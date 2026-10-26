@@ -1,0 +1,14 @@
+[
+  {
+    "usuario": "iara",
+    "nombre": "Iara",
+    "color": "#e84393",
+    "hash": "PEGAR_ACA_EL_HASH (cd api && npm run hash -- \"la clave\")"
+  },
+  {
+    "usuario": "nahuel",
+    "nombre": "Nahuel",
+    "color": "#0984e3",
+    "hash": "PEGAR_ACA_EL_HASH"
+  }
+]
