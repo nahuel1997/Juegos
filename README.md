@@ -16,7 +16,7 @@ Suena un aviso cuando te toca (se silencia con 🔔). Tiene **chat en vivo** y *
 - **Generala**: 5 dados, 3 tiros, escalera/full/póker/generala/doble; servida opcional gana.
 - **Escoba del 15**: mazo español, escobas, más cartas/oros/sietes y siete de oros (suma en el momento en que se levanta); cada uno ve cuántas cartas, oros y sietes lleva; animación especial del 7 de oros; se juega hasta N puntos.
 
-Las partidas en curso viven en memoria. El historial, el chat y los perfiles (con las fotos) se guardan en `DATA_DIR` (volumen Docker).
+Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).
 
 ## Usuarios
 

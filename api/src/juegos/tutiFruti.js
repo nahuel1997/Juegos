@@ -102,13 +102,7 @@ export class PartidaTutiFruti {
       if (this.config.segundosBasta === 0) return this.#cerrar();
       r.fase = 'basta';
       r.hasta = Date.now() + this.config.segundosBasta * 1000;
-      this.timer = setTimeout(() => {
-        if (this.actual === r && r.fase === 'basta') {
-          this.#cerrar();
-          this.notificar?.();
-        }
-      }, this.config.segundosBasta * 1000);
-      this.timer.unref?.();
+      this.#programarCierre();
       return;
     }
     if (tipo === 'puntos') {
@@ -129,6 +123,24 @@ export class PartidaTutiFruti {
       return this.#nuevaRonda();
     }
     throw new ErrorJuego('Acción desconocida');
+  }
+
+  // Cierra la ronda cuando se acaba el tiempo del basta.
+  #programarCierre() {
+    const r = this.actual;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      if (this.actual === r && r.fase === 'basta') {
+        this.#cerrar();
+        this.notificar?.();
+      }
+    }, Math.max(0, r.hasta - Date.now()));
+    this.timer.unref?.();
+  }
+
+  // Después de restaurar una partida guardada: si estaba corriendo un basta, se vuelve a programar.
+  reanudar() {
+    if (this.estado === 'jugando' && this.actual.fase === 'basta') this.#programarCierre();
   }
 
   #cerrar() {

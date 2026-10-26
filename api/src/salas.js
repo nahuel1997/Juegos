@@ -8,6 +8,7 @@ import * as generala from './juegos/generala.js';
 import * as escoba from './juegos/escoba.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
+import { cargarSalas, crearGuardador } from './persistencia.js';
 
 // Juegos disponibles. Para sumar uno: un módulo con CONFIG_DEFECTO, validarConfig y una clase de
 // partida (accion, abandonar, vistaPara, detalleHistorial), y su entrada acá.
@@ -27,6 +28,9 @@ export function montarSalas(io) {
   const salas = new Map(); // id -> sala
   const salaDe = new Map(); // usuario -> id de su sala
   const ultimaConfig = new Map(); // juego -> última config usada (la próxima sala arranca con esa)
+
+  // Las salas y partidas se guardan en disco en cada cambio: sobreviven a reinicios y deploys.
+  const guardador = crearGuardador(() => ({ salas: [...salas.values()], salaDe: [...salaDe], ultimaConfig: [...ultimaConfig] }));
 
   const canal = (u) => `u:${u}`;
   const aviso = (u, texto) => io.to(canal(u)).emit('aviso', { texto });
@@ -55,6 +59,7 @@ export function montarSalas(io) {
   }
 
   function emitirSala(sala) {
+    guardador.luego();
     for (const j of sala.jugadores) {
       const rival = rivalDe(sala, j);
       io.to(canal(j)).emit('sala', {
@@ -103,13 +108,18 @@ export function montarSalas(io) {
     emitirLobby();
   }
 
-  function iniciarPartida(sala) {
-    const { Clase } = JUEGOS[sala.juego];
-    sala.partida = new Clase(sala.jugadores, sala.config);
+  // Avisos de la partida que no vienen de una acción (ej. se terminó el tiempo del basta).
+  function conectarPartida(sala) {
     sala.partida.notificar = () => {
       registrarSiTermino(sala);
       emitirSala(sala);
     };
+  }
+
+  function iniciarPartida(sala) {
+    const { Clase } = JUEGOS[sala.juego];
+    sala.partida = new Clase(sala.jugadores, sala.config);
+    conectarPartida(sala);
     sala.listos.clear();
     sala.revancha.clear();
     ultimaConfig.set(sala.juego, sala.config);
@@ -118,11 +128,36 @@ export function montarSalas(io) {
 
   function cerrarSala(sala) {
     salas.delete(sala.id);
+    guardador.luego();
     for (const j of sala.jugadores) {
       if (salaDe.get(j) === sala.id) salaDe.delete(j);
       io.to(canal(j)).emit('sala', null);
     }
     emitirLobby();
+  }
+
+  // Al arrancar: vuelven las salas y partidas que había antes de reiniciar.
+  const guardado = cargarSalas();
+  if (guardado) {
+    for (const [juego, cfg] of guardado.ultimaConfig || []) if (JUEGOS[juego]) ultimaConfig.set(juego, cfg);
+    for (const datos of guardado.salas || []) {
+      if (!JUEGOS[datos.juego]) continue;
+      try {
+        const sala = { ...datos, partida: null };
+        if (datos.partida) {
+          // Se crea la partida de nuevo (así tiene sus métodos) y se le pisa el estado guardado.
+          const { Clase } = JUEGOS[datos.juego];
+          sala.partida = Object.assign(new Clase(datos.partida.jugadores, datos.partida.config), datos.partida);
+          conectarPartida(sala);
+          sala.partida.reanudar?.();
+        }
+        salas.set(sala.id, sala);
+      } catch (e) {
+        console.error('No se pudo restaurar una sala:', e.message);
+      }
+    }
+    for (const [u, id] of guardado.salaDe || []) if (salas.has(id)) salaDe.set(u, id);
+    if (salas.size) console.log(`Salas restauradas: ${salas.size}`);
   }
 
   io.use((socket, next) => {
@@ -266,6 +301,7 @@ export function montarSalas(io) {
 
   // Para que el resto de la app avise cambios (ej. alguien cambió su nombre o su foto).
   return {
+    guardarYa: () => guardador.ya(),
     refrescar() {
       emitirLobby();
       for (const s of salas.values()) emitirSala(s);

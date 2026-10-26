@@ -80,5 +80,6 @@ export function crearServidor() {
   const servidor = createServer(app);
   const io = new Server(servidor, { path: '/socket.io', serveClient: false });
   salas = montarSalas(io);
+  servidor.salas = salas;
   return servidor;
 }
