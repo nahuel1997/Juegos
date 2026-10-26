@@ -26,10 +26,13 @@ export default function ConfigBatalla({ config, cambiar }) {
             onChange={(n) => set({ barcos: { ...config.barcos, [t.tipo]: n } })}
           />
         ))}
+        <Interruptor valor={config.pegados} onChange={(pegados) => set({ pegados })}>
+          Se pueden poner barcos pegados
+        </Interruptor>
         <Interruptor valor={config.seguirAlTocar} onChange={(seguirAlTocar) => set({ seguirAlTocar })}>
           Si tocás un barco seguís tirando
         </Interruptor>
-        <p className="ayuda">Al hundir un barco siempre pasa el turno al otro.</p>
+        <p className="ayuda">{config.seguirAlTocar ? 'Agua o hundido pasan el turno; tocado sigue.' : 'Después de cada tiro (agua, tocado o hundido) le toca al otro.'}</p>
       </section>
     </div>
   );

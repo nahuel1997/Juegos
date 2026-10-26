@@ -44,6 +44,7 @@ export default function ConfigTuti({ config, cambiar }) {
       <section>
         <h3>Partida</h3>
         <Stepper etiqueta="Rondas" valor={config.rondas} min={1} max={20} onChange={(rondas) => set({ rondas })} />
+        <Stepper etiqueta="Segundos para prepararse antes de cada letra" valor={config.cuentaAtras ?? 5} min={0} max={30} onChange={(cuentaAtras) => set({ cuentaAtras })} />
         <Stepper etiqueta="Segundos después del ¡basta!" valor={config.segundosBasta} min={0} max={60} paso={5} onChange={(segundosBasta) => set({ segundosBasta })} />
         <h3>Letras que no salen</h3>
         <div className="letras-toggle">

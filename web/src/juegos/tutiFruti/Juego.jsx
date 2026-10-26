@@ -114,6 +114,21 @@ export default function JuegoTuti({ partida, accion, ctx }) {
     return () => clearInterval(t);
   }, [partida.restanteMs, partida.fase]);
 
+  // Cuenta para ver la letra y prepararse: hasta que llega a 0 no se puede escribir.
+  const [preparacion, setPreparacion] = useState(0);
+  useEffect(() => {
+    const fin = Date.now() + (partida.arrancaEnMs || 0);
+    const tic = () => setPreparacion(Math.max(0, Math.ceil((fin - Date.now()) / 1000)));
+    tic();
+    const t = setInterval(tic, 200);
+    return () => clearInterval(t);
+  }, [partida.numero, partida.arrancaEnMs]);
+  const puedeEscribir = listaLetra && preparacion === 0;
+  useEffect(() => {
+    if (puedeEscribir && escribiendo) setTimeout(() => inputs.current[0]?.focus(), 30);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puedeEscribir, partida.numero]);
+
   function escribir(i, texto) {
     const nuevos = valores.map((v, k) => (k === i ? texto : v));
     setValores(nuevos);
@@ -133,15 +148,19 @@ export default function JuegoTuti({ partida, accion, ctx }) {
       </div>
 
       <div className="tuti-cab">
-        <Ruleta key={partida.numero} letra={actual.letra} alTerminar={() => { setListaLetra(true); setTimeout(() => inputs.current[0]?.focus(), 50); }} />
+        <Ruleta key={partida.numero} letra={actual.letra} alTerminar={() => setListaLetra(true)} />
         <div className="tuti-estado">
-          {escribiendo && partida.fase === 'escribiendo' && <b>¡Con la {actual.letra}! Completá todo y cantá basta.</b>}
+          {escribiendo && partida.fase === 'escribiendo' && (
+            puedeEscribir
+              ? <b>¡Con la {actual.letra}! Completá todo y cantá basta.</b>
+              : listaLetra && <div className="preparate"><span>Preparate, arranca en</span><b key={preparacion}>{preparacion}</b></div>
+          )}
           {partida.fase === 'basta' && (
             <b className="alerta">{yoBasta ? `¡Cantaste basta! ${ctx.nombreRival} tiene` : `¡${ctx.nombreRival} cantó basta! Te quedan`} {restante ?? ''} s</b>
           )}
           {partida.fase === 'puntuando' && <b>Ronda cerrada: pongan los puntos.</b>}
           {escribiendo && (
-            <button className="btn grande basta" disabled={!completo || !listaLetra || yoBasta} onClick={() => { clearTimeout(envio.current); accion('basta', { valores }); }}>
+            <button className="btn grande basta" disabled={!completo || !puedeEscribir || yoBasta} onClick={() => { clearTimeout(envio.current); accion('basta', { valores }); }}>
               {yoBasta ? 'Esperando…' : '¡BASTA!'}
             </button>
           )}
@@ -172,8 +191,8 @@ export default function JuegoTuti({ partida, accion, ctx }) {
                           ref={(el) => (inputs.current[i] = el)}
                           value={valores[i] || ''}
                           maxLength={40}
-                          disabled={!listaLetra}
-                          placeholder={listaLetra ? `${c} con ${r.letra}` : ''}
+                          disabled={!puedeEscribir}
+                          placeholder={puedeEscribir ? `${c} con ${r.letra}` : ''}
                           onChange={(e) => escribir(i, e.target.value)}
                           onKeyDown={(e) => {
                             // Enter = como Tab: pasa a la casilla siguiente.
@@ -214,3 +233,6 @@ export default function JuegoTuti({ partida, accion, ctx }) {
 }
 
 JuegoTuti.textoFinal = (p) => `Terminó ${p.totales.yo} a ${p.totales.rival}.`;
+
+// Suena cuando sale una letra nueva.
+JuegoTuti.claveTurno = (p) => (p.estado === 'jugando' && p.fase === 'escribiendo' ? `t-${p.numero}` : null);

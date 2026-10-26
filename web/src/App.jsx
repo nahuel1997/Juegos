@@ -8,6 +8,7 @@ import Perfil from './componentes/Perfil.jsx';
 import Chat from './componentes/Chat.jsx';
 import Avisos from './componentes/Avisos.jsx';
 import { Avatar } from './componentes/comunes.jsx';
+import { sonidoActivo, setSonidoActivo, sonarTurno } from './sonido.js';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined); // undefined = cargando, null = sin sesión
@@ -18,6 +19,7 @@ export default function App() {
   const [avisos, setAvisos] = useState([]);
   const [mensajes, setMensajes] = useState([]);
   const [escribiendo, setEscribiendo] = useState(null);
+  const [sonido, setSonido] = useState(sonidoActivo);
   const socketRef = useRef(null);
 
   const avisar = useCallback((texto, tipo = 'info') => {
@@ -107,6 +109,14 @@ export default function App() {
           <span>Juegos 1vs1{usuario.tema === 'rosa' && ' 💕'}</span>
         </button>
         <div className="barra-der">
+          <button
+            className="btn chico fantasma sonido"
+            title={sonido ? 'Silenciar el aviso de turno' : 'Activar el aviso de turno'}
+            aria-label={sonido ? 'Silenciar' : 'Activar sonido'}
+            onClick={() => { setSonidoActivo(!sonido); setSonido(!sonido); if (!sonido) setTimeout(sonarTurno, 0); }}
+          >
+            {sonido ? '🔔' : '🔕'}
+          </button>
           <span className={`punto ${conectado ? 'on' : 'off'}`} title={conectado ? 'Conectado' : 'Reconectando…'} />
           <button className="yo" onClick={() => setVista('perfil')} title="Tu perfil">
             <Avatar usuario={usuario} tam={30} />

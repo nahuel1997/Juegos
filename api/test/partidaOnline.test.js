@@ -100,7 +100,7 @@ test('batalla naval: sala de configuración, reglas en vivo y partida completa',
 
   // Una regla imposible se rechaza; una válida la ven los dos y desmarca el "listo".
   await iara.emitir('listo', { listo: true });
-  assert.match((await nahuel.emitir('configurar', { config: { filas: 6, columnas: 6, barcos: { portaaviones: 4 } } })).error, /No entran/);
+  assert.match((await nahuel.emitir('configurar', { config: { filas: 6, columnas: 6, barcos: { portaaviones: 4 }, pegados: false } })).error, /No entran/);
   const config = { filas: 8, columnas: 9, barcos: { crucero: 2, destructor: 1 }, seguirAlTocar: true };
   assert.deepEqual(await nahuel.emitir('configurar', { config }), { ok: true });
   await esperar(() => iara.estado.sala.config.filas === 8 && iara.estado.sala.listos.length === 0);

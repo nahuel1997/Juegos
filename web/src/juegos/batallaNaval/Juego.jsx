@@ -62,7 +62,7 @@ const claseBarco = (b) => (b ? `barco ${b.horizontal ? 'h' : 'v'} ${b.punta} ${b
 const MiniBarco = ({ largo }) => <span className="mini-barco">{Array.from({ length: largo }, (_, i) => <i key={i} />)}</span>;
 
 function Colocacion({ partida, accion, ctx }) {
-  const { flota, filas, columnas } = partida;
+  const { flota, filas, columnas, pegados } = partida;
   const [barcos, setBarcos] = useState([]);
   const [sel, setSel] = useState(flota[0].id);
   const [horizontal, setHorizontal] = useState(true);
@@ -78,7 +78,7 @@ function Colocacion({ partida, accion, ctx }) {
   const mapa = useMemo(() => mapaBarcos(barcos, flota), [barcos, flota]);
   const largoSel = sel && flota.find((t) => t.id === sel).largo;
   const previa = sel && hover ? { id: sel, fila: hover[0], col: hover[1], horizontal } : null;
-  const previaOk = previa && cabe(previa, barcos, flota, filas, columnas);
+  const previaOk = previa && cabe(previa, barcos, flota, filas, columnas, pegados);
   const celdasPrevia = previa ? new Set(celdasDe(previa, largoSel).map(([f, c]) => k(f, c))) : new Set();
   const faltan = flota.filter((t) => !barcos.some((b) => b.id === t.id));
 
@@ -94,7 +94,7 @@ function Colocacion({ partida, accion, ctx }) {
     }
     if (!sel) return;
     const nuevo = { id: sel, fila: f, col: c, horizontal };
-    if (!cabe(nuevo, barcos, flota, filas, columnas)) return;
+    if (!cabe(nuevo, barcos, flota, filas, columnas, pegados)) return;
     const lista = [...barcos, nuevo];
     setBarcos(lista);
     setSel(flota.find((t) => !lista.some((b) => b.id === t.id))?.id ?? null);
@@ -159,25 +159,25 @@ function Colocacion({ partida, accion, ctx }) {
             <button className="btn fantasma" onClick={() => setHorizontal((h) => !h)}>
               ↻ Girar ({horizontal ? 'horizontal' : 'vertical'})
             </button>
-            <button className="btn fantasma" onClick={() => { const f = flotaAlAzar(flota, filas, columnas); if (f) { setBarcos(f); setSel(null); } }}>🎲 Al azar</button>
+            <button className="btn fantasma" onClick={() => { const f = flotaAlAzar(flota, filas, columnas, pegados); if (f) { setBarcos(f); setSel(null); } }}>🎲 Al azar</button>
             <button className="btn fantasma" onClick={() => { setBarcos([]); setSel(flota[0].id); }}>Limpiar</button>
             <button className="btn grande" disabled={faltan.length > 0 || enviando} onClick={listo}>
               {faltan.length ? `Faltan ${faltan.length} barco${faltan.length > 1 ? 's' : ''}` : '¡Listo!'}
             </button>
           </div>
-          <p className="ayuda">Tocá el tablero para ubicar. Girá con el botón, la tecla R o clic derecho. Tocá un barco ubicado para moverlo. Los barcos no se pueden tocar entre sí.</p>
+          <p className="ayuda">Tocá el tablero para ubicar. Girá con el botón, la tecla R o clic derecho. Tocá un barco ubicado para moverlo. {pegados ? 'Los barcos pueden ir pegados, pero no encimados.' : 'Los barcos no se pueden tocar entre sí.'}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function textoUltimo(u, yo, nombreRival) {
+function textoUltimo(u, yo, nombreRival, seguir) {
   if (!u) return null;
   const quien = u.por === yo ? 'Vos' : nombreRival;
   const donde = `${LETRAS[u.fila]}${u.col + 1}`;
   if (u.resultado === 'hundido') return `${quien} → ${donde}: ¡Hundido! (${u.barco}) · pasa el turno`;
-  if (u.resultado === 'tocado') return `${quien} → ${donde}: ¡Tocado!`;
+  if (u.resultado === 'tocado') return `${quien} → ${donde}: ¡Tocado!${seguir ? '' : ' · pasa el turno'}`;
   return `${quien} → ${donde}: Agua`;
 }
 
@@ -197,7 +197,7 @@ function Combate({ partida, accion, ctx }) {
     <>
       <div className={`estado-cinta ${miTurno ? 'tu-turno' : ''}`}>
         {estado === 'jugando' ? (miTurno ? '¡Te toca disparar!' : `Turno de ${nombreRival}…`) : 'Partida terminada'}
-        {ultimo && <small>{textoUltimo(ultimo, yo, nombreRival)}</small>}
+        {ultimo && <small>{textoUltimo(ultimo, yo, nombreRival, partida.seguirAlTocar)}</small>}
       </div>
       <div className="combate">
         <Tablero
@@ -259,3 +259,6 @@ export default function JuegoBatalla({ partida, accion, ctx }) {
 
 // Texto del final según cómo terminó.
 JuegoBatalla.textoFinal = (p, gane) => (gane ? 'Hundiste toda la flota enemiga.' : 'Te hundieron toda la flota.');
+
+// Clave que cambia cada vez que empieza un turno tuyo (para el sonido); null si no te toca.
+JuegoBatalla.claveTurno = (p, ctx) => (p.estado === 'jugando' && p.turno === ctx.yo ? `b-${p.disparosRecibidos.length}` : null);

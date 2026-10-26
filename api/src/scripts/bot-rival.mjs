@@ -51,7 +51,7 @@ async function jugar(sala) {
   const p = sala.partida;
   switch (sala.juego) {
     case 'batalla-naval':
-      if (p.estado === 'colocando' && !p.listo.yo) return accion('colocar', { barcos: flotaAlAzar(p.flota, p.filas, p.columnas) });
+      if (p.estado === 'colocando' && !p.listo.yo) return accion('colocar', { barcos: flotaAlAzar(p.flota, p.filas, p.columnas, { pegados: p.pegados }) });
       if (p.estado === 'jugando' && p.turno === yo) {
         const hechos = new Set(p.misDisparos.map((d) => `${d.fila},${d.col}`));
         let f, c;
@@ -71,7 +71,7 @@ async function jugar(sala) {
     case 'tuti-fruti': {
       const ronda = p.rondas[p.rondas.length - 1];
       if (p.fase === 'escribiendo' || (p.fase === 'basta' && p.bastaPor !== yo)) {
-        await new Promise((ok) => setTimeout(ok, 2500));
+        await new Promise((ok) => setTimeout(ok, (p.arrancaEnMs || 0) + 2500));
         return accion('basta', { valores: p.config.columnas.map((c) => `${ronda.letra}${c.toLowerCase().slice(1, 5)}`) });
       }
       if (p.fase === 'puntuando' && !p.confirmados.includes(yo) && p.confirmados.includes(sala.rival)) return accion('confirmar');

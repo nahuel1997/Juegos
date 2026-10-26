@@ -14,18 +14,20 @@ export function celdasDe({ fila, col, horizontal }, largo) {
   return Array.from({ length: largo }, (_, i) => (horizontal ? [fila, col + i] : [fila + i, col]));
 }
 
-// ¿Se puede poner este barco junto a los otros? (dentro del tablero y sin tocarse, ni en diagonal)
-export function cabe(barco, otros, flota, filas, columnas) {
+// ¿Se puede poner este barco junto a los otros? Dentro del tablero, nunca encimado y, si no se
+// permiten barcos pegados, tampoco tocando a otro (ni en diagonal).
+export function cabe(barco, otros, flota, filas, columnas, pegados = false) {
   const largo = (id) => flota.find((b) => b.id === id).largo;
   const celdas = celdasDe(barco, largo(barco.id));
   if (celdas.some(([f, c]) => f < 0 || c < 0 || f >= filas || c >= columnas)) return false;
   const ocupadas = new Set(
     otros.filter((b) => b.id !== barco.id).flatMap((b) => celdasDe(b, largo(b.id)).map(([f, c]) => `${f},${c}`)),
   );
-  return !celdas.some(([f, c]) => [-1, 0, 1].some((df) => [-1, 0, 1].some((dc) => ocupadas.has(`${f + df},${c + dc}`))));
+  const radio = pegados ? [0] : [-1, 0, 1];
+  return !celdas.some(([f, c]) => radio.some((df) => radio.some((dc) => ocupadas.has(`${f + df},${c + dc}`))));
 }
 
-export function flotaAlAzar(flota, filas, columnas) {
+export function flotaAlAzar(flota, filas, columnas, pegados = false) {
   for (let vuelta = 0; vuelta < 2000; vuelta++) {
     const barcos = [];
     for (const t of flota) {
@@ -37,7 +39,7 @@ export function flotaAlAzar(flota, filas, columnas) {
           fila: Math.floor(Math.random() * (horizontal ? filas : filas - t.largo + 1)),
           col: Math.floor(Math.random() * (horizontal ? columnas - t.largo + 1 : columnas)),
         };
-        if (cabe(b, barcos, flota, filas, columnas)) { barcos.push(b); break; }
+        if (cabe(b, barcos, flota, filas, columnas, pegados)) { barcos.push(b); break; }
       }
     }
     if (barcos.length === flota.length) return barcos;

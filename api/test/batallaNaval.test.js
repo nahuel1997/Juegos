@@ -17,10 +17,14 @@ test('valida una flota correcta', () => {
   assert.equal(validarFlota(flotaFija(), FLOTA, 10, 10).length, 5);
 });
 
-test('rechaza barcos que se tocan o se salen', () => {
+test('rechaza barcos que se tocan (si no se permiten pegados), encimados o que se salen', () => {
   const pegados = flotaFija();
   pegados[1].fila = 1;
-  assert.throws(() => validarFlota(pegados, FLOTA, 10, 10), ErrorJuego);
+  assert.throws(() => validarFlota(pegados, FLOTA, 10, 10, { pegados: false }), /toca al/);
+  assert.equal(validarFlota(pegados, FLOTA, 10, 10, { pegados: true }).length, 5);
+  const encimados = flotaFija();
+  encimados[1].fila = 0;
+  assert.throws(() => validarFlota(encimados, FLOTA, 10, 10, { pegados: true }), /se encima/);
   const afuera = flotaFija();
   afuera[0].col = 7;
   assert.throws(() => validarFlota(afuera, FLOTA, 10, 10), /se sale/);
@@ -29,6 +33,11 @@ test('rechaza barcos que se tocan o se salen', () => {
 
 test('la flota al azar siempre es válida, también en tableros chicos o con muchos barcos', () => {
   for (let i = 0; i < 100; i++) assert.doesNotThrow(() => validarFlota(flotaAlAzar(FLOTA, 10, 10), FLOTA, 10, 10));
+  // Con barcos pegados entran muchos más en un tablero chico.
+  const apretada = validarConfig({ filas: 6, columnas: 6, barcos: { portaaviones: 2, acorazado: 2, crucero: 2 }, pegados: true });
+  const fa = flotaDe(apretada);
+  assert.doesNotThrow(() => validarFlota(flotaAlAzar(fa, 6, 6, { pegados: true }), fa, 6, 6, { pegados: true }));
+  assert.throws(() => validarConfig({ ...apretada, pegados: false }), /No entran/);
   const cfg = validarConfig({ filas: 12, columnas: 8, barcos: { portaaviones: 2, crucero: 2, destructor: 3 } });
   const flota = flotaDe(cfg);
   assert.equal(flota.length, 7);
@@ -36,13 +45,23 @@ test('la flota al azar siempre es válida, también en tableros chicos o con muc
 });
 
 test('la config rechaza tableros donde no entran los barcos', () => {
-  assert.throws(() => validarConfig({ filas: 6, columnas: 6, barcos: { portaaviones: 4, acorazado: 4 } }), /No entran/);
+  assert.throws(() => validarConfig({ filas: 6, columnas: 6, barcos: { portaaviones: 4, acorazado: 4 }, pegados: false }), /No entran/);
+  // Pegados o no, más celdas que el tablero nunca entran.
+  assert.throws(() => validarConfig({ filas: 6, columnas: 6, barcos: { portaaviones: 4, acorazado: 4, crucero: 4 } }), /No entran/);
   assert.throws(() => validarConfig({ filas: 20 }), /filas/);
   assert.throws(() => validarConfig({ barcos: {} }), /al menos un barco/);
 });
 
-test('agua y hundido pasan el turno, tocado lo mantiene', () => {
+test('por defecto cualquier tiro pasa el turno, también si tocás', () => {
   const p = partidaEnJuego();
+  assert.equal(p.disparar('iara', 0, 0).resultado, 'tocado');
+  assert.equal(p.turno, 'nahuel');
+});
+
+const SEGUIR = { ...CONFIG_DEFECTO, seguirAlTocar: true };
+
+test('con seguirAlTocar: agua y hundido pasan el turno, tocado lo mantiene', () => {
+  const p = partidaEnJuego(SEGUIR);
   assert.equal(p.disparar('iara', 0, 0).resultado, 'tocado');
   assert.equal(p.turno, 'iara');
   assert.equal(p.disparar('iara', 9, 9).resultado, 'agua');
@@ -55,14 +74,8 @@ test('agua y hundido pasan el turno, tocado lo mantiene', () => {
   assert.throws(() => p.disparar('nahuel', 5, 5), /No es tu turno/);
 });
 
-test('con seguirAlTocar apagado, cualquier tiro pasa el turno', () => {
-  const p = partidaEnJuego({ ...CONFIG_DEFECTO, seguirAlTocar: false });
-  p.disparar('iara', 0, 0);
-  assert.equal(p.turno, 'nahuel');
-});
-
 test('no se puede repetir un disparo', () => {
-  const p = partidaEnJuego();
+  const p = partidaEnJuego(SEGUIR);
   p.disparar('iara', 0, 0);
   assert.throws(() => p.disparar('iara', 0, 0), /Ya disparaste/);
 });
@@ -81,7 +94,7 @@ test('hundir toda la flota gana la partida', () => {
 });
 
 test('la vista no filtra la flota del rival', () => {
-  const p = partidaEnJuego();
+  const p = partidaEnJuego(SEGUIR);
   p.disparar('iara', 8, 0);
   let v = p.vistaPara('iara');
   assert.equal(v.flotaRival.length, 0);

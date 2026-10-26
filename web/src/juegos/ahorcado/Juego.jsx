@@ -148,3 +148,12 @@ export default function JuegoAhorcado({ partida, accion, ctx }) {
 }
 
 JuegoAhorcado.textoFinal = (p) => `Terminó ${p.puntos.yo} a ${p.puntos.rival}.`;
+
+// Te toca si tenés que elegir la palabra o si estás adivinando.
+JuegoAhorcado.claveTurno = (p) => {
+  const r = p.ronda;
+  if (p.estado !== 'jugando') return null;
+  if (r.fase === 'eligiendo' && !r.adivinoYo) return `a-${r.numero}-elegir`;
+  if (r.fase === 'adivinando' && r.adivinoYo) return `a-${r.numero}-adivinar`;
+  return null;
+};

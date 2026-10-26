@@ -197,6 +197,28 @@ export class PartidaEscoba {
         sietes: porJugador(this.resumen.sietes),
       },
       listosSiguiente: [...this.listosSiguiente],
+      // Cómo viene levantando cada uno (sin mostrar las cartas): el detalle propio completo.
+      misLevantadas: conteo(this.capturas[j]),
+      // Puntos que ya están asegurados en la mano en curso (escobas y siete de oros),
+      // para que el marcador suba en el momento. Al cerrar la mano pasan a `puntos`.
+      enEstaMano: this.fase === 'jugando'
+        ? { yo: this.#asegurados(j), rival: this.#asegurados(rival) }
+        : { yo: 0, rival: 0 },
     };
   }
+
+  #asegurados(j) {
+    return this.escobas[j] + (this.capturas[j].some((c) => c.id === SIETE_DE_OROS) ? 1 : 0);
+  }
+}
+
+const SIETE_DE_OROS = 'oros-7';
+
+function conteo(cartas) {
+  return {
+    cartas: cartas.length,
+    oros: cartas.filter((c) => c.palo === 'oros').length,
+    sietes: cartas.filter((c) => c.numero === 7).length,
+    sieteDeOros: cartas.some((c) => c.id === SIETE_DE_OROS),
+  };
 }

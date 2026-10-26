@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { JUEGOS } from '../juegos/index.js';
 import { Avatar } from './comunes.jsx';
+import { sonarTurno } from '../sonido.js';
 
 function Final({ sala, emitir, ctx, textoFinal }) {
   const p = sala.partida;
@@ -36,6 +37,14 @@ export default function Sala({ sala, emitir, gente }) {
   const ctx = { yo: sala.yo, rival: sala.rival, nombreRival: rival.nombre, rivalOnline: sala.rivalOnline };
   const accion = useCallback((tipo, datos) => emitir('accion', { tipo, datos }), [emitir]);
   const listoYo = sala.listos.includes(sala.yo);
+
+  // Sonido cuando empieza un turno tuyo (no al entrar o recargar la sala).
+  const clave = sala.partida && def.Juego.claveTurno ? def.Juego.claveTurno(sala.partida, ctx) : null;
+  const ultimaClave = useRef(clave);
+  useEffect(() => {
+    if (clave && clave !== ultimaClave.current) sonarTurno();
+    ultimaClave.current = clave;
+  }, [clave]);
   const listoRival = sala.listos.includes(sala.rival);
 
   function abandonar() {

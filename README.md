@@ -2,7 +2,7 @@
 
 App de juegos online 1 contra 1: **batalla naval**, **ahorcado**, **tuti fruti**, **generala** y **escoba del 15**.
 Cada desafío abre una **sala de configuración** donde los dos ajustan las reglas en vivo y arrancan cuando están listos.
-Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y clave).
+Suena un aviso cuando te toca (se silencia con 🔔). Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y clave).
 
 - **api/**: Node 20 + Express 5 + Socket.IO (tiempo real). Login con cookie httpOnly (JWT), claves con bcrypt.
   Las partidas viven en memoria; el historial se guarda en `DATA_DIR/historial.json` (volumen Docker).
@@ -10,11 +10,11 @@ Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y
 
 ## Juegos
 
-- **Batalla naval**: filas y columnas (6 a 15) y cantidad de cada barco. Tocado = seguís (configurable); agua o hundido = pasa el turno.
+- **Batalla naval**: filas y columnas (6 a 15), cantidad de cada barco y si pueden ir pegados (por defecto sí). Cada tiro pasa el turno (opcional: tocado = seguís).
 - **Ahorcado**: rondas alternadas; la palabra la elige el rival (con pista) o sale al azar. Errores permitidos configurables.
-- **Tuti fruti**: columnas propias, letras excluidas, letra al azar sin repetir, ¡basta! con cuenta regresiva y puntos manuales.
+- **Tuti fruti**: columnas propias, letras excluidas, letra al azar sin repetir, cuenta para prepararse antes de cada letra (5 s, configurable), ¡basta! con cuenta regresiva y puntos manuales.
 - **Generala**: 5 dados, 3 tiros, escalera/full/póker/generala/doble; servida opcional gana.
-- **Escoba del 15**: mazo español, escobas, más cartas/oros/sietes y siete de oros; se juega hasta N puntos.
+- **Escoba del 15**: mazo español, escobas, más cartas/oros/sietes y siete de oros (suma en el momento en que se levanta); cada uno ve cuántas cartas, oros y sietes lleva; animación especial del 7 de oros; se juega hasta N puntos.
 
 Las partidas en curso viven en memoria. El historial, el chat y los perfiles (con las fotos) se guardan en `DATA_DIR` (volumen Docker).
 

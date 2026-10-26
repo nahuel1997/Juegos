@@ -118,3 +118,5 @@ export default function JuegoGenerala({ partida, accion, ctx }) {
 
 JuegoGenerala.textoFinal = (p, gane) =>
   p.motivoFin === 'servida' ? (gane ? '¡Generala servida!' : 'Le salió generala servida 😱') : `Terminó ${p.totales.yo} a ${p.totales.rival}.`;
+
+JuegoGenerala.claveTurno = (p, ctx) => (p.estado === 'jugando' && p.turno === ctx.yo ? `g-${Object.keys(p.planillas.yo).length}` : null);

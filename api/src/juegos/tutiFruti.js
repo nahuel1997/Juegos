@@ -6,6 +6,7 @@ export const CONFIG_DEFECTO = {
   columnas: ['Nombre', 'Animal', 'Color', 'Fruta o verdura', 'País o ciudad', 'Cosa'],
   rondas: 5,
   segundosBasta: 10,
+  cuentaAtras: 5, // segundos para ver la letra y prepararse antes de poder escribir
   excluidas: ['K', 'Ñ', 'Q', 'W', 'X', 'Y', 'Z'],
 };
 
@@ -22,6 +23,7 @@ export function validarConfig(c = {}) {
     columnas,
     rondas: entero(c.rondas ?? CONFIG_DEFECTO.rondas, 1, 20, 'Las rondas'),
     segundosBasta: entero(c.segundosBasta ?? CONFIG_DEFECTO.segundosBasta, 0, 60, 'Los segundos del basta'),
+    cuentaAtras: entero(c.cuentaAtras ?? CONFIG_DEFECTO.cuentaAtras, 0, 30, 'La cuenta antes de cada letra'),
     excluidas,
   };
   if (LETRAS.length - excluidas.length < config.rondas) throw new ErrorJuego('Quedan menos letras que rondas: sacá letras excluidas');
@@ -64,6 +66,7 @@ export class PartidaTutiFruti {
       puntos: { [this.jugadores[0]]: Array(n).fill(null), [this.jugadores[1]]: Array(n).fill(null) },
       bastaPor: null,
       hasta: null,
+      desde: Date.now() + this.config.cuentaAtras * 1000, // antes de esto no se puede escribir
       confirmados: new Set(),
     });
   }
@@ -80,6 +83,9 @@ export class PartidaTutiFruti {
     const r = this.actual;
     const escribiendo = r.fase === 'escribiendo' || r.fase === 'basta';
 
+    if ((tipo === 'respuestas' || tipo === 'basta') && escribiendo && Date.now() < r.desde) {
+      throw new ErrorJuego('Esperá que termine la cuenta para escribir');
+    }
     if (tipo === 'respuestas') {
       if (!escribiendo) throw new ErrorJuego('La ronda ya se cerró');
       return this.#guardar(j, datos.valores);
@@ -170,6 +176,7 @@ export class PartidaTutiFruti {
       numero: this.rondas.length,
       bastaPor: actual.bastaPor,
       restanteMs: actual.hasta ? Math.max(0, actual.hasta - Date.now()) : null,
+      arrancaEnMs: Math.max(0, actual.desde - Date.now()),
       confirmados: [...actual.confirmados],
       totales: { yo: totales[j], rival: totales[rival] },
       rondas: this.rondas.map((r) => {

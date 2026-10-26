@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const PALO = { oros: '🪙', copas: '🍷', espadas: '🗡️', bastos: '🪵' };
 const FIGURA = { 10: 'Sota', 11: 'Caballo', 12: 'Rey' };
+const SIETE_DE_OROS = 'oros-7';
 
-export function Carta({ carta, seleccionada, onClick, chica }) {
+export function Carta({ carta, seleccionada, onClick, chica, brilla }) {
   if (!carta) return <div className={`carta dorso ${chica ? 'chica' : ''}`} />;
   return (
-    <button type="button" className={`carta palo-${carta.palo} ${seleccionada ? 'sel' : ''} ${chica ? 'chica' : ''}`} onClick={onClick} disabled={!onClick} title={`${FIGURA[carta.numero] || carta.numero} de ${carta.palo} (vale ${carta.valor})`}>
+    <button type="button" className={`carta palo-${carta.palo} ${seleccionada ? 'sel' : ''} ${chica ? 'chica' : ''} ${brilla ? 'siete-oro' : ''}`} onClick={onClick} disabled={!onClick} title={`${FIGURA[carta.numero] || carta.numero} de ${carta.palo} (vale ${carta.valor})`}>
       <span className="num">{carta.numero}</span>
       <span className="palo">{PALO[carta.palo]}</span>
       <span className="fig">{FIGURA[carta.numero] || ''}</span>
@@ -76,16 +77,45 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
   }, [firma]);
   useEffect(() => setSinQuince(false), [mia]);
 
+  // Animación especial cuando el 7 de oros aparece en la mesa o alguien se lo lleva.
+  const [destello, setDestello] = useState(null);
+  const estabaEnMesa = useRef(partida.mesa.some((c) => c.id === SIETE_DE_OROS));
+  const enMesa = partida.mesa.some((c) => c.id === SIETE_DE_OROS);
+  const u = partida.ultima;
+  const seLoLlevo = u && u.tipo !== 'tiro' && (u.carta?.id === SIETE_DE_OROS || u.cartas?.some((c) => c.id === SIETE_DE_OROS));
+  const claveUltima = u ? `${u.por}-${u.tipo}-${u.carta?.id || ''}-${partida.mano}` : '';
+  const montado = useRef(false);
+  useEffect(() => {
+    if (!montado.current) {
+      // Al entrar (o recargar) no se repite la animación de una jugada vieja.
+      montado.current = true;
+      return;
+    }
+    let nuevo = null;
+    if (enMesa && !estabaEnMesa.current) nuevo = { tipo: 'aparece', texto: '✨ ¡El 7 de oros está en la mesa! ✨' };
+    else if (seLoLlevo) nuevo = { tipo: 'llevo', texto: u.por === ctx.yo ? '🪙 ¡Te llevaste el 7 de oros! +1' : `🪙 ${ctx.nombreRival} se llevó el 7 de oros` };
+    estabaEnMesa.current = enMesa;
+    if (!nuevo) return;
+    setDestello({ ...nuevo, id: Date.now() });
+    const t = setTimeout(() => setDestello(null), 2600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enMesa, claveUltima]);
+
   const carta = partida.miMano.find((c) => c.id === mia);
   const suma = (carta?.valor || 0) + partida.mesa.filter((c) => mesaSel.includes(c.id)).reduce((s, c) => s + c.valor, 0);
   const toggleMesa = (id) => setMesaSel(mesaSel.includes(id) ? mesaSel.filter((x) => x !== id) : [...mesaSel, id]);
 
+  const enMano = partida.enEstaMano || { yo: 0, rival: 0 };
+  const mias = partida.misLevantadas;
+
   return (
     <div className="escoba">
+      {destello && <div className={`destello-oro ${destello.tipo}`} key={destello.id}>{destello.texto}</div>}
       <div className="marcador">
-        <span>Vos <b>{partida.puntos.yo}</b></span>
+        <span>Vos <b>{partida.puntos.yo + enMano.yo}</b>{enMano.yo > 0 && <small className="en-mano"> (+{enMano.yo} en esta mano)</small>}</span>
         <span className="ronda">Mano {partida.mano} · a {partida.config.puntosParaGanar}</span>
-        <span><b>{partida.puntos.rival}</b> {ctx.nombreRival}</span>
+        <span>{enMano.rival > 0 && <small className="en-mano">(+{enMano.rival} en esta mano) </small>}<b>{partida.puntos.rival + enMano.rival}</b> {ctx.nombreRival}</span>
       </div>
 
       {partida.fase === 'resumen' ? (
@@ -106,7 +136,13 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
         <div className="mesa">
           {partida.mesa.length === 0 && <span className="mesa-vacia">Mesa vacía</span>}
           {partida.mesa.map((c) => (
-            <Carta key={c.id} carta={c} seleccionada={mesaSel.includes(c.id)} onClick={miTurno && mia ? () => toggleMesa(c.id) : undefined} />
+            <Carta
+              key={c.id}
+              carta={c}
+              seleccionada={mesaSel.includes(c.id)}
+              brilla={c.id === SIETE_DE_OROS}
+              onClick={miTurno && mia ? () => toggleMesa(c.id) : undefined}
+            />
           ))}
           <div className="mazo" title="Cartas en el mazo">{partida.mazo > 0 && <><Carta chica /><small>{partida.mazo}</small></>}</div>
         </div>
@@ -131,7 +167,16 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
             <Carta key={c.id} carta={c} seleccionada={mia === c.id} onClick={miTurno ? () => { setMia(mia === c.id ? null : c.id); setMesaSel([]); } : undefined} />
           ))}
         </div>
-        <small className="mis-datos">Vos: {partida.levantadas.yo} levantadas · 🧹 {partida.escobas.yo}{partida.reparte === ctx.yo ? ' · repartís vos' : ''}</small>
+        {mias && (
+          <div className="mis-levantadas" aria-label="Lo que llevás levantado">
+            <span title="Cartas levantadas">🃏 <b>{mias.cartas}</b> cartas</span>
+            <span title="Oros levantados">🪙 <b>{mias.oros}</b> oros</span>
+            <span title="Sietes levantados">7️⃣ <b>{mias.sietes}</b> sietes</span>
+            <span title="Escobas">🧹 <b>{partida.escobas.yo}</b></span>
+            <span className={`siete-oro-chip ${mias.sieteDeOros ? 'si' : ''}`}>{mias.sieteDeOros ? '✨ 7 de oros' : '7 de oros: no'}</span>
+          </div>
+        )}
+        {partida.reparte === ctx.yo && <small className="mis-datos">Repartís vos</small>}
         {miTurno && !carta && <p className="ayuda">Elegí una carta de tu mano y después las de la mesa que sumen 15.</p>}
       </div>
     </div>
@@ -139,3 +184,6 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
 }
 
 JuegoEscoba.textoFinal = (p) => `Terminó ${p.puntos.yo} a ${p.puntos.rival}.`;
+
+JuegoEscoba.claveTurno = (p, ctx) =>
+  p.estado === 'jugando' && p.fase === 'jugando' && p.turno === ctx.yo ? `e-${p.mano}-${p.mazo}-${p.miMano.length}` : null;

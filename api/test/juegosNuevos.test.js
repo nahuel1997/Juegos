@@ -44,11 +44,11 @@ test('ahorcado: arriesgar mal suma un error, en modo azar no hay que elegir', ()
 
 // ---------- Tuti fruti ----------
 test('tuti fruti: columnas propias, letras sin repetir y excluidas', () => {
-  assert.throws(() => cfgTuti({ columnas: ['A', 'a'] }), /repetidas/);
-  const cfg = cfgTuti({ columnas: ['Comida', 'Marca'], rondas: 3, excluidas: [] });
+  assert.throws(() => cfgTuti({ cuentaAtras: 0,  columnas: ['A', 'a'] }), /repetidas/);
+  const cfg = cfgTuti({ cuentaAtras: 0,  columnas: ['Comida', 'Marca'], rondas: 3, excluidas: [] });
   const p = new PartidaTutiFruti(J, cfg);
   assert.equal(p.vistaPara('iara').rondas[0].mias.length, 2);
-  const cfg2 = cfgTuti({ rondas: 20, excluidas: ['K', 'Ñ', 'Q', 'W', 'X', 'Y', 'Z'] });
+  const cfg2 = cfgTuti({ cuentaAtras: 0,  rondas: 20, excluidas: ['K', 'Ñ', 'Q', 'W', 'X', 'Y', 'Z'] });
   const p2 = new PartidaTutiFruti(J, cfg2);
   const letras = new Set();
   for (let i = 0; i < 20; i++) {
@@ -64,7 +64,7 @@ test('tuti fruti: columnas propias, letras sin repetir y excluidas', () => {
 });
 
 test('tuti fruti: basta exige completar, oculta respuestas y los puntos son manuales', () => {
-  const p = new PartidaTutiFruti(J, cfgTuti({ columnas: ['Animal', 'Color'], rondas: 1, segundosBasta: 0 }));
+  const p = new PartidaTutiFruti(J, cfgTuti({ cuentaAtras: 0,  columnas: ['Animal', 'Color'], rondas: 1, segundosBasta: 0 }));
   p.accion('nahuel', 'respuestas', { valores: ['Mono', ''] });
   assert.equal(p.vistaPara('iara').rondas[0].rival, null);
   assert.throws(() => p.accion('nahuel', 'basta', { valores: ['Mono', ''] }), /Completá/);
@@ -85,8 +85,17 @@ test('tuti fruti: basta exige completar, oculta respuestas y los puntos son manu
   assert.deepEqual(p.vistaPara('iara').totales, { yo: 20, rival: 10 });
 });
 
+test('tuti fruti: hay que esperar la cuenta antes de escribir', () => {
+  const p = new PartidaTutiFruti(J, cfgTuti({ cuentaAtras: 5, columnas: ['Animal'] }));
+  assert.ok(p.vistaPara('iara').arrancaEnMs > 4000);
+  assert.throws(() => p.accion('iara', 'basta', { valores: ['Oso'] }), /Esperá/);
+  p.actual.desde = Date.now() - 1;
+  p.accion('iara', 'basta', { valores: ['Oso'] });
+  assert.equal(p.vistaPara('iara').fase, 'basta');
+});
+
 test('tuti fruti: el basta con cuenta regresiva cierra solo', async () => {
-  const p = new PartidaTutiFruti(J, cfgTuti({ columnas: ['Animal'], rondas: 1, segundosBasta: 1 }));
+  const p = new PartidaTutiFruti(J, cfgTuti({ cuentaAtras: 0,  columnas: ['Animal'], rondas: 1, segundosBasta: 1 }));
   let avisado = false;
   p.notificar = () => (avisado = true);
   p.accion('iara', 'basta', { valores: ['Oso'] });
@@ -172,6 +181,12 @@ test('escoba: solo se levanta si suma 15 y se juega la mano entera', () => {
     p.accion(j, 'jugar', { carta: p.mano[j][0].id });
   };
   assert.throws(() => p.accion('nahuel', 'jugar', { carta: p.mano.nahuel[0].id }), /No es tu turno/);
+  // El siete de oros suma en el marcador apenas se levanta (antes de cerrar la mano).
+  p.capturas.iara.push({ id: 'oros-7', palo: 'oros', numero: 7, valor: 7 });
+  const v0 = p.vistaPara('iara');
+  assert.equal(v0.enEstaMano.yo, p.escobas.iara + 1);
+  assert.deepEqual(v0.misLevantadas, { cartas: p.capturas.iara.length, oros: p.capturas.iara.filter((c) => c.palo === 'oros').length, sietes: p.capturas.iara.filter((c) => c.numero === 7).length, sieteDeOros: true });
+  p.capturas.iara.pop();
   while (p.fase === 'jugando') jugar(p.turno);
   // Al cerrar la mano todas las cartas terminan levantadas.
   const total = p.capturas.iara.length + p.capturas.nahuel.length;
