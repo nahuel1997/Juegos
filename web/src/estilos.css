@@ -34,9 +34,10 @@ button { font: inherit; }
   padding: 10px 16px; background: rgba(8, 22, 44, .7); backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 5;
 }
-.marca { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.marca { display: flex; align-items: center; gap: 10px; font-weight: 700; background: none; border: 0; color: inherit; cursor: pointer; padding: 0; }
 .barra-der { display: flex; align-items: center; gap: 10px; }
-.yo { font-weight: 600; color: var(--c); }
+.yo { display: flex; align-items: center; gap: 8px; font-weight: 600; background: none; border: 0; color: var(--texto); cursor: pointer; padding: 2px 6px; border-radius: 99px; }
+.yo:hover { background: var(--fondo2); }
 .punto { width: 9px; height: 9px; border-radius: 50%; }
 .punto.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
 .punto.off { background: var(--tocado); }
@@ -84,7 +85,8 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 .juego-emoji { font-size: 2.4rem; }
 .rivales { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .rivales li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--fondo2); border-radius: 12px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--c); font-weight: 700; flex: none; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--c, var(--borde)); color: #fff; font-weight: 700; flex: none; overflow: hidden; vertical-align: middle; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 .rival-nombre { flex: 1; display: flex; flex-direction: column; font-weight: 600; }
 .rival-nombre small { color: var(--suave); font-weight: 400; }
 .rival-nombre small.on { color: var(--ok); }
@@ -120,8 +122,8 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 
 .tablero-wrap h3 { text-align: center; margin-bottom: 8px; }
 .tablero {
-  display: grid; grid-template-columns: 20px repeat(10, 1fr); gap: 2px;
-  background: rgba(0,0,0,.2); padding: 6px; border-radius: 12px; max-width: 460px; margin: 0 auto;
+  display: grid; grid-template-columns: 20px repeat(var(--cols, 10), 1fr); gap: 2px;
+  background: rgba(0,0,0,.2); padding: 6px; border-radius: 12px; margin: 0 auto;
   border: 2px solid transparent; transition: border-color .3s;
 }
 .tablero-wrap.activo .tablero { border-color: var(--acento); box-shadow: 0 0 20px rgba(255, 183, 3, .25); }
@@ -179,7 +181,7 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 @media (max-width: 760px) {
   main { padding: 12px; }
   .colocacion-grid, .combate, .flotas-estado { grid-template-columns: 1fr; }
-  .tablero { grid-template-columns: 16px repeat(10, 1fr); padding: 4px; }
+  .tablero { grid-template-columns: 16px repeat(var(--cols, 10), 1fr); padding: 4px; }
   .combate .propio .tablero { max-width: 320px; }
 }
 

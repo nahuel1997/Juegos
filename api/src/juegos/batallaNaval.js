@@ -1,37 +1,90 @@
-// Batalla naval 1vs1: tablero 10x10, flota clásica. Lógica pura (sin red) para poder testearla.
+// Batalla naval 1vs1 configurable (tamaño del tablero y cantidad de barcos). Lógica pura (sin red).
+import { ErrorJuego, entero } from './comun.js';
 
-export const TAM = 10;
+export { ErrorJuego };
 
-export const FLOTA = [
-  { id: 'portaaviones', nombre: 'Portaaviones', largo: 5 },
-  { id: 'acorazado', nombre: 'Acorazado', largo: 4 },
-  { id: 'crucero', nombre: 'Crucero', largo: 3 },
-  { id: 'submarino', nombre: 'Submarino', largo: 3 },
-  { id: 'destructor', nombre: 'Destructor', largo: 2 },
+export const TIPOS = [
+  { tipo: 'portaaviones', nombre: 'Portaaviones', largo: 5 },
+  { tipo: 'acorazado', nombre: 'Acorazado', largo: 4 },
+  { tipo: 'crucero', nombre: 'Crucero', largo: 3 },
+  { tipo: 'submarino', nombre: 'Submarino', largo: 3 },
+  { tipo: 'destructor', nombre: 'Destructor', largo: 2 },
 ];
 
-export class ErrorJuego extends Error {}
+export const CONFIG_DEFECTO = {
+  filas: 10,
+  columnas: 10,
+  barcos: { portaaviones: 1, acorazado: 1, crucero: 1, submarino: 1, destructor: 1 },
+  seguirAlTocar: true, // tocado = seguís tirando; agua o hundido = pasa el turno
+};
 
-const enTablero = (f, c) => Number.isInteger(f) && Number.isInteger(c) && f >= 0 && f < TAM && c >= 0 && c < TAM;
 const clave = (f, c) => `${f},${c}`;
+
+// Lista de barcos de la partida, cada uno con id propio (ej. "crucero-2").
+export function flotaDe(config) {
+  return TIPOS.flatMap((t) =>
+    Array.from({ length: config.barcos[t.tipo] || 0 }, (_, i) => ({ id: `${t.tipo}-${i + 1}`, tipo: t.tipo, nombre: t.nombre, largo: t.largo })),
+  );
+}
 
 export function celdasDe({ fila, col, horizontal }, largo) {
   return Array.from({ length: largo }, (_, i) => (horizontal ? [fila, col + i] : [fila + i, col]));
 }
 
-// Valida la flota que manda el cliente y devuelve los barcos normalizados con sus celdas.
-// Los barcos no pueden superponerse ni tocarse (ni en diagonal).
-export function validarFlota(barcos) {
-  if (!Array.isArray(barcos) || barcos.length !== FLOTA.length) throw new ErrorJuego('Tenés que ubicar los 5 barcos');
+const tocaAlguna = (celdas, ocupadas) =>
+  celdas.some(([f, c]) => [-1, 0, 1].some((df) => [-1, 0, 1].some((dc) => ocupadas.has(clave(f + df, c + dc)))));
+
+// Ubica la flota al azar sin que los barcos se toquen. Devuelve null si no lo logra en `intentos` vueltas.
+export function flotaAlAzar(flota, filas, columnas, { intentos = Infinity, rand = Math.random } = {}) {
+  for (let vuelta = 0; vuelta < intentos; vuelta++) {
+    const barcos = [];
+    const ocupadas = new Set();
+    for (const b of flota) {
+      for (let i = 0; i < 100; i++) {
+        const horizontal = b.largo > columnas ? false : b.largo > filas ? true : rand() < 0.5;
+        const fila = Math.floor(rand() * (horizontal ? filas : filas - b.largo + 1));
+        const col = Math.floor(rand() * (horizontal ? columnas - b.largo + 1 : columnas));
+        const celdas = celdasDe({ fila, col, horizontal }, b.largo);
+        if (tocaAlguna(celdas, ocupadas)) continue;
+        celdas.forEach(([f, c]) => ocupadas.add(clave(f, c)));
+        barcos.push({ id: b.id, fila, col, horizontal });
+        break;
+      }
+    }
+    if (barcos.length === flota.length) return barcos;
+  }
+  return null;
+}
+
+export function validarConfig(c = {}) {
+  const config = {
+    filas: entero(c.filas ?? CONFIG_DEFECTO.filas, 6, 15, 'Las filas'),
+    columnas: entero(c.columnas ?? CONFIG_DEFECTO.columnas, 6, 15, 'Las columnas'),
+    barcos: Object.fromEntries(TIPOS.map((t) => [t.tipo, entero(c.barcos?.[t.tipo] ?? 0, 0, 4, `La cantidad de ${t.nombre.toLowerCase()}s`)])),
+    seguirAlTocar: c.seguirAlTocar !== false,
+  };
+  const flota = flotaDe(config);
+  if (flota.length === 0) throw new ErrorJuego('Tiene que haber al menos un barco');
+  if (flota.length > 15) throw new ErrorJuego('Máximo 15 barcos');
+  if (!flotaAlAzar(flota, config.filas, config.columnas, { intentos: 300 })) {
+    throw new ErrorJuego('No entran tantos barcos en ese tablero: sumá filas o sacá barcos');
+  }
+  return config;
+}
+
+// Valida la flota que manda el cliente. Los barcos no pueden superponerse ni tocarse (ni en diagonal).
+export function validarFlota(barcos, flota, filas, columnas) {
+  if (!Array.isArray(barcos) || barcos.length !== flota.length) throw new ErrorJuego(`Tenés que ubicar los ${flota.length} barcos`);
   const ocupadas = new Map();
-  const resultado = [];
-  for (const tipo of FLOTA) {
+  return flota.map((tipo) => {
     const b = barcos.find((x) => x && x.id === tipo.id);
     if (!b) throw new ErrorJuego(`Falta ubicar el ${tipo.nombre.toLowerCase()}`);
     const pos = { fila: b.fila, col: b.col, horizontal: !!b.horizontal };
     const celdas = celdasDe(pos, tipo.largo);
     for (const [f, c] of celdas) {
-      if (!enTablero(f, c)) throw new ErrorJuego(`El ${tipo.nombre.toLowerCase()} se sale del tablero`);
+      if (!Number.isInteger(f) || !Number.isInteger(c) || f < 0 || c < 0 || f >= filas || c >= columnas) {
+        throw new ErrorJuego(`El ${tipo.nombre.toLowerCase()} se sale del tablero`);
+      }
       for (let df = -1; df <= 1; df++) {
         for (let dc = -1; dc <= 1; dc++) {
           const otro = ocupadas.get(clave(f + df, c + dc));
@@ -40,41 +93,21 @@ export function validarFlota(barcos) {
       }
     }
     celdas.forEach(([f, c]) => ocupadas.set(clave(f, c), tipo.nombre));
-    resultado.push({ ...tipo, ...pos, celdas, impactos: 0 });
-  }
-  return resultado;
-}
-
-export function flotaAlAzar(rand = Math.random) {
-  for (;;) {
-    const barcos = [];
-    const ocupadas = new Set();
-    for (const tipo of FLOTA) {
-      for (let intento = 0; intento < 200; intento++) {
-        const horizontal = rand() < 0.5;
-        const fila = Math.floor(rand() * (horizontal ? TAM : TAM - tipo.largo + 1));
-        const col = Math.floor(rand() * (horizontal ? TAM - tipo.largo + 1 : TAM));
-        const celdas = celdasDe({ fila, col, horizontal }, tipo.largo);
-        const choca = celdas.some(([f, c]) =>
-          [-1, 0, 1].some((df) => [-1, 0, 1].some((dc) => ocupadas.has(clave(f + df, c + dc)))));
-        if (choca) continue;
-        celdas.forEach(([f, c]) => ocupadas.add(clave(f, c)));
-        barcos.push({ id: tipo.id, fila, col, horizontal });
-        break;
-      }
-    }
-    if (barcos.length === FLOTA.length) return barcos;
-  }
+    return { ...tipo, ...pos, celdas, impactos: 0 };
+  });
 }
 
 export class PartidaBatallaNaval {
-  constructor(jugadorA, jugadorB, { empieza } = {}) {
+  constructor(jugadores, config = CONFIG_DEFECTO, { empieza } = {}) {
+    const [a, b] = jugadores;
     this.juego = 'batalla-naval';
-    this.jugadores = [jugadorA, jugadorB];
+    this.jugadores = [a, b];
+    this.config = config;
+    this.flota = flotaDe(config);
     this.estado = 'colocando'; // colocando | jugando | terminada
-    this.flotas = { [jugadorA]: null, [jugadorB]: null };
-    this.disparos = { [jugadorA]: new Map(), [jugadorB]: new Map() }; // disparos HECHOS por cada jugador
-    this.turno = empieza ?? (Math.random() < 0.5 ? jugadorA : jugadorB);
+    this.flotas = { [a]: null, [b]: null };
+    this.disparos = { [a]: new Map(), [b]: new Map() }; // disparos HECHOS por cada jugador
+    this.turno = empieza ?? (Math.random() < 0.5 ? a : b);
     this.ganador = null;
     this.motivoFin = null;
     this.ultimo = null; // último disparo, para animarlo en el front
@@ -89,19 +122,27 @@ export class PartidaBatallaNaval {
     if (!this.jugadores.includes(j)) throw new ErrorJuego('No jugás en esta partida');
   }
 
+  accion(j, tipo, datos = {}) {
+    if (tipo === 'colocar') return this.colocar(j, datos.barcos);
+    if (tipo === 'disparar') return this.disparar(j, datos.fila, datos.col);
+    throw new ErrorJuego('Acción desconocida');
+  }
+
   colocar(j, barcos) {
     this.#exigirJugador(j);
     if (this.estado !== 'colocando') throw new ErrorJuego('Ya no se pueden mover los barcos');
-    this.flotas[j] = validarFlota(barcos);
+    this.flotas[j] = validarFlota(barcos, this.flota, this.config.filas, this.config.columnas);
     if (this.jugadores.every((x) => this.flotas[x])) this.estado = 'jugando';
   }
 
-  // Si acertás, seguís tirando; si es agua, pasa el turno.
   disparar(j, fila, col) {
     this.#exigirJugador(j);
     if (this.estado !== 'jugando') throw new ErrorJuego('La partida no está en juego');
     if (this.turno !== j) throw new ErrorJuego('No es tu turno');
-    if (!enTablero(fila, col)) throw new ErrorJuego('Disparo fuera del tablero');
+    const { filas, columnas } = this.config;
+    if (!Number.isInteger(fila) || !Number.isInteger(col) || fila < 0 || col < 0 || fila >= filas || col >= columnas) {
+      throw new ErrorJuego('Disparo fuera del tablero');
+    }
     const mios = this.disparos[j];
     if (mios.has(clave(fila, col))) throw new ErrorJuego('Ya disparaste ahí');
 
@@ -119,7 +160,8 @@ export class PartidaBatallaNaval {
       this.estado = 'terminada';
       this.ganador = j;
       this.motivoFin = 'flota';
-    } else if (resultado === 'agua') {
+    } else if (resultado === 'agua' || resultado === 'hundido' || !this.config.seguirAlTocar) {
+      // Al hundir un barco también pasa el turno.
       this.turno = rival;
     }
     return this.ultimo;
@@ -133,6 +175,10 @@ export class PartidaBatallaNaval {
     this.motivoFin = 'abandono';
   }
 
+  detalleHistorial() {
+    return { disparos: Object.fromEntries(this.jugadores.map((j) => [j, this.disparos[j].size])) };
+  }
+
   // Lo que ve cada jugador: su flota completa, y del rival solo lo que descubrió (los hundidos enteros).
   vistaPara(j) {
     this.#exigirJugador(j);
@@ -140,23 +186,24 @@ export class PartidaBatallaNaval {
     const lista = (m) => [...m].map(([k, r]) => { const [fila, col] = k.split(',').map(Number); return { fila, col, r }; });
     const flotaRival = this.flotas[rival] || [];
     const terminada = this.estado === 'terminada';
+    const resumen = ({ id, tipo, nombre, largo, fila, col, horizontal, impactos }) => ({ id, tipo, nombre, largo, fila, col, horizontal, impactos });
     return {
-      juego: this.juego,
       estado: this.estado,
-      yo: j,
-      rival,
+      filas: this.config.filas,
+      columnas: this.config.columnas,
+      flota: this.flota,
       turno: this.turno,
       ganador: this.ganador,
       motivoFin: this.motivoFin,
       ultimo: this.ultimo,
       listo: { yo: !!this.flotas[j], rival: !!this.flotas[rival] },
-      miFlota: (this.flotas[j] || []).map(({ id, nombre, largo, fila, col, horizontal, impactos }) => ({ id, nombre, largo, fila, col, horizontal, impactos })),
+      miFlota: (this.flotas[j] || []).map(resumen),
       disparosRecibidos: lista(this.disparos[rival]),
       misDisparos: lista(this.disparos[j]),
       // Al terminar se muestra la flota del rival entera; antes, solo los barcos hundidos.
       flotaRival: flotaRival
         .filter((b) => terminada || b.impactos === b.largo)
-        .map(({ id, nombre, largo, fila, col, horizontal, impactos }) => ({ id, nombre, largo, fila, col, horizontal, hundido: impactos === largo })),
+        .map((b) => ({ ...resumen(b), hundido: b.impactos === b.largo })),
       restantes: {
         mios: (this.flotas[j] || []).filter((b) => b.impactos < b.largo).length,
         rival: flotaRival.filter((b) => b.impactos < b.largo).length,

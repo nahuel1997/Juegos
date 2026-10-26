@@ -1,16 +1,22 @@
 # Juegos 1vs1
 
-App de juegos online 1 contra 1. Primer juego: **batalla naval**.
+App de juegos online 1 contra 1: **batalla naval**, **ahorcado**, **tuti fruti**, **generala** y **escoba del 15**.
+Cada desafío abre una **sala de configuración** donde los dos ajustan las reglas en vivo y arrancan cuando están listos.
+Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y clave).
 
 - **api/**: Node 20 + Express 5 + Socket.IO (tiempo real). Login con cookie httpOnly (JWT), claves con bcrypt.
   Las partidas viven en memoria; el historial se guarda en `DATA_DIR/historial.json` (volumen Docker).
 - **web/**: React 18 + Vite, servido por Nginx, que además proxea `/api` y `/socket.io` a la API.
 
-## Reglas de la batalla naval
+## Juegos
 
-Tablero 10x10, flota de 5 barcos (5, 4, 3, 3, 2) que no se pueden tocar ni en diagonal.
-Si acertás, seguís tirando; si es agua, pasa el turno. Gana quien hunde toda la flota rival.
-Si alguien se desconecta, la partida queda esperando a que vuelva.
+- **Batalla naval**: filas y columnas (6 a 15) y cantidad de cada barco. Tocado = seguís (configurable); agua o hundido = pasa el turno.
+- **Ahorcado**: rondas alternadas; la palabra la elige el rival (con pista) o sale al azar. Errores permitidos configurables.
+- **Tuti fruti**: columnas propias, letras excluidas, letra al azar sin repetir, ¡basta! con cuenta regresiva y puntos manuales.
+- **Generala**: 5 dados, 3 tiros, escalera/full/póker/generala/doble; servida opcional gana.
+- **Escoba del 15**: mazo español, escobas, más cartas/oros/sietes y siete de oros; se juega hasta N puntos.
+
+Las partidas en curso viven en memoria. El historial, el chat y los perfiles (con las fotos) se guardan en `DATA_DIR` (volumen Docker).
 
 ## Usuarios
 

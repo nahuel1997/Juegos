@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { perfilDe, actualizarPerfil, TEMAS } from './perfiles.js';
 
 function parsearCookies(cabecera) {
   const out = {};
@@ -28,10 +29,34 @@ if (!SECRETO) throw new Error('Falta JWT_SECRET');
 export const COOKIE = 'juegos_sesion';
 const DURACION_DIAS = 30;
 
-// tema: estética personal opcional del usuario (ej. "rosa"); solo la ve él.
-export const publico = ({ usuario, nombre, color, tema = '' }) => ({ usuario, nombre, color, tema });
-export const buscarUsuario = (usuario) => USUARIOS.find((u) => u.usuario === usuario);
-export const todosLosUsuarios = () => USUARIOS.map(publico);
+// tema: estética personal del usuario (azul, rosa o negro); solo la ve él.
+export const publico = ({ usuario, nombre, color, tema, avatarVersion }) => ({
+  usuario,
+  nombre,
+  color,
+  tema: TEMAS.includes(tema) ? tema : 'azul',
+  avatar: avatarVersion ? `/api/avatar/${usuario}?v=${avatarVersion}` : null,
+});
+
+// usuarios.json + lo que cada uno cambió en su perfil.
+export function buscarUsuario(usuario) {
+  const base = USUARIOS.find((u) => u.usuario === usuario);
+  return base ? { ...base, ...perfilDe(usuario) } : undefined;
+}
+export const todosLosUsuarios = () => USUARIOS.map((u) => publico(buscarUsuario(u.usuario)));
+
+export async function cambiarClave(usuario, actual, nueva) {
+  const u = buscarUsuario(usuario);
+  if (!(await bcrypt.compare(String(actual || ''), u.hash))) throw Object.assign(new Error('La clave actual no es correcta'), { status: 400 });
+  if (String(nueva || '').length < 6) throw Object.assign(new Error('La clave nueva tiene que tener al menos 6 caracteres'), { status: 400 });
+  // Cambiar la clave cierra las otras sesiones (el token lleva la versión de la clave).
+  actualizarPerfil(usuario, { hash: await bcrypt.hash(String(nueva), 10), claveVersion: (u.claveVersion || 0) + 1 });
+}
+
+export function firmarSesion(res, u) {
+  const token = jwt.sign({ sub: u.usuario, v: u.claveVersion || 0 }, SECRETO, { expiresIn: `${DURACION_DIAS}d` });
+  res.cookie(COOKIE, token, opcionesCookie());
+}
 
 // Freno simple a la fuerza bruta: 8 intentos fallidos por IP cada 15 minutos.
 const fallos = new Map();
@@ -62,8 +87,9 @@ export function usuarioDeCookie(cabecera) {
   try {
     const token = parsearCookies(cabecera || '')[COOKIE];
     if (!token) return null;
-    const { sub } = jwt.verify(token, SECRETO);
-    return buscarUsuario(sub) || null;
+    const { sub, v = 0 } = jwt.verify(token, SECRETO);
+    const u = buscarUsuario(sub);
+    return u && (u.claveVersion || 0) === v ? u : null;
   } catch {
     return null;
   }
@@ -82,8 +108,7 @@ export async function login(req, res) {
     return res.status(401).json({ error: 'Usuario o clave incorrectos' });
   }
   fallos.delete(ip);
-  const token = jwt.sign({ sub: u.usuario }, SECRETO, { expiresIn: `${DURACION_DIAS}d` });
-  res.cookie(COOKIE, token, opcionesCookie());
+  firmarSesion(res, u);
   res.json({ usuario: publico(u) });
 }
 

@@ -1,48 +1,51 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FLOTA, LETRAS, TAM, cabe, celdasDe, flotaAlAzar, largoDe } from '../juegos/flota.js';
+import { LETRAS, cabe, celdasDe, flotaAlAzar } from './flota.js';
 
 const k = (f, c) => `${f},${c}`;
 
 // Mapa celda -> pedazo de barco, para dibujar cada barco con sus puntas redondeadas.
-function mapaBarcos(barcos, extra = {}) {
+function mapaBarcos(barcos, flota) {
   const m = new Map();
   for (const b of barcos) {
-    const largo = b.largo ?? largoDe(b.id);
+    const largo = b.largo ?? flota.find((t) => t.id === b.id).largo;
     celdasDe(b, largo).forEach(([f, c], i) =>
-      m.set(k(f, c), { ...extra, id: b.id, horizontal: b.horizontal, punta: i === 0 ? 'ini' : i === largo - 1 ? 'fin' : '', hundido: b.hundido }),
+      m.set(k(f, c), { id: b.id, horizontal: b.horizontal, punta: i === 0 ? 'ini' : i === largo - 1 ? 'fin' : '', hundido: b.hundido }),
     );
   }
   return m;
 }
 
-function Tablero({ celda, onClick, onHover, clickable, titulo, className = '' }) {
-  const filas = Array.from({ length: TAM }, (_, f) => f);
+function Tablero({ filas, columnas, celda, onClick, onHover, clickable, titulo, className = '' }) {
   return (
     <div className={`tablero-wrap ${className}`}>
       {titulo && <h3>{titulo}</h3>}
-      <div className={`tablero ${clickable ? 'clickable' : ''}`} onMouseLeave={() => onHover?.(null)}>
+      <div
+        className={`tablero ${clickable ? 'clickable' : ''}`}
+        style={{ '--cols': columnas, maxWidth: Math.min(560, 46 * columnas + 30) }}
+        onMouseLeave={() => onHover?.(null)}
+      >
         <div className="coord" />
-        {filas.map((c) => <div key={`h${c}`} className="coord">{c + 1}</div>)}
-        {filas.map((f) => (
-          <FilaTablero key={f} f={f} celda={celda} onClick={onClick} onHover={onHover} />
+        {Array.from({ length: columnas }, (_, c) => <div key={`h${c}`} className="coord">{c + 1}</div>)}
+        {Array.from({ length: filas }, (_, f) => (
+          <FilaTablero key={f} f={f} columnas={columnas} celda={celda} onClick={onClick} onHover={onHover} />
         ))}
       </div>
     </div>
   );
 }
 
-function FilaTablero({ f, celda, onClick, onHover }) {
+function FilaTablero({ f, columnas, celda, onClick, onHover }) {
   return (
     <>
       <div className="coord">{LETRAS[f]}</div>
-      {Array.from({ length: TAM }, (_, c) => {
-        const { clase = '', marca = null, titulo } = celda(f, c);
+      {Array.from({ length: columnas }, (_, c) => {
+        const { clase = '', marca = null } = celda(f, c);
         return (
           <button
             key={c}
             type="button"
             className={`celda ${clase}`}
-            title={titulo ?? `${LETRAS[f]}${c + 1}`}
+            title={`${LETRAS[f]}${c + 1}`}
             onClick={() => onClick?.(f, c)}
             onMouseEnter={() => onHover?.([f, c])}
             onContextMenu={(e) => { if (onHover) { e.preventDefault(); onHover('girar'); } }}
@@ -56,25 +59,28 @@ function FilaTablero({ f, celda, onClick, onHover }) {
 }
 
 const claseBarco = (b) => (b ? `barco ${b.horizontal ? 'h' : 'v'} ${b.punta} ${b.hundido ? 'hundido' : ''}` : '');
+const MiniBarco = ({ largo }) => <span className="mini-barco">{Array.from({ length: largo }, (_, i) => <i key={i} />)}</span>;
 
-function Colocacion({ partida, emitir }) {
+function Colocacion({ partida, accion, ctx }) {
+  const { flota, filas, columnas } = partida;
   const [barcos, setBarcos] = useState([]);
-  const [sel, setSel] = useState(FLOTA[0].id);
+  const [sel, setSel] = useState(flota[0].id);
   const [horizontal, setHorizontal] = useState(true);
   const [hover, setHover] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
-    const tecla = (e) => { if (e.key === 'r' || e.key === 'R') setHorizontal((h) => !h); };
+    const tecla = (e) => { if ((e.key === 'r' || e.key === 'R') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') setHorizontal((h) => !h); };
     window.addEventListener('keydown', tecla);
     return () => window.removeEventListener('keydown', tecla);
   }, []);
 
-  const mapa = useMemo(() => mapaBarcos(barcos), [barcos]);
+  const mapa = useMemo(() => mapaBarcos(barcos, flota), [barcos, flota]);
+  const largoSel = sel && flota.find((t) => t.id === sel).largo;
   const previa = sel && hover ? { id: sel, fila: hover[0], col: hover[1], horizontal } : null;
-  const previaOk = previa && cabe(previa, barcos);
-  const celdasPrevia = previa ? new Set(celdasDe(previa, largoDe(sel)).map(([f, c]) => k(f, c))) : new Set();
-  const faltan = FLOTA.filter((t) => !barcos.some((b) => b.id === t.id));
+  const previaOk = previa && cabe(previa, barcos, flota, filas, columnas);
+  const celdasPrevia = previa ? new Set(celdasDe(previa, largoSel).map(([f, c]) => k(f, c))) : new Set();
+  const faltan = flota.filter((t) => !barcos.some((b) => b.id === t.id));
 
   function click(f, c) {
     const pieza = mapa.get(k(f, c));
@@ -88,23 +94,23 @@ function Colocacion({ partida, emitir }) {
     }
     if (!sel) return;
     const nuevo = { id: sel, fila: f, col: c, horizontal };
-    if (!cabe(nuevo, barcos)) return;
+    if (!cabe(nuevo, barcos, flota, filas, columnas)) return;
     const lista = [...barcos, nuevo];
     setBarcos(lista);
-    setSel(FLOTA.find((t) => !lista.some((b) => b.id === t.id))?.id ?? null);
+    setSel(flota.find((t) => !lista.some((b) => b.id === t.id))?.id ?? null);
   }
 
   async function listo() {
     setEnviando(true);
-    await emitir('colocar', { barcos });
+    await accion('colocar', { barcos });
     setEnviando(false);
   }
 
   if (partida.listo.yo) {
     return (
       <div className="colocacion">
-        <div className="estado-cinta espera">Flota lista. Esperando que {partida.nombreRival} ubique la suya…</div>
-        <Tablero titulo="Tu flota" celda={(f, c) => ({ clase: claseBarco(mapaBarcos(partida.miFlota).get(k(f, c))) })} />
+        <div className="estado-cinta espera">Flota lista. Esperando que {ctx.nombreRival} ubique la suya…</div>
+        <Tablero filas={filas} columnas={columnas} titulo="Tu flota" celda={(f, c) => ({ clase: claseBarco(mapaBarcos(partida.miFlota, flota).get(k(f, c))) })} />
       </div>
     );
   }
@@ -112,10 +118,12 @@ function Colocacion({ partida, emitir }) {
   return (
     <div className="colocacion">
       <div className="estado-cinta">
-        Ubicá tus barcos{partida.listo.rival ? ` · ${partida.nombreRival} ya está listo` : ''}
+        Ubicá tus barcos{partida.listo.rival ? ` · ${ctx.nombreRival} ya está listo` : ''}
       </div>
       <div className="colocacion-grid">
         <Tablero
+          filas={filas}
+          columnas={columnas}
           clickable
           celda={(f, c) => {
             const enPrevia = celdasPrevia.has(k(f, c));
@@ -125,9 +133,9 @@ function Colocacion({ partida, emitir }) {
           onHover={(h) => (h === 'girar' ? setHorizontal((x) => !x) : setHover(h))}
         />
         <div className="panel-flota">
-          <h3>Tu flota</h3>
+          <h3>Tu flota ({flota.length})</h3>
           <ul className="lista-barcos">
-            {FLOTA.map((t) => {
+            {flota.map((t) => {
               const ubicado = barcos.some((b) => b.id === t.id);
               return (
                 <li key={t.id}>
@@ -139,7 +147,7 @@ function Colocacion({ partida, emitir }) {
                       setSel(t.id);
                     }}
                   >
-                    <span className="mini-barco">{Array.from({ length: t.largo }, (_, i) => <i key={i} />)}</span>
+                    <MiniBarco largo={t.largo} />
                     {t.nombre}
                     {ubicado && <small>✓</small>}
                   </button>
@@ -151,8 +159,8 @@ function Colocacion({ partida, emitir }) {
             <button className="btn fantasma" onClick={() => setHorizontal((h) => !h)}>
               ↻ Girar ({horizontal ? 'horizontal' : 'vertical'})
             </button>
-            <button className="btn fantasma" onClick={() => { setBarcos(flotaAlAzar()); setSel(null); }}>🎲 Al azar</button>
-            <button className="btn fantasma" onClick={() => { setBarcos([]); setSel(FLOTA[0].id); }}>Limpiar</button>
+            <button className="btn fantasma" onClick={() => { const f = flotaAlAzar(flota, filas, columnas); if (f) { setBarcos(f); setSel(null); } }}>🎲 Al azar</button>
+            <button className="btn fantasma" onClick={() => { setBarcos([]); setSel(flota[0].id); }}>Limpiar</button>
             <button className="btn grande" disabled={faltan.length > 0 || enviando} onClick={listo}>
               {faltan.length ? `Faltan ${faltan.length} barco${faltan.length > 1 ? 's' : ''}` : '¡Listo!'}
             </button>
@@ -168,18 +176,19 @@ function textoUltimo(u, yo, nombreRival) {
   if (!u) return null;
   const quien = u.por === yo ? 'Vos' : nombreRival;
   const donde = `${LETRAS[u.fila]}${u.col + 1}`;
-  if (u.resultado === 'hundido') return `${quien} → ${donde}: ¡Hundido! (${u.barco})`;
+  if (u.resultado === 'hundido') return `${quien} → ${donde}: ¡Hundido! (${u.barco}) · pasa el turno`;
   if (u.resultado === 'tocado') return `${quien} → ${donde}: ¡Tocado!`;
   return `${quien} → ${donde}: Agua`;
 }
 
-function Combate({ partida, emitir }) {
-  const { yo, turno, ultimo, estado } = partida;
+function Combate({ partida, accion, ctx }) {
+  const { turno, ultimo, estado, flota, filas, columnas } = partida;
+  const { yo, rival, nombreRival } = ctx;
   const miTurno = estado === 'jugando' && turno === yo;
   const misDisparos = useMemo(() => new Map(partida.misDisparos.map((d) => [k(d.fila, d.col), d.r])), [partida.misDisparos]);
   const recibidos = useMemo(() => new Map(partida.disparosRecibidos.map((d) => [k(d.fila, d.col), d.r])), [partida.disparosRecibidos]);
-  const miMapa = useMemo(() => mapaBarcos(partida.miFlota), [partida.miFlota]);
-  const mapaRival = useMemo(() => mapaBarcos(partida.flotaRival), [partida.flotaRival]);
+  const miMapa = useMemo(() => mapaBarcos(partida.miFlota, flota), [partida.miFlota, flota]);
+  const mapaRival = useMemo(() => mapaBarcos(partida.flotaRival, flota), [partida.flotaRival, flota]);
   const esUltimo = (por, f, c) => ultimo && ultimo.por === por && ultimo.fila === f && ultimo.col === c;
 
   const marca = (r) => (r === 'tocado' ? <span className="impacto">✕</span> : r === 'agua' ? <span className="agua-punto" /> : null);
@@ -187,34 +196,34 @@ function Combate({ partida, emitir }) {
   return (
     <>
       <div className={`estado-cinta ${miTurno ? 'tu-turno' : ''}`}>
-        {estado === 'jugando' ? (miTurno ? '¡Te toca disparar!' : `Turno de ${partida.nombreRival}…`) : 'Partida terminada'}
-        {ultimo && <small>{textoUltimo(ultimo, yo, partida.nombreRival)}</small>}
+        {estado === 'jugando' ? (miTurno ? '¡Te toca disparar!' : `Turno de ${nombreRival}…`) : 'Partida terminada'}
+        {ultimo && <small>{textoUltimo(ultimo, yo, nombreRival)}</small>}
       </div>
-      {!partida.rivalOnline && estado === 'jugando' && (
-        <div className="cinta">{partida.nombreRival} se desconectó. La partida queda guardada hasta que vuelva.</div>
-      )}
       <div className="combate">
         <Tablero
-          titulo={`Flota de ${partida.nombreRival} · quedan ${partida.restantes.rival}`}
+          filas={filas}
+          columnas={columnas}
+          titulo={`Flota de ${nombreRival} · quedan ${partida.restantes.rival}`}
           className={miTurno ? 'activo' : ''}
           clickable={miTurno}
           celda={(f, c) => {
             const r = misDisparos.get(k(f, c));
-            const barco = mapaRival.get(k(f, c));
             return {
-              clase: `${claseBarco(barco)} ${r || ''} ${!r && miTurno ? 'apuntable' : ''} ${esUltimo(yo, f, c) ? 'ultimo' : ''}`,
+              clase: `${claseBarco(mapaRival.get(k(f, c)))} ${r || ''} ${!r && miTurno ? 'apuntable' : ''} ${esUltimo(yo, f, c) ? 'ultimo' : ''}`,
               marca: marca(r),
             };
           }}
-          onClick={(f, c) => { if (miTurno && !misDisparos.has(k(f, c))) emitir('disparar', { fila: f, col: c }); }}
+          onClick={(f, c) => { if (miTurno && !misDisparos.has(k(f, c))) accion('disparar', { fila: f, col: c }); }}
         />
         <Tablero
+          filas={filas}
+          columnas={columnas}
           titulo={`Tu flota · quedan ${partida.restantes.mios}`}
           className="propio"
           celda={(f, c) => {
             const r = recibidos.get(k(f, c));
             return {
-              clase: `${claseBarco(miMapa.get(k(f, c)))} ${r || ''} ${esUltimo(partida.rival, f, c) ? 'ultimo' : ''}`,
+              clase: `${claseBarco(miMapa.get(k(f, c)))} ${r || ''} ${esUltimo(rival, f, c) ? 'ultimo' : ''}`,
               marca: marca(r),
             };
           }}
@@ -222,7 +231,7 @@ function Combate({ partida, emitir }) {
       </div>
       <div className="flotas-estado">
         <EstadoFlota titulo="Tus barcos" barcos={partida.miFlota.map((b) => ({ ...b, hundido: b.impactos === b.largo }))} />
-        <EstadoFlota titulo={`Barcos de ${partida.nombreRival}`}barcos={FLOTA.map((t) => ({ ...t, hundido: partida.flotaRival.some((b) => b.id === t.id && b.hundido) }))} />
+        <EstadoFlota titulo={`Barcos de ${nombreRival}`} barcos={flota.map((t) => ({ ...t, hundido: partida.flotaRival.some((b) => b.id === t.id && b.hundido) }))} />
       </div>
     </>
   );
@@ -234,7 +243,7 @@ function EstadoFlota({ titulo, barcos }) {
       <h4>{titulo}</h4>
       {barcos.map((b) => (
         <span key={b.id} className={`chip ${b.hundido ? 'hundido' : ''}`}>
-          <span className="mini-barco">{Array.from({ length: b.largo }, (_, i) => <i key={i} />)}</span>
+          <MiniBarco largo={b.largo} />
           {b.nombre}
         </span>
       ))}
@@ -242,46 +251,11 @@ function EstadoFlota({ titulo, barcos }) {
   );
 }
 
-function Final({ partida, emitir }) {
-  const gane = partida.ganador === partida.yo;
-  const pidioRival = partida.revancha.includes(partida.rival);
-  const pediYo = partida.revancha.includes(partida.yo);
-  return (
-    <div className={`tarjeta final ${gane ? 'gane' : 'perdi'}`}>
-      <div className="final-emoji">{document.documentElement.dataset.tema === 'rosa' ? (gane ? '👑💖' : '💌') : gane ? '🏆' : '🌊'}</div>
-      <h2>{gane ? '¡Ganaste!' : `Ganó ${partida.nombreRival}`}</h2>
-      <p className="sub">
-        {partida.motivoFin === 'abandono'
-          ? gane ? `${partida.nombreRival} abandonó la partida.` : 'Abandonaste la partida.'
-          : gane ? 'Hundiste toda la flota enemiga.' : 'Te hundieron toda la flota.'}
-      </p>
-      {pidioRival && !pediYo && <p className="pedido">{partida.nombreRival} quiere la revancha</p>}
-      <div className="acciones">
-        <button className="btn" disabled={pediYo || !partida.rivalOnline} onClick={() => emitir('revancha')}>
-          {pediYo ? 'Esperando respuesta…' : pidioRival ? '¡Aceptar revancha!' : 'Pedir revancha'}
-        </button>
-        <button className="btn fantasma" onClick={() => emitir('salir')}>Volver al inicio</button>
-      </div>
-    </div>
-  );
+export default function JuegoBatalla({ partida, accion, ctx }) {
+  return partida.estado === 'colocando'
+    ? <Colocacion partida={partida} accion={accion} ctx={ctx} />
+    : <Combate partida={partida} accion={accion} ctx={ctx} />;
 }
 
-export default function BatallaNaval({ partida: p, emitir, lobby }) {
-  const nombreRival = lobby?.usuarios.find((u) => u.usuario === p.rival)?.nombre || p.rival;
-  const partida = { ...p, nombreRival };
-
-  function abandonar() {
-    if (window.confirm('¿Seguro que querés abandonar? La partida la gana tu rival.')) emitir('abandonar');
-  }
-
-  return (
-    <div className="batalla">
-      <div className="batalla-cab">
-        <h2>🚢 Batalla naval <span className="vs">vs {nombreRival}</span></h2>
-        {p.estado !== 'terminada' && <button className="btn chico fantasma" onClick={abandonar}>Abandonar</button>}
-      </div>
-      {p.estado === 'terminada' && <Final partida={partida} emitir={emitir} />}
-      {p.estado === 'colocando' ? <Colocacion partida={partida} emitir={emitir} /> : <Combate partida={partida} emitir={emitir} />}
-    </div>
-  );
-}
+// Texto del final según cómo terminó.
+JuegoBatalla.textoFinal = (p, gane) => (gane ? 'Hundiste toda la flota enemiga.' : 'Te hundieron toda la flota.');

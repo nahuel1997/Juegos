@@ -1,17 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { pedir } from './api.js';
 import Login from './componentes/Login.jsx';
 import Lobby from './componentes/Lobby.jsx';
-import BatallaNaval from './componentes/BatallaNaval.jsx';
+import Sala from './componentes/Sala.jsx';
+import Perfil from './componentes/Perfil.jsx';
+import Chat from './componentes/Chat.jsx';
 import Avisos from './componentes/Avisos.jsx';
+import { Avatar } from './componentes/comunes.jsx';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined); // undefined = cargando, null = sin sesión
   const [lobby, setLobby] = useState(null);
-  const [partida, setPartida] = useState(undefined);
+  const [sala, setSala] = useState(undefined);
+  const [vista, setVista] = useState('inicio'); // inicio | perfil
   const [conectado, setConectado] = useState(false);
   const [avisos, setAvisos] = useState([]);
+  const [mensajes, setMensajes] = useState([]);
+  const [escribiendo, setEscribiendo] = useState(null);
   const socketRef = useRef(null);
 
   const avisar = useCallback((texto, tipo = 'info') => {
@@ -24,7 +30,7 @@ export default function App() {
     pedir('/yo').then((r) => setUsuario(r.usuario)).catch(() => setUsuario(null));
   }, []);
 
-  // Tema personal (ej. rosa con corazones para Iara). Se recuerda en el navegador para que
+  // Tema personal (azul, rosa con corazones o negro). Se recuerda en el navegador para que
   // el login ya salga con ese estilo la próxima vez.
   useEffect(() => {
     if (usuario === undefined) return;
@@ -33,23 +39,35 @@ export default function App() {
       if (usuario) localStorage.setItem('tema', tema);
       else tema = localStorage.getItem('tema') || '';
     } catch { /* sin storage: se usa el del usuario */ }
-    document.documentElement.dataset.tema = tema;
+    document.documentElement.dataset.tema = tema === 'azul' ? '' : tema;
   }, [usuario]);
 
+  const yo = usuario?.usuario;
   useEffect(() => {
-    if (!usuario) return;
+    if (!yo) return;
     const s = io({ path: '/socket.io', transports: ['websocket', 'polling'] });
     socketRef.current = s;
+    let quitarEscribiendo;
     s.on('connect', () => setConectado(true));
     s.on('disconnect', () => setConectado(false));
     s.on('connect_error', (e) => {
       if (e.message === 'sin-sesion') setUsuario(null);
     });
     s.on('lobby', setLobby);
-    s.on('partida', setPartida);
+    s.on('sala', setSala);
     s.on('aviso', ({ texto }) => avisar(texto));
+    s.on('chat:historial', setMensajes);
+    s.on('chat:mensaje', (m) => {
+      setMensajes((lista) => [...lista.slice(-299), m]);
+      setEscribiendo(null);
+    });
+    s.on('chat:escribiendo', ({ de }) => {
+      setEscribiendo(de);
+      clearTimeout(quitarEscribiendo);
+      quitarEscribiendo = setTimeout(() => setEscribiendo(null), 3000);
+    });
     return () => s.close();
-  }, [usuario, avisar]);
+  }, [yo, avisar]);
 
   // Manda un evento y muestra el error si el server lo rechaza.
   const emitir = useCallback(
@@ -63,11 +81,19 @@ export default function App() {
     [avisar],
   );
 
+  // Todos los usuarios por nombre de usuario (para nombres, colores y fotos).
+  const gente = useMemo(() => {
+    const m = Object.fromEntries((lobby?.usuarios || []).map((u) => [u.usuario, u]));
+    if (usuario) m[usuario.usuario] = usuario;
+    return m;
+  }, [lobby, usuario]);
+
   async function salir() {
     await pedir('/logout', { metodo: 'POST' }).catch(() => {});
     setUsuario(null);
     setLobby(null);
-    setPartida(undefined);
+    setSala(undefined);
+    setMensajes([]);
   }
 
   if (usuario === undefined) return <div className="cargando">Cargando…</div>;
@@ -76,24 +102,37 @@ export default function App() {
   return (
     <div className="app">
       <header className="barra">
-        <div className="marca">
+        <button className="marca" onClick={() => setVista('inicio')}>
           <img src="/icono.svg" alt="" width="28" height="28" />
           <span>Juegos 1vs1{usuario.tema === 'rosa' && ' 💕'}</span>
-        </div>
+        </button>
         <div className="barra-der">
           <span className={`punto ${conectado ? 'on' : 'off'}`} title={conectado ? 'Conectado' : 'Reconectando…'} />
-          <span className="yo" style={{ '--c': usuario.color }}>{usuario.nombre}</span>
+          <button className="yo" onClick={() => setVista('perfil')} title="Tu perfil">
+            <Avatar usuario={usuario} tam={30} />
+            <span>{usuario.nombre}</span>
+          </button>
           <button className="btn chico fantasma" onClick={salir}>Salir</button>
         </div>
       </header>
       <main>
         {!conectado && <div className="cinta">Reconectando con el servidor…</div>}
-        {partida ? (
-          <BatallaNaval partida={partida} emitir={emitir} lobby={lobby} />
+        {vista === 'perfil' ? (
+          <Perfil usuario={usuario} onCambio={setUsuario} volver={() => setVista('inicio')} avisar={avisar} />
+        ) : sala ? (
+          <Sala sala={sala} emitir={emitir} gente={gente} />
         ) : (
           <Lobby lobby={lobby} emitir={emitir} />
         )}
       </main>
+      <Chat
+        mensajes={mensajes}
+        gente={gente}
+        yo={usuario.usuario}
+        escribiendo={escribiendo}
+        enviar={(texto) => emitir('chat:enviar', { texto })}
+        avisarEscribiendo={() => socketRef.current?.emit('chat:escribiendo')}
+      />
       <Avisos avisos={avisos} />
       {usuario.tema === 'rosa' && <Corazones />}
     </div>
