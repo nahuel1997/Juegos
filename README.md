@@ -21,7 +21,7 @@ cp usuarios.example.json usuarios.json
 cd api && npm run hash -- "la clave"
 ```
 
-y pegar cada hash en su usuario. En Docker se monta como solo lectura en el contenedor de la API.
+y pegar cada hash en su usuario. Opcional: `"tema": "rosa"` le da a ese usuario la estética rosa con corazones. En Docker se monta como solo lectura en el contenedor de la API.
 
 ## Desarrollo local
 
@@ -39,6 +39,12 @@ cd api && npm test                        # lógica + partida online completa
 cp .env.example .env    # poner un JWT_SECRET largo
 # + usuarios.json (ver "Usuarios")
 docker compose up -d --build
+```
+
+Deploy en el servidor de demos (https://187.77.244.107:8449, registrada en el panel de apps):
+
+```bash
+git archive HEAD | ssh root@187.77.244.107 'tar -x -m -C /opt/apps/juegos && sh /opt/apps/juegos/deploy/desplegar.sh'
 ```
 
 El contenedor web escucha en `127.0.0.1:4400` (configurable con `WEB_BIND`/`WEB_PORT`).

@@ -3,6 +3,7 @@
     "usuario": "iara",
     "nombre": "Iara",
     "color": "#e84393",
+    "tema": "rosa",
     "hash": "PEGAR_ACA_EL_HASH (cd api && npm run hash -- \"la clave\")"
   },
   {

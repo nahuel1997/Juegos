@@ -28,7 +28,8 @@ if (!SECRETO) throw new Error('Falta JWT_SECRET');
 export const COOKIE = 'juegos_sesion';
 const DURACION_DIAS = 30;
 
-export const publico = ({ usuario, nombre, color }) => ({ usuario, nombre, color });
+// tema: estética personal opcional del usuario (ej. "rosa"); solo la ve él.
+export const publico = ({ usuario, nombre, color, tema = '' }) => ({ usuario, nombre, color, tema });
 export const buscarUsuario = (usuario) => USUARIOS.find((u) => u.usuario === usuario);
 export const todosLosUsuarios = () => USUARIOS.map(publico);
 

@@ -248,7 +248,7 @@ function Final({ partida, emitir }) {
   const pediYo = partida.revancha.includes(partida.yo);
   return (
     <div className={`tarjeta final ${gane ? 'gane' : 'perdi'}`}>
-      <div className="final-emoji">{gane ? '🏆' : '🌊'}</div>
+      <div className="final-emoji">{document.documentElement.dataset.tema === 'rosa' ? (gane ? '👑💖' : '💌') : gane ? '🏆' : '🌊'}</div>
       <h2>{gane ? '¡Ganaste!' : `Ganó ${partida.nombreRival}`}</h2>
       <p className="sub">
         {partida.motivoFin === 'abandono'

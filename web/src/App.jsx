@@ -24,6 +24,18 @@ export default function App() {
     pedir('/yo').then((r) => setUsuario(r.usuario)).catch(() => setUsuario(null));
   }, []);
 
+  // Tema personal (ej. rosa con corazones para Iara). Se recuerda en el navegador para que
+  // el login ya salga con ese estilo la próxima vez.
+  useEffect(() => {
+    if (usuario === undefined) return;
+    let tema = usuario?.tema || '';
+    try {
+      if (usuario) localStorage.setItem('tema', tema);
+      else tema = localStorage.getItem('tema') || '';
+    } catch { /* sin storage: se usa el del usuario */ }
+    document.documentElement.dataset.tema = tema;
+  }, [usuario]);
+
   useEffect(() => {
     if (!usuario) return;
     const s = io({ path: '/socket.io', transports: ['websocket', 'polling'] });
@@ -66,7 +78,7 @@ export default function App() {
       <header className="barra">
         <div className="marca">
           <img src="/icono.svg" alt="" width="28" height="28" />
-          <span>Juegos 1vs1</span>
+          <span>Juegos 1vs1{usuario.tema === 'rosa' && ' 💕'}</span>
         </div>
         <div className="barra-der">
           <span className={`punto ${conectado ? 'on' : 'off'}`} title={conectado ? 'Conectado' : 'Reconectando…'} />
@@ -83,6 +95,20 @@ export default function App() {
         )}
       </main>
       <Avisos avisos={avisos} />
+      {usuario.tema === 'rosa' && <Corazones />}
+    </div>
+  );
+}
+
+// Corazones que suben flotando por el fondo (decorativos, no se pueden tocar).
+function Corazones() {
+  return (
+    <div className="corazones" aria-hidden="true">
+      {Array.from({ length: 14 }, (_, i) => (
+        <span key={i} style={{ '--x': `${(i * 37) % 100}%`, '--d': `${9 + (i % 5) * 2}s`, '--r': `${(i * 1.3) % 9}s`, '--t': `${14 + (i % 4) * 6}px` }}>
+          {i % 3 ? '♥' : '💖'}
+        </span>
+      ))}
     </div>
   );
 }

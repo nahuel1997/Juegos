@@ -182,3 +182,70 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
   .tablero { grid-template-columns: 16px repeat(10, 1fr); padding: 4px; }
   .combate .propio .tablero { max-width: 320px; }
 }
+
+/* ===== Tema rosa con corazones (usuarios con "tema": "rosa") ===== */
+:root[data-tema="rosa"] {
+  --fondo: #ffd9ea;
+  --fondo2: #ffe9f3;
+  --tarjeta: #fff5fa;
+  --borde: #f9a8d4;
+  --texto: #6b0f3d;
+  --suave: #b24a7f;
+  --acento: #ff4f9a;
+  --mar: #f9a8d4;
+  --mar2: #fbc4e0;
+  --barco: #ff7ab8;
+  --barco-borde: #e0488f;
+  --tocado: #e11d74;
+  --ok: #ff4f9a;
+  color-scheme: light;
+}
+[data-tema="rosa"] body {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 50 C10 36 8 22 18 17 c6-3 11 0 14 5 c3-5 8-8 14-5 c10 5 8 19-14 33z' fill='%23ff4f9a' fill-opacity='.09'/%3E%3C/svg%3E") repeat,
+    radial-gradient(1200px 600px at 50% -10%, #ffc2de, #ffd9ea) fixed;
+}
+[data-tema="rosa"] .barra { background: rgba(255, 228, 241, .85); }
+[data-tema="rosa"] .marca, [data-tema="rosa"] h1, [data-tema="rosa"] h2 { color: #d6246e; }
+[data-tema="rosa"] .btn { color: #fff; background: linear-gradient(135deg, #ff7ab8, #ff3d8b); box-shadow: 0 4px 12px rgba(255, 61, 139, .3); }
+[data-tema="rosa"] .btn.fantasma { background: #fff; color: var(--texto); box-shadow: none; }
+[data-tema="rosa"] .btn:not(.fantasma)::after { content: ' ♥'; }
+[data-tema="rosa"] .btn.chico::after { content: ''; }
+[data-tema="rosa"] .tarjeta { box-shadow: 0 8px 24px rgba(255, 79, 154, .15); }
+[data-tema="rosa"] .login input { background: #fff; }
+[data-tema="rosa"] .login img, [data-tema="rosa"] .marca img { filter: hue-rotate(115deg) saturate(1.6) brightness(1.15); }
+[data-tema="rosa"] .aviso { background: #fff; color: var(--texto); }
+[data-tema="rosa"] .aviso.error { background: #ffe0ec; }
+[data-tema="rosa"] .cinta { background: #fff0f7; }
+[data-tema="rosa"] .estado-cinta.tu-turno { background: #ffe0ef; color: #d6246e; }
+[data-tema="rosa"] .estado-cinta.tu-turno::before { content: '💘 '; }
+[data-tema="rosa"] .tablero { background: rgba(255, 255, 255, .55); }
+[data-tema="rosa"] .tablero-wrap.activo .tablero { box-shadow: 0 0 20px rgba(255, 79, 154, .35); }
+[data-tema="rosa"] .celda.apuntable:hover { background: #ff9ccb; }
+[data-tema="rosa"] .celda.agua { background: #fde4f0; }
+[data-tema="rosa"] .celda.tocado:not(.barco) { background: #ff6fae; }
+[data-tema="rosa"] .celda.barco.hundido { background: linear-gradient(145deg, #a3135a, #6b0f3d); }
+[data-tema="rosa"] .mini-barco i { background: var(--barco); }
+/* Agua = corazoncito vacío, tocado = corazón */
+[data-tema="rosa"] .agua-punto { background: none; width: auto; height: auto; opacity: .8; }
+[data-tema="rosa"] .agua-punto::after { content: '♡'; color: #e0488f; font-size: clamp(.6rem, 2.2vw, .95rem); }
+[data-tema="rosa"] .impacto { font-size: 0; text-shadow: none; }
+[data-tema="rosa"] .impacto::after { content: '❤'; color: #fff; font-size: clamp(.7rem, 2.6vw, 1.1rem); }
+[data-tema="rosa"] .celda.barco.tocado .impacto::after { color: #b0105c; }
+[data-tema="rosa"] .celda.hundido .impacto::after { content: '💔'; }
+[data-tema="rosa"] .historial li { border-left-color: #ff4f9a; }
+[data-tema="rosa"] .historial li.perdi { border-left-color: #c9a3b6; }
+
+.corazones { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.corazones span {
+  position: absolute; bottom: -40px; left: var(--x); font-size: var(--t); color: #ff4f9a; opacity: 0;
+  animation: sube var(--d) linear var(--r) infinite;
+}
+@keyframes sube {
+  0% { transform: translateY(0) rotate(-10deg); opacity: 0; }
+  10% { opacity: .55; }
+  100% { transform: translateY(-110vh) rotate(15deg); opacity: 0; }
+}
+[data-tema="rosa"] main, [data-tema="rosa"] .barra { position: relative; z-index: 1; }
+[data-tema="rosa"] .barra { position: sticky; }
+@media (prefers-reduced-motion: reduce) { .corazones { display: none; } }
