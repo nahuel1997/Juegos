@@ -2,6 +2,7 @@
 // Verde = letra en su lugar, amarillo = está en otro lugar, gris = no está. Gana la ronda quien la
 // saca en menos intentos (empate en intentos: el más rápido). Del rival solo se ven los colores.
 import { ErrorJuego, entero, LETRAS, normalizar, ganadorPorPuntos } from './comun.js';
+import * as registro from './palabrasJugadas.js';
 
 export const CONFIG_DEFECTO = { largo: 5, intentos: 6, rondas: 3 };
 
@@ -13,6 +14,9 @@ export const PALABRAS = {
 };
 
 const LISTAS = Object.fromEntries(Object.entries(PALABRAS).map(([n, lista]) => [n, [...new Set(lista)]]));
+
+// Cuántas palabras hay y cuáles ya se jugaron, por largo (para mostrar en la sala).
+export const palabrasJugadas = () => registro.resumen(LISTAS);
 
 export function validarConfig(c = {}) {
   return {
@@ -64,8 +68,14 @@ export class PartidaStopPalabras {
   }
 
   #nuevaRonda() {
+    // No se repiten las de esta partida ni las ya jugadas antes; si no queda ninguna, la lista vuelve a empezar.
+    const { largo } = this.config;
     const usadas = new Set(this.rondas.map((r) => r.palabra));
-    const lista = LISTAS[this.config.largo].filter((p) => !usadas.has(p));
+    let lista = LISTAS[largo].filter((p) => !usadas.has(p) && !registro.jugadas(largo).includes(p));
+    if (!lista.length && !this.palabrasFijas) {
+      registro.reiniciar(largo);
+      lista = LISTAS[largo].filter((p) => !usadas.has(p));
+    }
     const palabra = this.palabrasFijas?.[this.rondas.length] ?? lista[Math.floor(this.rand() * lista.length)];
     const jugador = () => ({ intentos: [], resuelto: false, terminado: false, ms: null });
     this.rondas.push({
@@ -120,6 +130,8 @@ export class PartidaStopPalabras {
     };
     const cmp = mejor(pa, pb);
     r.ganador = cmp === 0 ? null : cmp < 0 ? a : b;
+    // Recién al cerrar la ronda queda anotada como jugada (así la lista nunca muestra la palabra en juego).
+    if (!this.palabrasFijas) registro.registrar(this.config.largo, r.palabra);
     if (r.ganador) this.puntos[r.ganador]++;
     if (this.rondas.length >= this.config.rondas) {
       this.estado = 'terminada';

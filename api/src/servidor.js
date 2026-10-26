@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { login, logout, exigirSesion, publico, buscarUsuario, cambiarClave, firmarSesion } from './auth.js';
 import { montarSalas } from './salas.js';
 import { resumen } from './historial.js';
+import { palabrasJugadas } from './juegos/stopPalabras.js';
 import { actualizarPerfil, guardarAvatar, borrarAvatar, archivoAvatar, TEMAS, MAX_AVATAR } from './perfiles.js';
 
 export function crearServidor() {
@@ -23,6 +24,7 @@ export function crearServidor() {
   app.post('/api/logout', logout);
   app.get('/api/yo', exigirSesion, (req, res) => res.json({ usuario: publico(req.usuario) }));
   app.get('/api/historial', exigirSesion, (req, res) => res.json(resumen(req.usuario.usuario)));
+  app.get('/api/stop/palabras', exigirSesion, (_req, res) => res.json(palabrasJugadas()));
 
   // Perfil: nombre, color y tema.
   app.put('/api/perfil', exigirSesion, (req, res) => {

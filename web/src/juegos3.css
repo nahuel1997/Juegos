@@ -129,3 +129,12 @@ button.ficha-domino.sel .domino-svg { filter: drop-shadow(0 0 0 3px var(--acento
   .ficha-domino.h .domino-svg { width: 48px; height: 24px; }
   .ficha-domino.v .domino-svg { width: 24px; height: 48px; }
 }
+
+/* Stop: palabras ya jugadas */
+.stop-jugadas { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: .9rem; }
+.stop-jugadas p { margin: 0; }
+.barra-progreso { height: 8px; border-radius: 99px; background: var(--tarjeta); overflow: hidden; }
+.barra-progreso i { display: block; height: 100%; background: var(--acento); border-radius: 99px; }
+.stop-jugadas summary { cursor: pointer; font-weight: 600; }
+.stop-lista { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; max-height: 160px; overflow-y: auto; }
+.stop-lista .chip { font-weight: 700; letter-spacing: .05em; }
