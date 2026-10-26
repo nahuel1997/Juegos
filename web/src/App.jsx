@@ -9,6 +9,8 @@ import Chat from './componentes/Chat.jsx';
 import Avisos from './componentes/Avisos.jsx';
 import { Avatar } from './componentes/comunes.jsx';
 import { sonidoActivo, setSonidoActivo, sonarTurno } from './sonido.js';
+import { Icono } from './iconos.jsx';
+import { EmoteGrande } from './componentes/Emotes.jsx';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined); // undefined = cargando, null = sin sesión
@@ -20,6 +22,7 @@ export default function App() {
   const [mensajes, setMensajes] = useState([]);
   const [escribiendo, setEscribiendo] = useState(null);
   const [sonido, setSonido] = useState(sonidoActivo);
+  const [emote, setEmote] = useState(null);
   const socketRef = useRef(null);
 
   const avisar = useCallback((texto, tipo = 'info') => {
@@ -58,6 +61,7 @@ export default function App() {
     s.on('lobby', setLobby);
     s.on('sala', setSala);
     s.on('aviso', ({ texto }) => avisar(texto));
+    s.on('emote', setEmote);
     s.on('chat:historial', setMensajes);
     s.on('chat:mensaje', (m) => {
       setMensajes((lista) => [...lista.slice(-299), m]);
@@ -106,7 +110,8 @@ export default function App() {
       <header className="barra">
         <button className="marca" onClick={() => setVista('inicio')}>
           <img src="/icono.svg" alt="" width="28" height="28" />
-          <span>Juegos 1vs1{usuario.tema === 'rosa' && ' 💕'}</span>
+          <span>Juegos 1vs1</span>
+          {usuario.tema === 'rosa' && <Icono id="corazon" tam={18} />}
         </button>
         <div className="barra-der">
           <button
@@ -115,7 +120,7 @@ export default function App() {
             aria-label={sonido ? 'Silenciar' : 'Activar sonido'}
             onClick={() => { setSonidoActivo(!sonido); setSonido(!sonido); if (!sonido) setTimeout(sonarTurno, 0); }}
           >
-            {sonido ? '🔔' : '🔕'}
+            <Icono id={sonido ? 'campana' : 'campanaNo'} tam={20} />
           </button>
           <span className={`punto ${conectado ? 'on' : 'off'}`} title={conectado ? 'Conectado' : 'Reconectando…'} />
           <button className="yo" onClick={() => setVista('perfil')} title="Tu perfil">
@@ -144,6 +149,7 @@ export default function App() {
         avisarEscribiendo={() => socketRef.current?.emit('chat:escribiendo')}
       />
       <Avisos avisos={avisos} />
+      {sala && <EmoteGrande emote={emote} yo={usuario.usuario} gente={gente} />}
       {usuario.tema === 'rosa' && <Corazones />}
     </div>
   );
@@ -155,7 +161,7 @@ function Corazones() {
     <div className="corazones" aria-hidden="true">
       {Array.from({ length: 14 }, (_, i) => (
         <span key={i} style={{ '--x': `${(i * 37) % 100}%`, '--d': `${9 + (i % 5) * 2}s`, '--r': `${(i * 1.3) % 9}s`, '--t': `${14 + (i % 4) * 6}px` }}>
-          {i % 3 ? '♥' : '💖'}
+          <Icono id="corazon" tam={14 + (i % 4) * 6} />
         </span>
       ))}
     </div>

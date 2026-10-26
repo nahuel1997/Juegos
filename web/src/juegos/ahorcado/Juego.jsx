@@ -79,7 +79,7 @@ export default function JuegoAhorcado({ partida, accion, ctx }) {
 
       {ronda.fase === 'eligiendo' && (
         adivino
-          ? <div className="estado-cinta espera">{ctx.nombreRival} está eligiendo la palabra… ✍️</div>
+          ? <div className="estado-cinta espera">{ctx.nombreRival} está eligiendo la palabra…</div>
           : <ElegirPalabra accion={accion} />
       )}
 
@@ -89,7 +89,7 @@ export default function JuegoAhorcado({ partida, accion, ctx }) {
             {ronda.fase === 'resuelta'
               ? ronda.resultado === 'adivino'
                 ? `${adivino ? '¡Adivinaste!' : `${ctx.nombreRival} la adivinó`}`
-                : `${adivino ? 'Te ahorcaron 😵' : `¡${ctx.nombreRival} se ahorcó!`}`
+                : `${adivino ? 'Te ahorcaron' : `¡${ctx.nombreRival} se ahorcó!`}`
               : adivino ? 'Adiviná la palabra' : `${ctx.nombreRival} está adivinando tu palabra…`}
             {ronda.pista && <small>Pista: {ronda.pista}</small>}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Icono } from '../../iconos.jsx';
 
-const PALO = { oros: '🪙', copas: '🍷', espadas: '🗡️', bastos: '🪵' };
+const PALO = { oros: 'oro', copas: 'copa', espadas: 'espada', bastos: 'basto' };
 const FIGURA = { 10: 'Sota', 11: 'Caballo', 12: 'Rey' };
 const SIETE_DE_OROS = 'oros-7';
 
@@ -9,7 +10,7 @@ export function Carta({ carta, seleccionada, onClick, chica, brilla }) {
   return (
     <button type="button" className={`carta palo-${carta.palo} ${seleccionada ? 'sel' : ''} ${chica ? 'chica' : ''} ${brilla ? 'siete-oro' : ''}`} onClick={onClick} disabled={!onClick} title={`${FIGURA[carta.numero] || carta.numero} de ${carta.palo} (vale ${carta.valor})`}>
       <span className="num">{carta.numero}</span>
-      <span className="palo">{PALO[carta.palo]}</span>
+      <span className="palo"><Icono id={PALO[carta.palo]} tam={chica ? 22 : 44} /></span>
       <span className="fig">{FIGURA[carta.numero] || ''}</span>
       <span className="val">{carta.valor}</span>
     </button>
@@ -30,7 +31,7 @@ function textoUltima(u, ctx) {
   const quien = u.por === ctx.yo ? 'Vos' : ctx.nombreRival;
   if (u.tipo === 'mesa-inicial') return `La mesa sumaba 15: ${quien === 'Vos' ? 'te la llevaste' : `se la llevó ${quien}`} (¡escoba!)`;
   if (u.tipo === 'tiro') return `${quien} tiró un ${u.carta.numero} de ${u.carta.palo}`;
-  return `${quien} levantó ${u.cartas.length + 1} cartas con el ${u.carta.numero} de ${u.carta.palo}${u.escoba ? ' · ¡ESCOBA! 🧹' : ''}`;
+  return `${quien} levantó ${u.cartas.length + 1} cartas con el ${u.carta.numero} de ${u.carta.palo}${u.escoba ? ' · ¡ESCOBA!' : ''}`;
 }
 
 function Resumen({ partida, accion, ctx }) {
@@ -92,8 +93,8 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
       return;
     }
     let nuevo = null;
-    if (enMesa && !estabaEnMesa.current) nuevo = { tipo: 'aparece', texto: '✨ ¡El 7 de oros está en la mesa! ✨' };
-    else if (seLoLlevo) nuevo = { tipo: 'llevo', texto: u.por === ctx.yo ? '🪙 ¡Te llevaste el 7 de oros! +1' : `🪙 ${ctx.nombreRival} se llevó el 7 de oros` };
+    if (enMesa && !estabaEnMesa.current) nuevo = { tipo: 'aparece', texto: '¡El 7 de oros está en la mesa!' };
+    else if (seLoLlevo) nuevo = { tipo: 'llevo', texto: u.por === ctx.yo ? '¡Te llevaste el 7 de oros! +1' : `${ctx.nombreRival} se llevó el 7 de oros` };
     estabaEnMesa.current = enMesa;
     if (!nuevo) return;
     setDestello({ ...nuevo, id: Date.now() });
@@ -111,7 +112,11 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
 
   return (
     <div className="escoba">
-      {destello && <div className={`destello-oro ${destello.tipo}`} key={destello.id}>{destello.texto}</div>}
+      {destello && (
+        <div className={`destello-oro ${destello.tipo}`} key={destello.id}>
+          <Icono id="chispas" tam={34} /><Icono id="oro" tam={34} /> {destello.texto} <Icono id="chispas" tam={34} />
+        </div>
+      )}
       <div className="marcador">
         <span>Vos <b>{partida.puntos.yo + enMano.yo}</b>{enMano.yo > 0 && <small className="en-mano"> (+{enMano.yo} en esta mano)</small>}</span>
         <span className="ronda">Mano {partida.mano} · a {partida.config.puntosParaGanar}</span>
@@ -130,7 +135,7 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
       <div className="paño">
         <div className="fila-rival">
           <div className="mano-rival">{Array.from({ length: partida.cartasRival }, (_, i) => <Carta key={i} chica />)}</div>
-          <small>{ctx.nombreRival}: {partida.levantadas.rival} levantadas · 🧹 {partida.escobas.rival}</small>
+          <small>{ctx.nombreRival}: {partida.levantadas.rival} levantadas · <Icono id="escoba" tam={16} /> {partida.escobas.rival}</small>
         </div>
 
         <div className="mesa">
@@ -156,7 +161,7 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
               ) : (
                 <button className="btn fantasma" onClick={() => accion('jugar', { carta: mia })}>Tirarla a la mesa</button>
               )}
-              <button className="btn chico fantasma" onClick={() => { const q = buscarQuince(carta, partida.mesa); setMesaSel(q || []); setSinQuince(!q); }}>💡 ¿Hay 15?</button>
+              <button className="btn chico fantasma" onClick={() => { const q = buscarQuince(carta, partida.mesa); setMesaSel(q || []); setSinQuince(!q); }}><Icono id="bombilla" tam={16} /> ¿Hay 15?</button>
             </div>
             {sinQuince && <small>Con esta carta no se llega a 15.</small>}
           </div>
@@ -169,11 +174,11 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
         </div>
         {mias && (
           <div className="mis-levantadas" aria-label="Lo que llevás levantado">
-            <span title="Cartas levantadas">🃏 <b>{mias.cartas}</b> cartas</span>
-            <span title="Oros levantados">🪙 <b>{mias.oros}</b> oros</span>
-            <span title="Sietes levantados">7️⃣ <b>{mias.sietes}</b> sietes</span>
-            <span title="Escobas">🧹 <b>{partida.escobas.yo}</b></span>
-            <span className={`siete-oro-chip ${mias.sieteDeOros ? 'si' : ''}`}>{mias.sieteDeOros ? '✨ 7 de oros' : '7 de oros: no'}</span>
+            <span title="Cartas levantadas"><Icono id="cartas" tam={18} /> <b>{mias.cartas}</b> cartas</span>
+            <span title="Oros levantados"><Icono id="oro" tam={18} /> <b>{mias.oros}</b> oros</span>
+            <span title="Sietes levantados"><Icono id="siete" tam={18} /> <b>{mias.sietes}</b> sietes</span>
+            <span title="Escobas"><Icono id="escoba" tam={18} /> <b>{partida.escobas.yo}</b></span>
+            <span className={`siete-oro-chip ${mias.sieteDeOros ? 'si' : ''}`}>{mias.sieteDeOros ? <><Icono id="chispas" tam={16} /> 7 de oros</> : '7 de oros: no'}</span>
           </div>
         )}
         {partida.reparte === ctx.yo && <small className="mis-datos">Repartís vos</small>}

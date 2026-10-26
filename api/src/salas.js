@@ -6,6 +6,11 @@ import * as ahorcado from './juegos/ahorcado.js';
 import * as tutiFruti from './juegos/tutiFruti.js';
 import * as generala from './juegos/generala.js';
 import * as escoba from './juegos/escoba.js';
+import * as cuatroEnLinea from './juegos/cuatroEnLinea.js';
+import * as ppt from './juegos/piedraPapelTijera.js';
+import * as damas from './juegos/damas.js';
+import * as memotest from './juegos/memotest.js';
+import * as stopPalabras from './juegos/stopPalabras.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -18,7 +23,15 @@ export const JUEGOS = {
   'tuti-fruti': { nombre: 'Tuti fruti', mod: tutiFruti, Clase: tutiFruti.PartidaTutiFruti },
   generala: { nombre: 'Generala', mod: generala, Clase: generala.PartidaGenerala },
   escoba: { nombre: 'Escoba del 15', mod: escoba, Clase: escoba.PartidaEscoba },
+  'cuatro-en-linea': { nombre: 'Cuatro en línea', mod: cuatroEnLinea, Clase: cuatroEnLinea.PartidaCuatroEnLinea },
+  'piedra-papel-tijera': { nombre: 'Piedra, papel o tijera', mod: ppt, Clase: ppt.PartidaPiedraPapelTijera },
+  damas: { nombre: 'Damas', mod: damas, Clase: damas.PartidaDamas },
+  memotest: { nombre: 'Memotest', mod: memotest, Clase: memotest.PartidaMemotest },
+  'stop-palabras': { nombre: 'Stop de palabras', mod: stopPalabras, Clase: stopPalabras.PartidaStopPalabras },
 };
+
+// Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).
+export const EMOTES = ['fuckyou', 'risa', 'llanto', 'enojo', 'beso', 'corazon', 'fuego', 'aplauso', 'facha', 'pulgar', 'sorpresa', 'caca', 'ojitos'];
 
 // Una sala = dos jugadores y un juego. Arranca en configuración (reglas editables por los dos,
 // en vivo); cuando los dos están listos empieza la partida. Al terminar: revancha, reglas o salir.
@@ -276,6 +289,16 @@ export function montarSalas(io) {
       s.listos.clear();
       s.revancha.clear();
       emitirSala(s);
+    });
+
+    // Emoticón para el rival: le aparece grande en pantalla. Con freno para que no sea spam.
+    let ultimoEmote = 0;
+    on('emote', ({ id }) => {
+      const s = miSala();
+      if (!EMOTES.includes(id)) throw new ErrorJuego('Emoticón desconocido');
+      if (Date.now() - ultimoEmote < 1200) throw new ErrorJuego('Más despacio');
+      ultimoEmote = Date.now();
+      for (const j of s.jugadores) io.to(canal(j)).emit('emote', { de: yo, id, n: Date.now() });
     });
 
     on('salir', () => {

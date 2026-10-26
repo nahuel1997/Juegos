@@ -2,7 +2,7 @@
 
 App de juegos online 1 contra 1: **batalla naval**, **ahorcado**, **tuti fruti**, **generala** y **escoba del 15**.
 Cada desafío abre una **sala de configuración** donde los dos ajustan las reglas en vivo y arrancan cuando están listos.
-Suena un aviso cuando te toca (se silencia con 🔔). Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y clave).
+En cualquier sala se le pueden mandar emoticones animados al rival. Todos los íconos y emoticones son SVG propios (web/src/iconos.jsx). Suena un aviso cuando te toca (se silencia con 🔔). Tiene **chat en vivo** y **perfil** (nombre, color, tema azul/rosa/negro, foto y clave).
 
 - **api/**: Node 20 + Express 5 + Socket.IO (tiempo real). Login con cookie httpOnly (JWT), claves con bcrypt.
   Las partidas viven en memoria; el historial se guarda en `DATA_DIR/historial.json` (volumen Docker).
@@ -15,6 +15,11 @@ Suena un aviso cuando te toca (se silencia con 🔔). Tiene **chat en vivo** y *
 - **Tuti fruti**: columnas propias, letras excluidas, letra al azar sin repetir, cuenta para prepararse antes de cada letra (5 s, configurable), ¡basta! con cuenta regresiva y puntos manuales.
 - **Generala**: 5 dados, 3 tiros, escalera/full/póker/generala/doble; servida opcional gana.
 - **Escoba del 15**: mazo español, escobas, más cartas/oros/sietes y siete de oros (suma en el momento en que se levanta); cada uno ve cuántas cartas, oros y sietes lleva; animación especial del 7 de oros; se juega hasta N puntos.
+- **Cuatro en línea**: tablero y fichas en línea configurables; tablero lleno = empate.
+- **Piedra, papel o tijera**: al mejor de N, eligiendo a la vez; variante con lagarto y Spock.
+- **Damas**: 8x8 o 10x10, comer obligatorio, dama voladora y peón que come para atrás (configurables); capturas encadenadas.
+- **Memotest**: pares por turnos con dibujos propios; par = seguís.
+- **Stop de palabras**: duelo tipo Wordle, la misma palabra para los dos; del rival solo se ven los colores.
 
 Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).
 

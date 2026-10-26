@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from './comunes.jsx';
+import { Icono } from '../iconos.jsx';
 
 const hora = (iso) => new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
@@ -38,7 +39,7 @@ export default function Chat({ mensajes, gente, yo, escribiendo, enviar, avisarE
   return (
     <>
       <button className={`chat-boton ${abierto ? 'abierto' : ''}`} onClick={() => setAbierto((a) => !a)} aria-label="Chat">
-        {abierto ? '✕' : '💬'}
+        {abierto ? '✕' : <Icono id="chat" tam={30} />}
         {noLeidos > 0 && <span className="badge">{noLeidos}</span>}
       </button>
       {abierto && (

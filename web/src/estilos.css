@@ -211,8 +211,8 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 [data-tema="rosa"] .marca, [data-tema="rosa"] h1, [data-tema="rosa"] h2 { color: #d6246e; }
 [data-tema="rosa"] .btn { color: #fff; background: linear-gradient(135deg, #ff7ab8, #ff3d8b); box-shadow: 0 4px 12px rgba(255, 61, 139, .3); }
 [data-tema="rosa"] .btn.fantasma { background: #fff; color: var(--texto); box-shadow: none; }
-[data-tema="rosa"] .btn:not(.fantasma)::after { content: ' ♥'; }
-[data-tema="rosa"] .btn.chico::after { content: ''; }
+[data-tema="rosa"] .btn:not(.fantasma)::after { content: ''; display: inline-block; width: .8em; height: .8em; margin-left: .35em; vertical-align: -0.05em; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S6 40 6 22C6 12 13 7 20 7c6 0 10 4 12 8c2-4 6-8 12-8c7 0 14 5 14 15c0 18-26 34-26 34z' fill='%23ffffff'/%3E%3C/svg%3E") center/contain no-repeat; }
+[data-tema="rosa"] .btn.chico::after { display: none; }
 [data-tema="rosa"] .tarjeta { box-shadow: 0 8px 24px rgba(255, 79, 154, .15); }
 [data-tema="rosa"] .login input { background: #fff; }
 [data-tema="rosa"] .login img, [data-tema="rosa"] .marca img { filter: hue-rotate(115deg) saturate(1.6) brightness(1.15); }
@@ -220,7 +220,7 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 [data-tema="rosa"] .aviso.error { background: #ffe0ec; }
 [data-tema="rosa"] .cinta { background: #fff0f7; }
 [data-tema="rosa"] .estado-cinta.tu-turno { background: #ffe0ef; color: #d6246e; }
-[data-tema="rosa"] .estado-cinta.tu-turno::before { content: '💘 '; }
+[data-tema="rosa"] .estado-cinta.tu-turno::before { content: ''; display: block; width: 1.3em; height: 1.3em; margin: 0 auto; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S6 40 6 22C6 12 13 7 20 7c6 0 10 4 12 8c2-4 6-8 12-8c7 0 14 5 14 15c0 18-26 34-26 34z' fill='%23ff3d6e'/%3E%3C/svg%3E") center/contain no-repeat; }
 [data-tema="rosa"] .tablero { background: rgba(255, 255, 255, .55); }
 [data-tema="rosa"] .tablero-wrap.activo .tablero { box-shadow: 0 0 20px rgba(255, 79, 154, .35); }
 [data-tema="rosa"] .celda.apuntable:hover { background: #ff9ccb; }
@@ -230,11 +230,11 @@ h3 { font-size: 1rem; color: var(--suave); font-weight: 600; }
 [data-tema="rosa"] .mini-barco i { background: var(--barco); }
 /* Agua = corazoncito vacío, tocado = corazón */
 [data-tema="rosa"] .agua-punto { background: none; width: auto; height: auto; opacity: .8; }
-[data-tema="rosa"] .agua-punto::after { content: '♡'; color: #e0488f; font-size: clamp(.6rem, 2.2vw, .95rem); }
+[data-tema="rosa"] .agua-punto::after { content: ''; display: block; width: clamp(.6rem, 2.2vw, .95rem); height: clamp(.6rem, 2.2vw, .95rem); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S6 40 6 22C6 12 13 7 20 7c6 0 10 4 12 8c2-4 6-8 12-8c7 0 14 5 14 15c0 18-26 34-26 34z' fill='none' stroke='%23e0488f' stroke-width='6'/%3E%3C/svg%3E") center/contain no-repeat; }
 [data-tema="rosa"] .impacto { font-size: 0; text-shadow: none; }
-[data-tema="rosa"] .impacto::after { content: '❤'; color: #fff; font-size: clamp(.7rem, 2.6vw, 1.1rem); }
-[data-tema="rosa"] .celda.barco.tocado .impacto::after { color: #b0105c; }
-[data-tema="rosa"] .celda.hundido .impacto::after { content: '💔'; }
+[data-tema="rosa"] .impacto::after { content: ''; display: block; width: clamp(.7rem, 2.6vw, 1.1rem); height: clamp(.7rem, 2.6vw, 1.1rem); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S6 40 6 22C6 12 13 7 20 7c6 0 10 4 12 8c2-4 6-8 12-8c7 0 14 5 14 15c0 18-26 34-26 34z' fill='%23ffffff'/%3E%3C/svg%3E") center/contain no-repeat; }
+[data-tema="rosa"] .celda.barco.tocado .impacto::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 56S6 40 6 22C6 12 13 7 20 7c6 0 10 4 12 8c2-4 6-8 12-8c7 0 14 5 14 15c0 18-26 34-26 34z' fill='%23b0105c'/%3E%3C/svg%3E"); }
+[data-tema="rosa"] .celda.hundido .impacto::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M30 15c-2-4-6-8-10-8C13 7 6 12 6 22c0 18 24 33 24 33l3-14-6-6 6-8z' fill='%23b0105c'/%3E%3Cpath d='M36 15c2-4 5-8 8-8c7 0 14 5 14 15c0 18-24 33-24 33l3-14-6-6 6-8z' fill='%23b0105c'/%3E%3C/svg%3E"); }
 [data-tema="rosa"] .historial li { border-left-color: #ff4f9a; }
 [data-tema="rosa"] .historial li.perdi { border-left-color: #c9a3b6; }
 

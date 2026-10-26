@@ -3,6 +3,7 @@
 // Uso: node src/scripts/bot-rival.mjs <usuario> <clave> [http://localhost:4400]
 import { io } from 'socket.io-client';
 import { flotaAlAzar } from '../juegos/batallaNaval.js';
+import { PALABRAS } from '../juegos/stopPalabras.js';
 
 const [usuario, clave, base = 'http://localhost:4400'] = process.argv.slice(2);
 const r = await fetch(`${base}/api/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario, clave }) });
@@ -16,6 +17,10 @@ let ocupado = false;
 let pendiente = null;
 
 s.on('lobby', (l) => l.invitaciones.recibidas.forEach((i) => s.emit('responder', { de: i.de, acepta: true }, () => {})));
+// Si le mandan un emoticón, contesta con otro.
+s.on('emote', (e) => {
+  if (e.de !== usuario) setTimeout(() => s.emit('emote', { id: ['risa', 'fuckyou', 'beso', 'facha'][azar(4)] }, () => {}), 1500);
+});
 s.on('chat:mensaje', (m) => {
   if (m.de !== usuario && /hola/i.test(m.texto)) s.emit('chat:enviar', { texto: '¡Hola! Soy el bot 🤖' }, () => {});
 });
@@ -94,6 +99,36 @@ async function jugar(sala) {
         }
       }
       return accion('jugar', { carta: p.miMano[0].id });
+    case 'cuatro-en-linea': {
+      if (p.turno !== yo) return;
+      const libres = p.tablero[0].map((v, c) => (v === null ? c : -1)).filter((c) => c >= 0);
+      return accion('soltar', { col: libres[azar(libres.length)] });
+    }
+    case 'piedra-papel-tijera':
+      if (p.miEleccion) return;
+      await new Promise((ok) => setTimeout(ok, 1200));
+      return accion('elegir', { jugada: p.opciones[azar(p.opciones.length)] });
+    case 'damas':
+      if (p.turno !== yo || !p.movidas.length) return;
+      {
+        const comer = p.movidas.filter((m) => m.come);
+        const lista = comer.length ? comer : p.movidas;
+        const m = lista[azar(lista.length)];
+        return accion('mover', { de: m.de, a: m.a });
+      }
+    case 'memotest': {
+      if (p.turno !== yo || p.mirando) return;
+      const tapadas = p.cartas.map((c, i) => (c.dibujo ? -1 : i)).filter((i) => i >= 0);
+      return accion('voltear', { i: tapadas[azar(tapadas.length)] });
+    }
+    case 'stop-palabras':
+      if (p.fase === 'resultado') return p.listos.includes(yo) ? undefined : accion('siguiente');
+      if (p.mio.terminado) return;
+      await new Promise((ok) => setTimeout(ok, 2500));
+      {
+        const lista = PALABRAS[p.config.largo];
+        return accion('intentar', { palabra: lista[azar(lista.length)] });
+      }
   }
 }
 

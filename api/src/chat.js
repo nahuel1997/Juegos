@@ -43,7 +43,7 @@ export function montarChat(io, socket, yo) {
     if (!limpio) return responder({ error: 'Mensaje vacío' });
     const ahora = Date.now();
     const recientes = (envios.get(yo) || []).filter((t) => ahora - t < 10_000);
-    if (recientes.length >= 10) return responder({ error: 'Más despacio 🙂' });
+    if (recientes.length >= 10) return responder({ error: 'Más despacio' });
     envios.set(yo, [...recientes, ahora]);
     const msg = { id: randomUUID(), de: yo, texto: limpio, fecha: new Date().toISOString() };
     mensajes.push(msg);

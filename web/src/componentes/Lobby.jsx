@@ -1,5 +1,6 @@
 import { JUEGOS } from '../juegos/index.js';
 import { Avatar } from './comunes.jsx';
+import { Icono } from '../iconos.jsx';
 
 const fecha = (iso) => new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -14,7 +15,7 @@ export default function Lobby({ lobby, emitir }) {
       {invitaciones.recibidas.map((inv) => (
         <div key={inv.de} className="tarjeta invitacion">
           <div>
-            <strong>{nombre(inv.de)}</strong> te desafía a <strong>{JUEGOS[inv.juego]?.emoji} {inv.nombreJuego}</strong>
+            <strong>{nombre(inv.de)}</strong> te desafía a <strong><Icono id={JUEGOS[inv.juego]?.icono} tam={20} /> {inv.nombreJuego}</strong>
           </div>
           <div className="acciones">
             <button className="btn" onClick={() => emitir('responder', { de: inv.de, acepta: true })}>¡Jugar!</button>
@@ -47,7 +48,7 @@ export default function Lobby({ lobby, emitir }) {
           return (
             <section key={j.id} className="tarjeta juego">
               <div className="juego-cab">
-                <span className="juego-emoji">{info?.emoji}</span>
+                <span className="juego-emoji"><Icono id={info?.icono} tam={52} /></span>
                 <div>
                   <h2>{j.nombre}</h2>
                   <p className="sub">{info?.texto}</p>
@@ -88,7 +89,7 @@ export default function Lobby({ lobby, emitir }) {
               return (
                 <li key={i} className={res}>
                   <span>
-                    {JUEGOS[p.juego]?.emoji} {res === 'empate' ? 'Empataste' : res === 'gane' ? 'Ganaste' : 'Perdiste'} vs {nombre(rival)}
+                    <Icono id={JUEGOS[p.juego]?.icono} tam={18} /> {res === 'empate' ? 'Empataste' : res === 'gane' ? 'Ganaste' : 'Perdiste'} vs {nombre(rival)}
                     <small> · {nombreJuego(p.juego)}</small>
                   </span>
                   <small>{p.motivoFin === 'abandono' ? 'por abandono · ' : ''}{fecha(p.fecha)}</small>

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import { JUEGOS } from '../juegos/index.js';
 import { Avatar } from './comunes.jsx';
 import { sonarTurno } from '../sonido.js';
+import { Icono } from '../iconos.jsx';
+import { SelectorEmotes } from './Emotes.jsx';
 
 function Final({ sala, emitir, ctx, textoFinal }) {
   const p = sala.partida;
@@ -10,9 +12,13 @@ function Final({ sala, emitir, ctx, textoFinal }) {
   const pidioRival = sala.revancha.includes(ctx.rival);
   const pediYo = sala.revancha.includes(ctx.yo);
   const rosa = document.documentElement.dataset.tema === 'rosa';
+  let dibujo;
+  if (empate) dibujo = <Icono id="apreton" tam={72} />;
+  else if (gane) dibujo = rosa ? <><Icono id="corona" tam={72} /><Icono id="corazon" tam={56} /></> : <Icono id="trofeo" tam={72} />;
+  else dibujo = <Icono id={rosa ? 'beso' : 'medalla'} tam={72} />;
   return (
     <div className={`tarjeta final ${gane ? 'gane' : empate ? '' : 'perdi'}`}>
-      <div className="final-emoji">{empate ? '🤝' : rosa ? (gane ? '👑💖' : '💌') : gane ? '🏆' : '🥈'}</div>
+      <div className="final-emoji">{dibujo}</div>
       <h2>{empate ? '¡Empate!' : gane ? '¡Ganaste!' : `Ganó ${ctx.nombreRival}`}</h2>
       <p className="sub">
         {p.motivoFin === 'abandono'
@@ -34,7 +40,14 @@ function Final({ sala, emitir, ctx, textoFinal }) {
 export default function Sala({ sala, emitir, gente }) {
   const def = JUEGOS[sala.juego];
   const rival = gente[sala.rival] || { usuario: sala.rival, nombre: sala.rival };
-  const ctx = { yo: sala.yo, rival: sala.rival, nombreRival: rival.nombre, rivalOnline: sala.rivalOnline };
+  const ctx = {
+    yo: sala.yo,
+    rival: sala.rival,
+    nombreRival: rival.nombre,
+    rivalOnline: sala.rivalOnline,
+    colorYo: gente[sala.yo]?.color || '#ffb703',
+    colorRival: rival.color || '#8ecae6',
+  };
   const accion = useCallback((tipo, datos) => emitir('accion', { tipo, datos }), [emitir]);
   const listoYo = sala.listos.includes(sala.yo);
 
@@ -55,11 +68,14 @@ export default function Sala({ sala, emitir, gente }) {
     <div className={`sala sala-${sala.juego}`}>
       <div className="batalla-cab">
         <h2>
-          {def.emoji} {sala.nombreJuego}{' '}
+          <Icono id={def.icono} tam={30} /> {sala.nombreJuego}{' '}
           <span className="vs">vs <Avatar usuario={rival} tam={24} /> {rival.nombre}</span>
         </h2>
-        {sala.estado === 'config' && <button className="btn chico fantasma" onClick={() => emitir('salir')}>Salir de la sala</button>}
-        {sala.estado === 'jugando' && <button className="btn chico fantasma" onClick={abandonar}>Abandonar</button>}
+        <div className="acciones sala-acciones">
+          <SelectorEmotes emitir={emitir} />
+          {sala.estado === 'config' && <button className="btn chico fantasma" onClick={() => emitir('salir')}>Salir de la sala</button>}
+          {sala.estado === 'jugando' && <button className="btn chico fantasma" onClick={abandonar}>Abandonar</button>}
+        </div>
       </div>
 
       {!sala.rivalOnline && <div className="cinta">{rival.nombre} se desconectó. La sala queda guardada hasta que vuelva.</div>}

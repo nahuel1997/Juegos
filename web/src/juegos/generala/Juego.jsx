@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icono } from '../../iconos.jsx';
 
 // Posiciones de los puntos en una grilla de 3x3 (0..8).
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -69,7 +70,7 @@ export default function JuegoGenerala({ partida, accion, ctx }) {
           {miTurno ? (
             <>
               <button className="btn grande" disabled={partida.tiros >= 3 || (partida.tiros > 0 && guardar.every(Boolean))} onClick={() => accion('tirar', { guardar })}>
-                {partida.tiros === 0 ? '🎲 Tirar' : partida.tiros < 3 ? `🎲 Volver a tirar (${3 - partida.tiros})` : 'Sin tiros: anotá'}
+                <span className="con-iconos">{partida.tiros < 3 && <Icono id="dado" tam={22} />}{partida.tiros === 0 ? 'Tirar' : partida.tiros < 3 ? `Volver a tirar (${3 - partida.tiros})` : 'Sin tiros: anotá'}</span>
               </button>
               <p className="ayuda">{partida.tiros === 0 ? 'Tirá los cinco dados.' : 'Tocá los dados que querés guardar y volvé a tirar, o anotá en la planilla.'}</p>
             </>
@@ -117,6 +118,6 @@ export default function JuegoGenerala({ partida, accion, ctx }) {
 }
 
 JuegoGenerala.textoFinal = (p, gane) =>
-  p.motivoFin === 'servida' ? (gane ? '¡Generala servida!' : 'Le salió generala servida 😱') : `Terminó ${p.totales.yo} a ${p.totales.rival}.`;
+  p.motivoFin === 'servida' ? (gane ? '¡Generala servida!' : 'Le salió generala servida') : `Terminó ${p.totales.yo} a ${p.totales.rival}.`;
 
 JuegoGenerala.claveTurno = (p, ctx) => (p.estado === 'jugando' && p.turno === ctx.yo ? `g-${Object.keys(p.planillas.yo).length}` : null);
