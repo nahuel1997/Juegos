@@ -19,6 +19,16 @@ import ConfigMemo from './memotest/Config.jsx';
 import JuegoMemo from './memotest/Juego.jsx';
 import ConfigStop from './stopPalabras/Config.jsx';
 import JuegoStop from './stopPalabras/Juego.jsx';
+import ConfigDomino from './domino/Config.jsx';
+import JuegoDomino from './domino/Juego.jsx';
+import ConfigLudo from './ludo/Config.jsx';
+import JuegoLudo from './ludo/Juego.jsx';
+import ConfigQuien from './quienEsQuien/Config.jsx';
+import JuegoQuien from './quienEsQuien/Juego.jsx';
+import ConfigPool from './pool/Config.jsx';
+import JuegoPool from './pool/Juego.jsx';
+import ConfigPenales from './penales/Config.jsx';
+import JuegoPenales from './penales/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -80,5 +90,35 @@ export const JUEGOS = {
     texto: 'Los dos adivinan la misma palabra: gana quien la saca en menos intentos.',
     Config: ConfigStop,
     Juego: JuegoStop,
+  },
+  domino: {
+    icono: 'domino',
+    texto: 'Doble seis: jugá a los extremos, robá del pozo y sumá los puntos del rival.',
+    Config: ConfigDomino,
+    Juego: JuegoDomino,
+  },
+  ludo: {
+    icono: 'ludo',
+    texto: 'Sacá tus cuatro fichas con un 6, comé al otro y llegá primero a la meta.',
+    Config: ConfigLudo,
+    Juego: JuegoLudo,
+  },
+  'quien-es-quien': {
+    icono: 'quien',
+    texto: 'Gatitos o perritos: preguntá y bajá cartas hasta adivinar el secreto del otro.',
+    Config: ConfigQuien,
+    Juego: JuegoQuien,
+  },
+  pool: {
+    icono: 'pool',
+    texto: 'Bola 8 con física de verdad: apuntá, medí la fuerza y metelas todas.',
+    Config: ConfigPool,
+    Juego: JuegoPool,
+  },
+  penales: {
+    icono: 'penal',
+    texto: 'Uno patea y el otro ataja: elegí la esquina y que no te la adivinen.',
+    Config: ConfigPenales,
+    Juego: JuegoPenales,
   },
 };

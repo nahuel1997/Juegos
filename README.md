@@ -20,6 +20,11 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **Damas**: 8x8 o 10x10, comer obligatorio, dama voladora y peón que come para atrás (configurables); capturas encadenadas.
 - **Memotest**: pares por turnos con dibujos propios; par = seguís.
 - **Stop de palabras**: duelo tipo Wordle, la misma palabra para los dos; del rival solo se ven los colores.
+- **Dominó**: doble seis, pozo para robar (opcional), tranque y manos a N puntos.
+- **Ludo**: rojo contra amarillo, salir con 6 (o 1 y 6), comer, casillas seguras y meta exacta (configurables).
+- **¿Quién es quién?**: versión gatitos (tamaños, colores, atigrados, manchas) o perritos (12 razas, entre ellos Lola, la pitbull caramelo y blanca de nariz rosa); preguntas respondidas por la app, bajar cartas y arriesgar.
+- **Pool**: bola 8 con física simulada en el server (los dos ven el mismo tiro); grupos, faltas y reglas de la 8.
+- **Penales**: pateador y arquero eligen zona a la vez; serie de N y muerte súbita.
 
 Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).
 

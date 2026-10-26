@@ -1,0 +1,131 @@
+/* Dominó, ludo, quién es quién, pool y penales. */
+.centrado { text-align: center; justify-content: center; }
+
+/* ===== Dominó ===== */
+.ficha-domino { display: inline-block; padding: 0; border: 0; background: none; line-height: 0; flex: none; }
+.ficha-domino.h .domino-svg { width: 64px; height: 32px; }
+.ficha-domino.v .domino-svg { width: 32px; height: 64px; }
+.ficha-domino .domino-svg { filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+button.ficha-domino { cursor: pointer; transition: transform .12s; }
+button.ficha-domino.jugable:hover { transform: translateY(-6px); }
+button.ficha-domino.apagada { opacity: .5; cursor: default; }
+button.ficha-domino.sel { transform: translateY(-10px); }
+button.ficha-domino.sel .domino-svg { filter: drop-shadow(0 0 0 3px var(--acento)) drop-shadow(0 0 6px var(--acento)); }
+.ficha-domino.nueva { animation: ficha-nueva .5s ease-out; }
+@keyframes ficha-nueva { from { transform: scale(1.4); } }
+.domino-mesa {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 3px; min-height: 120px; padding: 14px; margin: 12px 0;
+  background: radial-gradient(circle at 50% 40%, #1f7a4d, #0f4d30); border-radius: 18px; box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+}
+.domino-mesa .mesa-vacia { color: #eaf7ef; opacity: .7; }
+.punta { background: var(--acento); color: #1b1b1b; border: 0; border-radius: 8px; padding: 8px 10px; font-weight: 800; cursor: pointer; animation: latido-num .9s infinite alternate; }
+.domino-mano { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 8px; }
+.domino-rival { display: flex; gap: 3px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.domino-rival small { margin-left: 8px; color: var(--suave); }
+.ficha-dorso { width: 14px; height: 28px; border-radius: 3px; background: linear-gradient(135deg, #2b2233, #4a3a5a); border: 1px solid #fff3; }
+.domino-fila { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; justify-content: center; }
+
+/* ===== Ludo ===== */
+.ludo-juego { display: grid; grid-template-columns: minmax(0, 560px) 180px; gap: 18px; justify-content: center; align-items: start; }
+.ludo-tablero {
+  position: relative; display: grid; grid-template-columns: repeat(15, 1fr); aspect-ratio: 1; background: #fff; border-radius: 12px;
+  overflow: hidden; border: 4px solid #2b2233; box-shadow: 0 10px 26px rgba(0,0,0,.3);
+}
+.lc { border: .5px solid rgba(0,0,0,.06); display: grid; place-items: center; }
+.lc.camino { background: #fff; border-color: rgba(0,0,0,.18); }
+.lc.segura { background: #f3f3f3; }
+.lc.salida-0, .lc.pasillo-0 { background: #e63946; }
+.lc.salida-1, .lc.pasillo-1 { background: #f2b705; }
+.lc.salida-2 { background: #2a9d4f; }
+.lc.salida-3 { background: #2a6fdb; }
+.ludo-casa { position: absolute; width: 40%; height: 40%; border-radius: 6px; box-shadow: inset 0 0 0 9px rgba(255,255,255,.0); }
+.ludo-casa::after { content: ''; position: absolute; inset: 16%; background: #fff; border-radius: 12px; }
+.ludo-casa.c0 { left: 0; top: 0; background: #e63946; }
+.ludo-casa.c1 { right: 0; bottom: 0; background: #f2b705; }
+.ludo-casa.c2 { right: 0; top: 0; background: #2a9d4f; }
+.ludo-casa.c3 { left: 0; bottom: 0; background: #2a6fdb; }
+.ludo-centro {
+  position: absolute; left: 40%; top: 40%; width: 20%; height: 20%;
+  background: conic-gradient(from 45deg, #2a9d4f 0 25%, #f2b705 0 50%, #2a6fdb 0 75%, #e63946 0 100%);
+}
+.ludo-ficha {
+  position: absolute; width: 5.2%; height: 5.2%; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #fff; padding: 0;
+  background: radial-gradient(circle at 35% 30%, #fff8, transparent 40%), var(--c); box-shadow: 0 3px 6px rgba(0,0,0,.45); cursor: default;
+  transition: left .35s ease, top .35s ease; z-index: 2;
+}
+.ludo-ficha.movible { cursor: pointer; z-index: 3; animation: ficha-salta .7s ease-in-out infinite; }
+@keyframes ficha-salta { 50% { transform: translate(-50%, -70%); box-shadow: 0 0 0 3px #fff, 0 0 12px 4px rgba(255,255,255,.9); } }
+.ludo-panel { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.dado.grande-dado { width: 90px; height: 90px; cursor: default; }
+.dado.grande-dado.tirado { animation: rodar .5s ease-out; }
+
+/* ===== ¿Quién es quién? ===== */
+.quien-temas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quien-temas .opcion { align-items: center; text-align: center; }
+.quien-muestra { width: 90px; height: 90px; display: block; }
+.personaje { width: 100%; height: auto; display: block; }
+.quien-cab { display: grid; grid-template-columns: 170px 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
+.quien-secreto { text-align: center; color: var(--suave); }
+.quien-estado { display: flex; flex-direction: column; gap: 10px; }
+.quien-preguntas { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.pestanas { display: flex; gap: 4px; flex-wrap: wrap; }
+.pestana { border: 1px solid var(--borde); background: var(--fondo2); color: var(--texto); border-radius: 99px; padding: 5px 12px; cursor: pointer; font-weight: 600; }
+.pestana.activa { background: var(--acento); color: #1b1b1b; border-color: var(--acento); }
+.quien-valores { display: flex; flex-wrap: wrap; gap: 6px; }
+.quien-tablero { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.quien-carta {
+  background: linear-gradient(180deg, #eaf4ff, #fff); border: 3px solid #fff; border-radius: 12px; padding: 4px 4px 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; color: #2b2233; box-shadow: 0 4px 10px rgba(0,0,0,.25); transition: transform .25s, opacity .25s, filter .25s;
+}
+.quien-carta b { font-size: .85rem; }
+.quien-carta:hover:not(:disabled) { transform: translateY(-3px); }
+.quien-carta.bajada { transform: perspective(500px) rotateX(55deg) scale(.92); opacity: .35; filter: grayscale(1); }
+.quien-carta.era { border-color: var(--acento); box-shadow: 0 0 0 4px var(--acento), 0 0 18px var(--acento); opacity: 1; filter: none; transform: none; }
+.quien-carta.grande { cursor: default; border-color: var(--acento); }
+.quien-tablero.arriesgando .quien-carta:not(.bajada) { animation: tiembla .5s ease-in-out infinite; }
+@keyframes tiembla { 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+.quien-historial li { align-items: center; }
+.quien-historial b { font-size: 1rem; }
+
+/* ===== Pool ===== */
+.pool-mesa { width: 100%; max-width: 980px; display: block; margin: 0 auto; border-radius: 26px; box-shadow: 0 14px 30px rgba(0,0,0,.4); touch-action: none; }
+.pool-mesa.apuntable { cursor: crosshair; }
+.pool-controles { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.pool-controles .btn.grande { width: auto; padding: 12px 34px; }
+.app .pool-fuerza { flex-direction: row; align-items: center; gap: 10px; color: var(--texto); font-weight: 600; }
+.pool-fuerza input { width: 200px; accent-color: var(--acento); }
+.pool-controles .ayuda { width: 100%; text-align: center; margin: 0; }
+
+/* ===== Penales ===== */
+.penales-series { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-bottom: 10px; }
+.penales-serie { display: flex; gap: 6px; align-items: center; }
+.penales-serie small { width: 70px; text-align: right; color: var(--suave); }
+.bolita { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--borde); background: var(--tarjeta); }
+.bolita.gol { background: var(--ok); border-color: var(--ok); }
+.bolita.errado { background: var(--tocado); border-color: var(--tocado); }
+.penales-cancha { position: relative; max-width: 720px; margin: 0 auto; }
+.penales-svg { width: 100%; display: block; border-radius: 18px; box-shadow: 0 10px 26px rgba(0,0,0,.3); }
+.zona { fill: transparent; stroke: rgba(255,255,255,.35); stroke-dasharray: 4 4; }
+.zona.elegible { cursor: pointer; }
+.zona.elegible:hover { fill: rgba(255, 213, 74, .35); }
+.zona.elegible.arquero:hover { fill: rgba(79, 168, 255, .35); }
+.arquero, .pelota { transition: transform .7s cubic-bezier(.2, .8, .3, 1); }
+.penales-cartel {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 900; color: #fff;
+  text-shadow: 0 4px 0 rgba(0,0,0,.35); animation: cartel .9s cubic-bezier(.2, 1.6, .4, 1) .6s both; pointer-events: none; white-space: nowrap;
+}
+.penales-cartel.gol { color: #ffd54a; }
+.penales-cartel.atajado { color: #8ecae6; }
+@keyframes cartel { from { transform: translate(-50%, -50%) scale(.2) rotate(-12deg); opacity: 0; } }
+
+@media (max-width: 760px) {
+  .ludo-juego { grid-template-columns: 1fr; }
+  .ludo-panel { flex-direction: row; justify-content: center; }
+  .dado.grande-dado { width: 64px; height: 64px; }
+  .quien-cab { grid-template-columns: 1fr; }
+  .quien-secreto .quien-carta { width: 130px; margin: 0 auto; }
+  .quien-tablero { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+  .quien-carta b { font-size: .7rem; }
+  .ficha-domino.h .domino-svg { width: 48px; height: 24px; }
+  .ficha-domino.v .domino-svg { width: 24px; height: 48px; }
+}

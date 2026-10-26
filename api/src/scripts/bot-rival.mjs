@@ -129,6 +129,37 @@ async function jugar(sala) {
         const lista = PALABRAS[p.config.largo];
         return accion('intentar', { palabra: lista[azar(lista.length)] });
       }
+    case 'domino':
+      if (p.fase === 'resumen') return p.listos.includes(yo) ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      {
+        const f = p.jugables.find((x) => x.lados.length);
+        if (f) return accion('jugar', { ficha: f.id, lado: f.lados[0] });
+        return accion(p.puedeRobar ? 'robar' : 'pasar');
+      }
+    case 'ludo':
+      if (p.turno !== yo) return;
+      if (!p.dado) return accion('tirar');
+      return accion('mover', { pieza: p.movibles.findIndex(Boolean) });
+    case 'quien-es-quien': {
+      if (p.turno !== yo) return;
+      const attrs = Object.keys(p.preguntas);
+      const at = attrs[azar(attrs.length)];
+      const vals = Object.keys(p.preguntas[at].valores);
+      return accion('preguntar', { atributo: at, valor: vals[azar(vals.length)] });
+    }
+    case 'pool': {
+      if (p.turno !== yo) return;
+      await new Promise((ok) => setTimeout(ok, 2500));
+      const blanca = p.bolas.find((b) => b.n === 0);
+      const otras = p.bolas.filter((b) => b.en && b.n !== 0);
+      const obj = otras[azar(otras.length)];
+      return accion('tirar', { angulo: Math.atan2(obj.y - blanca.y, obj.x - blanca.x), fuerza: 0.5 + Math.random() * 0.4 });
+    }
+    case 'penales':
+      if (p.yaElegi) return;
+      await new Promise((ok) => setTimeout(ok, 1200));
+      return accion('elegir', { zona: azar(p.config.zonas) });
   }
 }
 

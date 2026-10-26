@@ -11,6 +11,11 @@ import * as ppt from './juegos/piedraPapelTijera.js';
 import * as damas from './juegos/damas.js';
 import * as memotest from './juegos/memotest.js';
 import * as stopPalabras from './juegos/stopPalabras.js';
+import * as domino from './juegos/domino.js';
+import * as ludo from './juegos/ludo.js';
+import * as quien from './juegos/quienEsQuien.js';
+import * as pool from './juegos/pool.js';
+import * as penales from './juegos/penales.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -28,6 +33,11 @@ export const JUEGOS = {
   damas: { nombre: 'Damas', mod: damas, Clase: damas.PartidaDamas },
   memotest: { nombre: 'Memotest', mod: memotest, Clase: memotest.PartidaMemotest },
   'stop-palabras': { nombre: 'Stop de palabras', mod: stopPalabras, Clase: stopPalabras.PartidaStopPalabras },
+  domino: { nombre: 'Dominó', mod: domino, Clase: domino.PartidaDomino },
+  ludo: { nombre: 'Ludo', mod: ludo, Clase: ludo.PartidaLudo },
+  'quien-es-quien': { nombre: '¿Quién es quién?', mod: quien, Clase: quien.PartidaQuienEsQuien },
+  pool: { nombre: 'Pool', mod: pool, Clase: pool.PartidaPool },
+  penales: { nombre: 'Penales', mod: penales, Clase: penales.PartidaPenales },
 };
 
 // Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).

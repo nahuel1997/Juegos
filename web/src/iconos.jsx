@@ -202,6 +202,69 @@ export const ICONOS = {
     </>
   ),
 
+  domino: (
+    <>
+      <rect x="8" y="14" width="24" height="44" rx="5" fill="#fffdf7" stroke={T} strokeWidth="2.5" transform="rotate(-14 20 36)" />
+      <path d="M10 37l20-5" stroke={T} strokeWidth="2" transform="rotate(-14 20 36)" />
+      {[[16, 24], [24, 28], [20, 46], [14, 50], [26, 50]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.6" fill={T} transform="rotate(-14 20 36)" />)}
+      <rect x="32" y="6" width="24" height="44" rx="5" fill="#fffdf7" stroke={T} strokeWidth="2.5" transform="rotate(10 44 28)" />
+      <path d="M32 28h24" stroke={T} strokeWidth="2" transform="rotate(10 44 28)" />
+      {[[38, 13], [50, 13], [44, 18], [38, 38], [50, 38], [38, 44], [50, 44]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.6" fill={T} transform="rotate(10 44 28)" />)}
+    </>
+  ),
+  ludo: (
+    <>
+      <rect x="6" y="6" width="52" height="52" rx="6" fill="#fff" stroke={T} strokeWidth="2.5" />
+      <path d="M6 6h20v20H6z" fill="#e63946" />
+      <path d="M38 6h20v20H38z" fill="#2a9d4f" />
+      <path d="M6 38h20v20H6z" fill="#2a6fdb" />
+      <path d="M38 38h20v20H38z" fill="#ffc83d" />
+      <path d="M26 26h12v12H26z" fill="#eee" />
+      <path d="M26 26l6 6 6-6zM26 38l6-6 6 6z" fill="#ccc" />
+      <circle cx="16" cy="16" r="5" fill="#fff" />
+      <circle cx="48" cy="48" r="5" fill="#fff" />
+    </>
+  ),
+  quien: (
+    <>
+      <rect x="6" y="10" width="24" height="30" rx="4" fill="#ffe3ec" stroke={T} strokeWidth="2.5" />
+      <path d="M11 22l3-8 4 6 4-6 3 8" fill="#f29a3a" stroke={T} strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="18" cy="26" r="7" fill="#f29a3a" stroke={T} strokeWidth="1.5" />
+      <circle cx="15.5" cy="25" r="1.3" fill={T} />
+      <circle cx="20.5" cy="25" r="1.3" fill={T} />
+      <rect x="34" y="10" width="24" height="30" rx="4" fill="#e3f0ff" stroke={T} strokeWidth="2.5" />
+      <ellipse cx="46" cy="27" rx="8" ry="7" fill="#d9a066" stroke={T} strokeWidth="1.5" />
+      <path d="M38 22q-4 6 0 10M54 22q4 6 0 10" stroke="#a8743c" strokeWidth="3" fill="none" />
+      <ellipse cx="46" cy="30" rx="2.5" ry="1.8" fill="#f08aa0" />
+      <text x="32" y="58" fontFamily="system-ui,sans-serif" fontWeight="900" fontSize="18" fill="#7b5cff" textAnchor="middle">?</text>
+    </>
+  ),
+  pool: (
+    <>
+      <rect x="4" y="12" width="56" height="40" rx="8" fill="#1f7a4d" stroke="#5e3a24" strokeWidth="4" />
+      <circle cx="8" cy="16" r="3.5" fill="#111" />
+      <circle cx="56" cy="16" r="3.5" fill="#111" />
+      <circle cx="8" cy="48" r="3.5" fill="#111" />
+      <circle cx="56" cy="48" r="3.5" fill="#111" />
+      <circle cx="40" cy="30" r="7" fill="#111" />
+      <circle cx="40" cy="30" r="3.2" fill="#fff" />
+      <text x="40" y="32.5" fontFamily="system-ui,sans-serif" fontWeight="900" fontSize="5" fill="#111" textAnchor="middle">8</text>
+      <circle cx="20" cy="36" r="5" fill="#fff" stroke="#ccc" />
+      <path d="M2 50l14-10" stroke="#c08552" strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
+  penal: (
+    <>
+      <path d="M6 14h52v34" stroke="#fff" strokeWidth="4" fill="none" />
+      <path d="M6 14v34" stroke="#fff" strokeWidth="4" />
+      <path d="M8 18h48M8 26h48M8 34h48M8 42h48M14 16v32M24 16v32M34 16v32M44 16v32M54 16v32" stroke="#cfd8dc" strokeWidth="1" />
+      <rect x="2" y="12" width="60" height="40" rx="2" fill="none" stroke="#546e7a" strokeWidth="2" />
+      <circle cx="40" cy="44" r="9" fill="#fff" stroke={T} strokeWidth="2" />
+      <path d="M40 38l4 3-1.5 5h-5l-1.5-5z" fill={T} />
+      <path d="M31 44l3 0M49 44l-3 0M40 53v-3" stroke={T} strokeWidth="2" />
+    </>
+  ),
+
   // ---------- Palos del mazo español ----------
   oro: (
     <>
