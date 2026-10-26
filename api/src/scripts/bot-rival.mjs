@@ -142,11 +142,19 @@ async function jugar(sala) {
       if (!p.dado) return accion('tirar');
       return accion('mover', { pieza: p.movibles.findIndex(Boolean) });
     case 'quien-es-quien': {
-      if (p.turno !== yo) return;
+      // Responde según su personaje si la pregunta coincide con una sugerida; si no, al azar.
+      if (p.pendiente && !p.pendiente.mia) {
+        const mio = p.personajes[p.miSecreto];
+        let si = Math.random() < 0.5;
+        for (const [at, v] of Object.entries(p.preguntas)) for (const [val, txt] of Object.entries(v.valores)) if (txt === p.pendiente.texto) si = mio[at] === val;
+        await new Promise((ok) => setTimeout(ok, 1200));
+        return accion('responder', { si });
+      }
+      if (p.turno !== yo || p.pendiente) return;
       const attrs = Object.keys(p.preguntas);
       const at = attrs[azar(attrs.length)];
-      const vals = Object.keys(p.preguntas[at].valores);
-      return accion('preguntar', { atributo: at, valor: vals[azar(vals.length)] });
+      const vals = Object.values(p.preguntas[at].valores);
+      return accion('preguntar', { texto: vals[azar(vals.length)] });
     }
     case 'pool': {
       if (p.turno !== yo) return;

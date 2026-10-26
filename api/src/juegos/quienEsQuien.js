@@ -1,6 +1,7 @@
-// ¿Quién es quién? 1vs1 con gatitos o perritos. Cada uno tiene un personaje secreto; por turnos se
-// hace una pregunta de sí/no sobre una característica (la responde el server, sin trampa) o se
-// arriesga quién es. Los personajes se dibujan en el front a partir de estas características.
+// ¿Quién es quién? 1vs1 con gatitos o perritos. Cada uno tiene un personaje secreto. En tu turno
+// le escribís una pregunta al otro (como un chat) y él responde sí o no mirando su personaje; con
+// eso bajás las cartas que descartás. También podés arriesgar; y si te queda uno solo en pie, al
+// empezar tu turno siguiente se arriesga solo. Los personajes se dibujan en el front.
 import { ErrorJuego, entero } from './comun.js';
 
 export const CONFIG_DEFECTO = { tema: 'gatitos', cantidad: 24, errarPierde: true };
@@ -61,7 +62,7 @@ export const PERRITOS = [
   p('Duque', 'ovejero', 'negro', 'bicolor', 'grande', 'paradas', 'negra', 'ninguno'),
 ];
 
-// Preguntas posibles: atributo → cómo se pregunta cada valor.
+// Preguntas sugeridas (para no tener que escribir todo): atributo → texto de cada valor.
 export const PREGUNTAS = {
   gatitos: {
     color: { titulo: 'Color', valores: { naranja: '¿Es naranja?', gris: '¿Es gris?', negro: '¿Es negro?', blanco: '¿Es blanco?', crema: '¿Es color crema?', marron: '¿Es marrón?' } },
@@ -115,7 +116,8 @@ export class PartidaQuienEsQuien {
     this.secreto = { [jugadores[0]]: a, [jugadores[1]]: b };
     this.tumbados = { [jugadores[0]]: [], [jugadores[1]]: [] };
     this.turno = empieza ?? (rand() < 0.5 ? jugadores[0] : jugadores[1]);
-    this.historial = []; // { por, atributo, valor, texto, respuesta } | { por, arriesgo, acierto }
+    this.historial = []; // { por, texto, respuesta: true|false|null } | { por, arriesgo, acierto, automatico }
+    this.pendiente = null; // pregunta esperando el sí o no del otro: { por, texto }
   }
 
   rival(j) {
@@ -135,16 +137,24 @@ export class PartidaQuienEsQuien {
       this.tumbados[j] = [...set].sort((x, y) => x - y);
       return;
     }
+    if (tipo === 'responder') {
+      if (!this.pendiente || this.pendiente.por !== rival) throw new ErrorJuego('No hay pregunta para responder');
+      if (typeof datos.si !== 'boolean') throw new ErrorJuego('Respondé sí o no');
+      this.historial[this.historial.length - 1].respuesta = datos.si;
+      this.pendiente = null;
+      // Respondió: ahora le toca a él.
+      this.turno = j;
+      this.#revisarUltimoEnPie(j);
+      return;
+    }
     if (this.turno !== j) throw new ErrorJuego('No es tu turno');
+    if (this.pendiente) throw new ErrorJuego('Esperá que te respondan');
 
     if (tipo === 'preguntar') {
-      const preg = PREGUNTAS[this.config.tema][datos.atributo];
-      const texto = preg?.valores[datos.valor];
-      if (!texto) throw new ErrorJuego('Pregunta inválida');
-      const secreto = this.personajes[this.secreto[rival]];
-      const respuesta = secreto[datos.atributo] === datos.valor;
-      this.historial.push({ por: j, atributo: datos.atributo, valor: datos.valor, texto, respuesta });
-      this.turno = rival;
+      const texto = String(datos.texto ?? '').replace(/\s+/g, ' ').trim().slice(0, 140);
+      if (texto.length < 3) throw new ErrorJuego('Escribí una pregunta');
+      this.pendiente = { por: j, texto };
+      this.historial.push({ por: j, texto, respuesta: null });
       return;
     }
     if (tipo === 'arriesgar') {
@@ -156,9 +166,23 @@ export class PartidaQuienEsQuien {
       if (this.config.errarPierde) return this.#terminar(rival, 'erro');
       this.tumbados[j] = [...new Set([...this.tumbados[j], i])];
       this.turno = rival;
+      this.#revisarUltimoEnPie(rival);
       return;
     }
     throw new ErrorJuego('Acción desconocida');
+  }
+
+  // Si al empezar su turno le queda un solo personaje en pie, se arriesga solo con ése.
+  #revisarUltimoEnPie(j) {
+    const enPie = this.personajes.map((_, i) => i).filter((i) => !this.tumbados[j].includes(i));
+    if (enPie.length !== 1) return;
+    const rival = this.rival(j);
+    const acierto = enPie[0] === this.secreto[rival];
+    this.historial.push({ por: j, arriesgo: this.personajes[enPie[0]].nombre, acierto, automatico: true });
+    if (acierto) return this.#terminar(j, 'adivino');
+    if (this.config.errarPierde) return this.#terminar(rival, 'erro');
+    this.tumbados[j] = this.tumbados[j].filter((i) => i !== enPie[0]).concat(enPie[0]);
+    this.turno = rival;
   }
 
   #terminar(ganador, motivo) {
@@ -193,6 +217,7 @@ export class PartidaQuienEsQuien {
       tumbados: this.tumbados[j],
       tumbadosRival: this.tumbados[rival].length,
       turno: this.turno,
+      pendiente: this.pendiente && { texto: this.pendiente.texto, mia: this.pendiente.por === j },
       historial: this.historial.map((h) => ({ ...h, mia: h.por === j })),
     };
   }

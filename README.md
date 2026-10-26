@@ -22,7 +22,7 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **Stop de palabras**: duelo tipo Wordle, la misma palabra para los dos; del rival solo se ven los colores.
 - **Dominó**: doble seis, pozo para robar (opcional), tranque y manos a N puntos.
 - **Ludo**: rojo contra amarillo, salir con 6 (o 1 y 6), comer, casillas seguras y meta exacta (configurables).
-- **¿Quién es quién?**: versión gatitos (tamaños, colores, atigrados, manchas) o perritos (12 razas, entre ellos Lola, la pitbull caramelo y blanca de nariz rosa); preguntas respondidas por la app, bajar cartas y arriesgar.
+- **¿Quién es quién?**: versión gatitos (tamaños, colores, atigrados, manchas) o perritos (12 razas, entre ellos Lola, la pitbull caramelo y blanca de nariz rosa); preguntas libres tipo chat que el otro responde con sí o no, bajar cartas y arriesgar; si te queda uno solo en pie, se revela solo en tu turno siguiente.
 - **Pool**: bola 8 con física simulada en el server (los dos ven el mismo tiro); grupos, faltas y reglas de la 8.
 - **Penales**: pateador y arquero eligen zona a la vez; serie de N y muerte súbita.
 

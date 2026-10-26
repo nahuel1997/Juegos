@@ -138,3 +138,23 @@ button.ficha-domino.sel .domino-svg { filter: drop-shadow(0 0 0 3px var(--acento
 .stop-jugadas summary { cursor: pointer; font-weight: 600; }
 .stop-lista { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; max-height: 160px; overflow-y: auto; }
 .stop-lista .chip { font-weight: 700; letter-spacing: .05em; }
+
+/* Quién es quién: chat de preguntas */
+.quien-chat { margin: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.quien-chat-lista { max-height: 210px; min-height: 80px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.qmsg { display: flex; }
+.qmsg.mio { justify-content: flex-end; }
+.qmsg .burbuja { flex-direction: row; align-items: center; gap: 10px; max-width: 85%; }
+.qmsg.mio .burbuja { background: var(--acento); color: #1b1b1b; }
+.qmsg .burbuja b { padding: 2px 10px; border-radius: 99px; background: rgba(0,0,0,.12); white-space: nowrap; }
+.qmsg .burbuja b.si { background: #2a9d4f; color: #fff; }
+.qmsg .burbuja b.no { background: #d62839; color: #fff; }
+.qmsg .burbuja b.espera { animation: latido-num .8s infinite alternate; }
+.qmsg .burbuja.arriesgo { border: 2px dashed currentColor; }
+.quien-responder { background: var(--fondo2); border-radius: 12px; padding: 10px; text-align: center; border: 2px solid var(--acento); }
+.quien-responder p { margin: 0 0 8px; font-weight: 700; font-size: 1.05rem; }
+.quien-responder .acciones { justify-content: center; }
+.quien-responder .btn { min-width: 90px; }
+.quien-botones { justify-content: space-between; }
+.quien-sugerencias { display: flex; flex-direction: column; gap: 6px; }
+.quien-tablero { margin-top: 6px; }

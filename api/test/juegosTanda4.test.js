@@ -113,12 +113,18 @@ test('quién es quién: está la pitbull caramelo y blanca con nariz rosa', () =
   assert.ok(p.personajes.some((x) => x.nombre === 'Lola'));
 });
 
-test('quién es quién: preguntas con respuesta real, tumbar y arriesgar', () => {
+test('quién es quién: pregunta libre, el otro responde sí o no y recién ahí cambia el turno', () => {
   const p = new PartidaQuienEsQuien(J, cfgQuien({ tema: 'gatitos' }), { empieza: 'iara' });
-  const secretoNahuel = p.personajes[p.secreto.nahuel];
-  p.accion('iara', 'preguntar', { atributo: 'tamano', valor: 'gordito' });
-  assert.equal(p.historial[0].respuesta, secretoNahuel.tamano === 'gordito');
+  assert.throws(() => p.accion('iara', 'preguntar', { texto: 'a' }), /Escribí/);
+  p.accion('iara', 'preguntar', { texto: '  ¿Es  gordito?  ' });
+  assert.deepEqual(p.vistaPara('nahuel').pendiente, { texto: '¿Es gordito?', mia: false });
+  assert.throws(() => p.accion('iara', 'preguntar', { texto: '¿Otra?' }), /Esperá/);
+  assert.throws(() => p.accion('iara', 'responder', { si: true }), /No hay pregunta/);
+  assert.throws(() => p.accion('nahuel', 'preguntar', { texto: '¿Es gris?' }), /No es tu turno/);
+  p.accion('nahuel', 'responder', { si: false });
+  assert.equal(p.historial[0].respuesta, false);
   assert.equal(p.turno, 'nahuel');
+  assert.equal(p.vistaPara('iara').pendiente, null);
   assert.equal(p.vistaPara('iara').secretoRival, null);
   p.accion('iara', 'tumbar', { indices: [0, 1, 2] }); // se puede fuera de turno
   assert.deepEqual(p.vistaPara('iara').tumbados, [0, 1, 2]);
@@ -130,6 +136,25 @@ test('quién es quién: preguntas con respuesta real, tumbar y arriesgar', () =>
   // Errar pierde (por defecto).
   const q = new PartidaQuienEsQuien(J, cfgQuien({}), { empieza: 'iara' });
   q.accion('iara', 'arriesgar', { indice: (q.secreto.nahuel + 1) % q.personajes.length });
+  assert.equal(q.ganador, 'nahuel');
+});
+
+test('quién es quién: si te queda uno solo en pie, se arriesga solo al empezar tu turno', () => {
+  const p = new PartidaQuienEsQuien(J, cfgQuien({}), { empieza: 'nahuel' });
+  const todos = p.personajes.map((_, i) => i);
+  // Iara baja todos menos el secreto de Nahuel (mientras pregunta Nahuel).
+  p.accion('iara', 'tumbar', { indices: todos.filter((i) => i !== p.secreto.nahuel) });
+  assert.equal(p.estado, 'jugando');
+  p.accion('nahuel', 'preguntar', { texto: '¿Tiene collar?' });
+  p.accion('iara', 'responder', { si: true }); // le toca a Iara → se revela solo
+  assert.equal(p.ganador, 'iara');
+  assert.ok(p.historial.at(-1).automatico);
+  // Si el que quedó en pie no era, pierde (errarPierde).
+  const q = new PartidaQuienEsQuien(J, cfgQuien({}), { empieza: 'nahuel' });
+  const otro = (q.secreto.nahuel + 1) % q.personajes.length;
+  q.accion('iara', 'tumbar', { indices: q.personajes.map((_, i) => i).filter((i) => i !== otro) });
+  q.accion('nahuel', 'preguntar', { texto: '¿Tiene collar?' });
+  q.accion('iara', 'responder', { si: false });
   assert.equal(q.ganador, 'nahuel');
 });
 
