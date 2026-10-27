@@ -1,0 +1,7 @@
+# La imagen del front se arma desde la raíz (necesita web/ y la lógica de los juegos en api/src
+# para la simulación de la vista previa). Todo lo demás queda afuera: usuarios, .env, datos.
+*
+!web
+!api/src
+web/node_modules
+web/dist

@@ -18,7 +18,10 @@ services:
     mem_limit: 192m
 
   web:
-    build: ./web
+    # Desde la raíz: el front usa la lógica de los juegos (api/src) para la vista previa.
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     restart: unless-stopped
     ports:
       - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-4400}:80"

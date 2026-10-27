@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Icono } from '../iconos.jsx';
 import { JUEGOS } from '../juegos/index.js';
 import { REGLAS } from '../juegos/reglas.js';
+import Simulacion from './Simulacion.jsx';
 
 // Ventana con la vista previa de un juego: de qué se trata, cómo se juega, cómo se gana y qué se configura.
 // `acciones` son los botones de abajo (desafiar, aceptar…).
@@ -30,6 +31,8 @@ export default function VistaPrevia({ id, nombre, cerrar, acciones }) {
             </div>
           </div>
         </div>
+
+        <Simulacion id={id} />
 
         <div className="vp-bloque objetivo">
           <h3>El objetivo</h3>

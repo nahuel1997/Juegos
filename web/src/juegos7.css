@@ -345,6 +345,19 @@
 .vp-opciones { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .vp-opciones li { font-size: .85rem; padding: 4px 10px; border-radius: 8px; background: var(--fondo2); }
 .vp-acciones { margin-top: 18px; justify-content: flex-end; flex-wrap: wrap; }
+.vp { width: min(100%, 720px); }
+.vp-demo { margin-top: 14px; border-radius: 14px; border: 1px solid var(--borde); overflow: hidden; background: var(--fondo); }
+.vp-demo-barra { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; background: var(--fondo2); flex-wrap: wrap; }
+.vp-demo-barra .acciones { gap: 6px; }
+.vp-vivo { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; }
+.vp-vivo i { width: 9px; height: 9px; border-radius: 50%; background: #e53935; animation: uno-latido .7s ease-in-out infinite alternate; }
+/* La caja contiene todo (también los carteles y el papel picado, que son position: fixed). */
+.vp-demo-caja { position: relative; overflow: hidden; transform: translateZ(0); transition: height .3s; }
+.vp-demo-juego { transform-origin: top left; padding: 8px; pointer-events: none; }
+/* En la simulación importa el tablero: se esconden los textos de ayuda y de turno. */
+.vp-demo-juego .estado-cinta, .vp-demo-juego .ayuda, .vp-demo-juego .mn-mias, .vp-demo-juego .dj-panel .ayuda { display: none; }
+.vp-demo-juego .cartel-grande { position: absolute; }
+.vp-demo-juego .confeti, .vp-demo-juego .moneda-show, .vp-demo-juego .show-oro, .vp-demo-juego .barrida, .vp-demo-juego .uno-elegir { position: absolute; }
 
 @media (max-width: 760px) {
   .vp { padding: 16px; }

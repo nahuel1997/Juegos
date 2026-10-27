@@ -20,7 +20,14 @@ if (typeof window !== 'undefined') {
   window.addEventListener('keydown', habilitar, { once: true });
 }
 
+// Mientras corre una simulación (vista previa de un juego) no suena nada.
+let silencios = 0;
+export function silenciar(si) {
+  silencios = Math.max(0, silencios + (si ? 1 : -1));
+}
+
 export function sonidoActivo() {
+  if (silencios) return false;
   try {
     return localStorage.getItem('sonido') !== 'no';
   } catch {
