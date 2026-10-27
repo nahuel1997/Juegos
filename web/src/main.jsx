@@ -6,6 +6,8 @@ import './juegos.css';
 import './juegos2.css';
 import './juegos3.css';
 import './juegos4.css';
+import './juegos5.css';
+import './juegos6.css';
 import './efectos.css';
 
 createRoot(document.getElementById('root')).render(

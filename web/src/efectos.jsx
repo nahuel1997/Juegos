@@ -51,6 +51,29 @@ export function Explosion({ grande }) {
   );
 }
 
+// Una bomba cae girando sobre la casilla y al tocar explota (o salpica si es agua).
+export const CAIDA_BOMBA = 600;
+export function Bombazo({ resultado }) {
+  const [cayo, setCayo] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCayo(true), CAIDA_BOMBA);
+    return () => clearTimeout(t);
+  }, []);
+  if (cayo) return resultado === 'agua' ? <Salpicadura /> : <Explosion grande={resultado === 'hundido'} />;
+  return (
+    <span className="bomba-cae" aria-hidden="true">
+      <span className="bomba-sombra" />
+      <svg viewBox="-20 -40 40 80" className="bomba">
+        <path className="bomba-aleta" d="M-9 -24 L-14 -38 L14 -38 L9 -24 Z" />
+        <line className="bomba-aleta" x1="0" y1="-38" x2="0" y2="-24" />
+        <path className="bomba-cuerpo" d="M0 34 C 14 34 15 12 15 -4 C 15 -18 9 -26 0 -26 C -9 -26 -15 -18 -15 -4 C -15 12 -14 34 0 34 Z" />
+        <rect className="bomba-faja" x="-15" y="-12" width="30" height="5" />
+        <ellipse className="bomba-brillo" cx="-6" cy="2" rx="3" ry="10" />
+      </svg>
+    </span>
+  );
+}
+
 export function Salpicadura() {
   return (
     <span className="salpicadura" aria-hidden="true">

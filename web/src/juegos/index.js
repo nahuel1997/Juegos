@@ -31,6 +31,10 @@ import ConfigPenales from './penales/Config.jsx';
 import JuegoPenales from './penales/Juego.jsx';
 import ConfigGatoRaton from './gatoRaton/Config.jsx';
 import JuegoGatoRaton from './gatoRaton/Juego.jsx';
+import ConfigUno from './uno/Config.jsx';
+import JuegoUno from './uno/Juego.jsx';
+import ConfigChinchon from './chinchon/Config.jsx';
+import JuegoChinchon from './chinchon/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -128,5 +132,17 @@ export const JUEGOS = {
     texto: 'Laberinto al azar: el ratón busca el queso y el gato lo persigue. Una casilla cada uno.',
     Config: ConfigGatoRaton,
     Juego: JuegoGatoRaton,
+  },
+  uno: {
+    icono: 'uno',
+    texto: 'Mismo color o mismo número, +2, +4 y comodines. ¡Acordate de decir UNO!',
+    Config: ConfigUno,
+    Juego: JuegoUno,
+  },
+  chinchon: {
+    icono: 'chinchon',
+    texto: 'Mazo español: ligá escaleras y piernas, cortá con poco y no pases de 100.',
+    Config: ConfigChinchon,
+    Juego: JuegoChinchon,
   },
 };

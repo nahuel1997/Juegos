@@ -1,0 +1,75 @@
+/* ===== Batalla naval: barcos dibujados ===== */
+.tablero { position: relative; }
+/* Las casillas con barco quedan transparentes: el dibujo está debajo (CapaBarcos), ocupando sus casillas. */
+.tablero .celda.barco:not(.previa) { background: transparent; }
+.barco-dibujo {
+  position: absolute; inset: 0; pointer-events: none; border-radius: 6px;
+  background: linear-gradient(145deg, var(--mar2), var(--mar));
+}
+.barco-dibujo svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.bq-c1 { stop-color: var(--barco); }
+.bq-c2 { stop-color: var(--barco-borde); }
+.bq-estela { fill: rgba(255, 255, 255, .12); }
+.bq-casco { stroke: rgba(0, 0, 0, .45); stroke-width: 3; }
+.bq-casco.sub { stroke-width: 3; }
+.bq-cubierta { fill: rgba(255, 255, 255, .22); stroke: rgba(0, 0, 0, .18); stroke-width: 2; }
+.bq-pista { stroke: #fff; stroke-width: 3; stroke-dasharray: 14 10; opacity: .8; }
+.bq-pista.fina { stroke-width: 2; stroke-dasharray: none; opacity: .45; }
+.bq-isla, .bq-puente { fill: var(--barco-borde); stroke: rgba(0, 0, 0, .45); stroke-width: 2; }
+.bq-torre { fill: var(--barco-borde); stroke: rgba(0, 0, 0, .5); stroke-width: 2.5; }
+.bq-aleta { fill: var(--barco-borde); stroke: rgba(0, 0, 0, .4); stroke-width: 2; }
+.bq-linea { stroke: rgba(0, 0, 0, .25); stroke-width: 2; }
+.bq-chimenea { fill: #3a3a42; stroke: #1c1c22; stroke-width: 2; }
+.bq-radar { fill: #fff; stroke: rgba(0, 0, 0, .5); stroke-width: 1.5; }
+.bq-torreta circle { fill: var(--barco-borde); stroke: rgba(0, 0, 0, .55); stroke-width: 2; }
+.bq-torreta .bq-tapa, .bq-tapa { fill: rgba(255, 255, 255, .45); stroke: none; }
+.bq-canon { fill: #3a3a42; }
+.bq-avion { fill: #e9eef4; stroke: rgba(0, 0, 0, .45); stroke-width: 1; }
+.bq-quemado { display: none; }
+.barco-dibujo.fantasma { opacity: .7; background: none; }
+.barco-dibujo.fantasma.mal { opacity: .55; filter: sepia(1) saturate(6) hue-rotate(-40deg); }
+
+/* Hundido: oscuro, chamuscado, ladeado y medio bajo el agua */
+.barco-dibujo.hundido svg { filter: grayscale(.5) brightness(.55) sepia(.35); transform: rotate(-2.5deg) scale(.93); }
+.barco-dibujo.hundido .bq-quemado { display: block; fill: rgba(20, 10, 5, .55); }
+.barco-dibujo.hundido::after {
+  content: ''; position: absolute; inset: 0; border-radius: 6px;
+  background: linear-gradient(180deg, transparent 35%, rgba(23, 74, 115, .55));
+}
+.barco-dibujo.v.hundido::after { background: linear-gradient(90deg, transparent 35%, rgba(23, 74, 115, .55)); }
+/* El que se acaba de hundir: aparece cuando cae la bomba y se va a pique de a poco */
+.barco-dibujo.recien { animation: barco-aparece .25s ease-out .6s both; }
+.barco-dibujo.recien svg { animation: a-pique 1.6s ease-in .6s both; }
+.barco-dibujo.recien::after { animation: barco-aparece 1.6s ease-in .6s both; }
+@keyframes barco-aparece { from { opacity: 0; } to { opacity: 1; } }
+@keyframes a-pique {
+  0% { filter: none; transform: none; }
+  25% { transform: rotate(3deg) scale(1.02); }
+  100% { filter: grayscale(.5) brightness(.55) sepia(.35); transform: rotate(-2.5deg) scale(.93); }
+}
+
+/* ===== La bomba que cae ===== */
+.bomba-cae { position: absolute; left: 50%; top: 50%; width: 120%; height: 120%; transform: translate(-50%, -50%); pointer-events: none; z-index: 7; }
+.bomba { position: absolute; left: 15%; top: -20%; width: 70%; height: 140%; overflow: visible; animation: bomba-cae .6s cubic-bezier(.55, 0, 1, .45) both; filter: drop-shadow(0 6px 4px rgba(0, 0, 0, .45)); }
+.bomba-cuerpo { fill: #2b2f36; stroke: #111; stroke-width: 1.5; }
+.bomba-aleta { fill: #4a515c; stroke: #111; stroke-width: 1.5; }
+.bomba-faja { fill: #ffb703; }
+.bomba-brillo { fill: rgba(255, 255, 255, .35); }
+.bomba-sombra { position: absolute; left: 50%; top: 50%; width: 70%; height: 30%; border-radius: 50%; background: rgba(0, 0, 0, .45); transform: translate(-50%, -50%) scale(.2); animation: bomba-sombra .6s ease-in both; }
+@keyframes bomba-cae {
+  0% { transform: translateY(-170%) scale(1.5) rotate(-14deg); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(0) scale(.7) rotate(4deg); opacity: 1; }
+}
+@keyframes bomba-sombra { to { transform: translate(-50%, -50%) scale(1); opacity: .8; } }
+/* Lo que marca el disparo aparece recién cuando la bomba toca */
+.celda.con-fx > .impacto, .celda.con-fx > .llamita, .celda.con-fx > .agua-punto { animation: barco-aparece .15s ease-out .6s both; }
+.celda.con-fx.agua, .celda.con-fx.tocado:not(.barco) { animation: fondo-mar .6s step-end both; }
+.celda.con-fx.ultimo.agua, .celda.con-fx.ultimo.tocado:not(.barco) { animation: fondo-mar .6s step-end, golpe .7s ease-out .6s both; }
+.celda.con-fx.ultimo.barco { animation: golpe .7s ease-out .6s both; }
+@keyframes fondo-mar { 0% { background: linear-gradient(145deg, var(--mar2), var(--mar)); } }
+.tablero-wrap.tras-bomba.tras-bomba .tablero { animation-delay: .6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bomba, .bomba-sombra, .barco-dibujo.recien, .barco-dibujo.recien svg, .barco-dibujo.recien::after { animation: none; }
+}

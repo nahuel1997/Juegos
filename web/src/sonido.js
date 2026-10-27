@@ -113,6 +113,25 @@ export const efectoSonido = {
     soplo(c, { inicio: t, duracion: grande ? 1.6 : 1, volumen: 0.45, desde: 3000, hasta: 80 });
     if (grande) soplo(c, { inicio: t + 0.25, duracion: 1.2, volumen: 0.3, desde: 1200, hasta: 60 });
   }),
+  // Silbido de la bomba cayendo (de agudo a grave).
+  silbido: (duracion = 0.6) => conAudio((c, t) => {
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(1500, t);
+    o.frequency.exponentialRampToValueAtTime(420, t + duracion);
+    g.gain.setValueAtTime(0.001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t + 0.08);
+    g.gain.setValueAtTime(0.12, t + duracion - 0.08);
+    g.gain.exponentialRampToValueAtTime(0.001, t + duracion);
+    o.connect(g).connect(c.destination);
+    o.start(t);
+    o.stop(t + duracion + 0.05);
+  }),
+  // Carta que se tira: un "fsst" cortito.
+  carta: () => conAudio((c, t) => {
+    soplo(c, { inicio: t, duracion: 0.18, volumen: 0.22, tipo: 'bandpass', desde: 5000, hasta: 1800, q: 1.2 });
+  }),
   agua: () => conAudio((c, t) => {
     soplo(c, { inicio: t, duracion: 0.45, volumen: 0.25, tipo: 'bandpass', desde: 2500, hasta: 600, q: 0.8 });
     soplo(c, { inicio: t + 0.12, duracion: 0.3, volumen: 0.12, tipo: 'highpass', desde: 4000, hasta: 1500 });

@@ -157,7 +157,7 @@ export class PartidaBatallaNaval {
       resultado = barco.impactos === barco.largo ? 'hundido' : 'tocado';
     }
     mios.set(clave(fila, col), resultado === 'agua' ? 'agua' : 'tocado');
-    this.ultimo = { por: j, fila, col, resultado, barco: resultado === 'hundido' ? barco.nombre : null };
+    this.ultimo = { por: j, fila, col, resultado, barco: resultado === 'hundido' ? barco.nombre : null, barcoId: resultado === 'hundido' ? barco.id : null };
 
     if (this.flotas[rival].every((b) => b.impactos === b.largo)) {
       this.estado = 'terminada';

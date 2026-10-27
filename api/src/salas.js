@@ -17,6 +17,8 @@ import * as quien from './juegos/quienEsQuien.js';
 import * as pool from './juegos/pool.js';
 import * as penales from './juegos/penales.js';
 import * as gatoRaton from './juegos/gatoRaton.js';
+import * as uno from './juegos/uno.js';
+import * as chinchon from './juegos/chinchon.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -40,6 +42,8 @@ export const JUEGOS = {
   pool: { nombre: 'Pool', mod: pool, Clase: pool.PartidaPool },
   penales: { nombre: 'Penales', mod: penales, Clase: penales.PartidaPenales },
   'gato-raton': { nombre: 'El gato y el ratón', mod: gatoRaton, Clase: gatoRaton.PartidaGatoRaton },
+  uno: { nombre: 'UNO', mod: uno, Clase: uno.PartidaUno },
+  chinchon: { nombre: 'Chinchón', mod: chinchon, Clase: chinchon.PartidaChinchon },
 };
 
 // Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).

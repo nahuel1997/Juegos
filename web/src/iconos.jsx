@@ -149,6 +149,25 @@ export const ICONOS = {
       <circle cx="49" cy="29" r="3" fill="#fff" />
     </>
   ),
+  uno: (
+    <>
+      <rect x="6" y="14" width="28" height="40" rx="5" fill="#1e88e5" stroke="#fff" strokeWidth="3" transform="rotate(-14 20 34)" />
+      <rect x="20" y="10" width="28" height="40" rx="5" fill="#fbc02d" stroke="#fff" strokeWidth="3" transform="rotate(-2 34 30)" />
+      <rect x="32" y="10" width="28" height="40" rx="5" fill="#e53935" stroke="#fff" strokeWidth="3" transform="rotate(12 46 30)" />
+      <ellipse cx="46" cy="30" rx="9" ry="14" fill="#fff" transform="rotate(30 46 30)" />
+      <path d="M42 24h8M46 22v16" stroke="#e53935" strokeWidth="3.5" strokeLinecap="round" transform="rotate(12 46 30)" />
+    </>
+  ),
+  chinchon: (
+    <>
+      <rect x="6" y="16" width="26" height="38" rx="5" fill="#fffaf0" stroke={T} strokeWidth="2.5" transform="rotate(-14 19 35)" />
+      <rect x="20" y="12" width="26" height="38" rx="5" fill="#fffaf0" stroke={T} strokeWidth="2.5" transform="rotate(-2 33 31)" />
+      <rect x="32" y="12" width="26" height="38" rx="5" fill="#f3e5ff" stroke={T} strokeWidth="2.5" transform="rotate(12 45 31)" />
+      <circle cx="33" cy="30" r="6" fill="#ffc83d" stroke="#b8860b" strokeWidth="2" />
+      <path d="M38 34l-3-12 6 6 4-9 4 9 6-6-3 12z" fill="#7b1fa2" stroke="#3b0a4f" strokeWidth="1.8" strokeLinejoin="round" transform="rotate(12 45 31)" />
+      <circle cx="46" cy="38" r="5" fill="#ffe0c2" stroke="#3b0a4f" strokeWidth="1.5" transform="rotate(12 45 31)" />
+    </>
+  ),
   cartas: (
     <>
       <rect x="8" y="12" width="28" height="40" rx="5" fill="#fff" stroke={T} strokeWidth="2.5" transform="rotate(-12 22 32)" />

@@ -10,7 +10,7 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 
 ## Juegos
 
-- **Batalla naval**: filas y columnas (6 a 15), cantidad de cada barco y si pueden ir pegados (por defecto sí). Cada tiro pasa el turno (opcional: tocado = seguís).
+- **Batalla naval**: filas y columnas (6 a 15), cantidad de cada barco y si pueden ir pegados (por defecto sí). Cada tiro pasa el turno (opcional: tocado = seguís). Barcos dibujados por tipo (portaaviones, acorazado, crucero, submarino, destructor); cada disparo es una bomba que cae y explota.
 - **Ahorcado**: rondas alternadas; la palabra la elige el rival (con pista) o sale al azar. Errores permitidos configurables.
 - **Tuti fruti**: columnas propias, letras excluidas, letra al azar sin repetir, cuenta para prepararse antes de cada letra (5 s, configurable), ¡basta! con cuenta regresiva y puntos manuales.
 - **Generala**: 5 dados, 3 tiros, escalera/full/póker/generala/doble; servida opcional gana.
@@ -26,6 +26,8 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **Pool**: bola 8 con física simulada en el server (los dos ven el mismo tiro); grupos, faltas y reglas de la 8.
 - **Penales**: pateador y arquero eligen zona a la vez; serie de N y muerte súbita.
 - **El gato y el ratón**: laberinto al azar con varios caminos (tamaño configurable); una moneda al aire decide quién arranca de gato, se mueven de a una casilla por turno con las flechitas, el ratón va de la madriguera al queso y el gato lo persigue (no puede pisar el queso). En cada ronda se cambian los papeles; gana el que gana más rondas.
+- **UNO**: mazo de 108 cartas, Salta/Reversa/+2/+4 (vuelve a jugar el mismo), comodín con elección de color, botón ¡UNO! y acusación si no lo decís (robás 2); el que se queda sin cartas suma lo del otro, hasta N puntos.
+- **Chinchón**: mazo español (con o sin ochos y nueves, con o sin comodines); la app acomoda la mano sola y marca con qué carta se puede cortar; menos diez, chinchón (gana la partida) y el rival pega sus sueltas en las combinaciones del que cortó; pierde el que pasa el límite.
 - **Animaciones**: explosión al pegarle a un barco (más grande al hundirlo) y salpicadura en el agua, dados que ruedan en la generala, show del 7 de oros y escoba que barre la mesa, papel picado al ganar.
 
 Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).

@@ -5,6 +5,7 @@ import { io } from 'socket.io-client';
 import { flotaAlAzar } from '../juegos/batallaNaval.js';
 import { PALABRAS } from '../juegos/stopPalabras.js';
 import { distancias, vecinos } from '../juegos/gatoRaton.js';
+import { mejorArreglo } from '../juegos/chinchon.js';
 
 const [usuario, clave, base = 'http://localhost:4400'] = process.argv.slice(2);
 const r = await fetch(`${base}/api/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario, clave }) });
@@ -169,6 +170,39 @@ async function jugar(sala) {
       if (p.yaElegi) return;
       await new Promise((ok) => setTimeout(ok, 1200));
       return accion('elegir', { zona: azar(p.config.zonas) });
+    case 'uno': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.sinUno === 'rival') return accion('acusar');
+      if (p.sinUno === 'yo' && Math.random() < 0.5) return accion('uno');
+      if (p.turno !== yo) return;
+      await new Promise((ok) => setTimeout(ok, 900));
+      // A veces se olvida de decir UNO (para probar el castigo).
+      if (p.miMano.length === 2 && !p.dijoUno && Math.random() < 0.6) return accion('uno');
+      const va = (c) => c.color === 'negro' || c.color === p.color || c.valor === p.tope.valor;
+      const opciones = p.miMano.filter((c) => (p.robada ? c.id === p.robada : va(c)));
+      if (!opciones.length) return p.robada ? accion('pasar') : accion('robar');
+      // Primero las de color, los comodines al final.
+      opciones.sort((a, b) => (a.color === 'negro') - (b.color === 'negro'));
+      const c = opciones[0];
+      const colores = ['rojo', 'amarillo', 'verde', 'azul'];
+      const color = colores.sort((a, b) => p.miMano.filter((x) => x.color === b).length - p.miMano.filter((x) => x.color === a).length)[0];
+      return accion('jugar', { carta: c.id, color });
+    }
+    case 'chinchon': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      await new Promise((ok) => setTimeout(ok, 900));
+      if (p.paso === 'robar') {
+        // Levanta del pozo si le baja lo suelto; si no, del mazo.
+        const sin = mejorArreglo(p.miMano, p.config).puntos;
+        const con = p.tope ? Math.min(...[...p.miMano, p.tope].map((_, i, todas) => mejorArreglo(todas.filter((__, k) => k !== i), p.config).puntos)) : Infinity;
+        return accion('robar', { de: con < sin ? 'pozo' : 'mazo' });
+      }
+      const mejor = [...p.cortes].sort((a, b) => a.puntos - b.puntos)[0];
+      return accion(mejor.puntos <= 5 ? 'cortar' : 'tirar', { carta: mejor.id });
+    }
     case 'gato-raton': {
       if (p.estado !== 'jugando') return;
       if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');

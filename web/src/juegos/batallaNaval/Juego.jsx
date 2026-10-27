@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LETRAS, cabe, celdasDe, flotaAlAzar } from './flota.js';
-import { Cartel, Explosion, Llamita, Salpicadura, useEfecto } from '../../efectos.jsx';
+import { Bombazo, CAIDA_BOMBA, Cartel, Llamita, useEfecto } from '../../efectos.jsx';
+import { CapaBarcos } from './Barco.jsx';
 import { efectoSonido } from '../../sonido.js';
 
 const k = (f, c) => `${f},${c}`;
@@ -17,7 +18,13 @@ function mapaBarcos(barcos, flota) {
   return m;
 }
 
-function Tablero({ filas, columnas, celda, onClick, onHover, clickable, titulo, className = '' }) {
+// Completa tipo y largo de cada barco con los datos de la flota (para dibujarlo).
+const conTipo = (barcos, flota) => barcos.map((b) => {
+  const t = flota.find((x) => x.id === b.id);
+  return { ...b, tipo: b.tipo ?? t.tipo, largo: b.largo ?? t.largo };
+});
+
+function Tablero({ filas, columnas, celda, onClick, onHover, clickable, titulo, className = '', barcos = [] }) {
   // (celda puede devolver `fx`: un efecto animado encima de la celda)
   return (
     <div className={`tablero-wrap ${className}`}>
@@ -27,6 +34,7 @@ function Tablero({ filas, columnas, celda, onClick, onHover, clickable, titulo, 
         style={{ '--cols': columnas, maxWidth: Math.min(560, 46 * columnas + 30) }}
         onMouseLeave={() => onHover?.(null)}
       >
+        <CapaBarcos barcos={barcos} />
         <div className="coord" />
         {Array.from({ length: columnas }, (_, c) => <div key={`h${c}`} className="coord">{c + 1}</div>)}
         {Array.from({ length: filas }, (_, f) => (
@@ -114,7 +122,7 @@ function Colocacion({ partida, accion, ctx }) {
     return (
       <div className="colocacion">
         <div className="estado-cinta espera">Flota lista. Esperando que {ctx.nombreRival} ubique la suya…</div>
-        <Tablero filas={filas} columnas={columnas} titulo="Tu flota" celda={(f, c) => ({ clase: claseBarco(mapaBarcos(partida.miFlota, flota).get(k(f, c))) })} />
+        <Tablero filas={filas} columnas={columnas} titulo="Tu flota" barcos={conTipo(partida.miFlota, flota)} celda={(f, c) => ({ clase: claseBarco(mapaBarcos(partida.miFlota, flota).get(k(f, c))) })} />
       </div>
     );
   }
@@ -129,6 +137,10 @@ function Colocacion({ partida, accion, ctx }) {
           filas={filas}
           columnas={columnas}
           clickable
+          barcos={[
+            ...conTipo(barcos, flota),
+            ...(previa ? conTipo([previa], flota).map((b) => ({ ...b, id: 'previa', clase: previaOk ? 'fantasma' : 'fantasma mal' })) : []),
+          ]}
           celda={(f, c) => {
             const enPrevia = celdasPrevia.has(k(f, c));
             return { clase: `${claseBarco(mapa.get(k(f, c)))} ${enPrevia ? (previaOk ? 'previa' : 'previa mal') : ''}` };
@@ -200,15 +212,23 @@ function Combate({ partida, accion, ctx }) {
   // Cada disparo nuevo: explosión (tocado), explosión grande + sacudón (hundido) o salpicadura (agua).
   const totalTiros = partida.misDisparos.length + partida.disparosRecibidos.length;
   const fx = useEfecto(ultimo ? `${totalTiros}-${ultimo.por}-${ultimo.fila}-${ultimo.col}` : null, () => {
-    if (ultimo.resultado === 'agua') efectoSonido.agua();
-    else efectoSonido.explosion(ultimo.resultado === 'hundido');
-    return { ...ultimo, ms: ultimo.resultado === 'hundido' ? 2200 : 1400 };
+    // Primero cae la bomba silbando; al tocar, explosión o salpicadura.
+    efectoSonido.silbido(CAIDA_BOMBA / 1000);
+    setTimeout(() => {
+      if (ultimo.resultado === 'agua') efectoSonido.agua();
+      else efectoSonido.explosion(ultimo.resultado === 'hundido');
+    }, CAIDA_BOMBA);
+    return { ...ultimo, ms: CAIDA_BOMBA + (ultimo.resultado === 'hundido' ? 2200 : 1400) };
   });
   const fxEn = (por, f, c) => {
     if (!fx || fx.por !== por || fx.fila !== f || fx.col !== c) return null;
-    return fx.resultado === 'agua' ? <Salpicadura key={fx.id} /> : <Explosion key={fx.id} grande={fx.resultado === 'hundido'} />;
+    return <Bombazo key={fx.id} resultado={fx.resultado} />;
   };
-  const sacude = (por) => (fx && fx.por === por && fx.resultado !== 'agua' ? (fx.resultado === 'hundido' ? 'sacudon' : 'temblor') : '');
+  const sacude = (por) => (fx && fx.por === por && fx.resultado !== 'agua' ? (fx.resultado === 'hundido' ? 'sacudon tras-bomba' : 'temblor tras-bomba') : '');
+  // El barco recién hundido se va a pique con animación (después de que cae la bomba).
+  const recien = (por, b) => fx?.resultado === 'hundido' && fx.por === por && fx.barcoId === b.id;
+  const misBarcos = conTipo(partida.miFlota, flota).map((b) => ({ ...b, hundido: b.impactos === b.largo, recien: recien(rival, b) }));
+  const barcosRival = conTipo(partida.flotaRival, flota).map((b) => ({ ...b, recien: recien(yo, b) }));
 
   return (
     <>
@@ -217,7 +237,7 @@ function Combate({ partida, accion, ctx }) {
         {ultimo && <small>{textoUltimo(ultimo, yo, nombreRival, partida.seguirAlTocar)}</small>}
       </div>
       {fx?.resultado === 'hundido' && (
-        <Cartel key={fx.id} tipo="hundido" texto="¡HUNDIDO!" sub={fx.por === yo ? `Hundiste el ${fx.barco}` : `Te hundieron el ${fx.barco}`} />
+        <Cartel key={fx.id} retraso={CAIDA_BOMBA / 1000} tipo="hundido" texto="¡HUNDIDO!" sub={fx.por === yo ? `Hundiste el ${fx.barco}` : `Te hundieron el ${fx.barco}`} />
       )}
       <div className="combate">
         <Tablero
@@ -225,6 +245,7 @@ function Combate({ partida, accion, ctx }) {
           columnas={columnas}
           titulo={`Flota de ${nombreRival} · quedan ${partida.restantes.rival}`}
           className={`${miTurno ? 'activo' : ''} ${sacude(yo)}`}
+          barcos={barcosRival}
           clickable={miTurno}
           celda={(f, c) => {
             const r = misDisparos.get(k(f, c));
@@ -241,6 +262,7 @@ function Combate({ partida, accion, ctx }) {
           columnas={columnas}
           titulo={`Tu flota · quedan ${partida.restantes.mios}`}
           className={`propio ${sacude(rival)}`}
+          barcos={misBarcos}
           celda={(f, c) => {
             const r = recibidos.get(k(f, c));
             return {
