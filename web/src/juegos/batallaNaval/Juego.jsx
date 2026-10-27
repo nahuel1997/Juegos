@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LETRAS, cabe, celdasDe, flotaAlAzar } from './flota.js';
+import { Cartel, Explosion, Llamita, Salpicadura, useEfecto } from '../../efectos.jsx';
+import { efectoSonido } from '../../sonido.js';
 
 const k = (f, c) => `${f},${c}`;
 
@@ -16,6 +18,7 @@ function mapaBarcos(barcos, flota) {
 }
 
 function Tablero({ filas, columnas, celda, onClick, onHover, clickable, titulo, className = '' }) {
+  // (celda puede devolver `fx`: un efecto animado encima de la celda)
   return (
     <div className={`tablero-wrap ${className}`}>
       {titulo && <h3>{titulo}</h3>}
@@ -39,18 +42,19 @@ function FilaTablero({ f, columnas, celda, onClick, onHover }) {
     <>
       <div className="coord">{LETRAS[f]}</div>
       {Array.from({ length: columnas }, (_, c) => {
-        const { clase = '', marca = null } = celda(f, c);
+        const { clase = '', marca = null, fx = null } = celda(f, c);
         return (
           <button
             key={c}
             type="button"
-            className={`celda ${clase}`}
+            className={`celda ${clase} ${fx ? 'con-fx' : ''}`}
             title={`${LETRAS[f]}${c + 1}`}
             onClick={() => onClick?.(f, c)}
             onMouseEnter={() => onHover?.([f, c])}
             onContextMenu={(e) => { if (onHover) { e.preventDefault(); onHover('girar'); } }}
           >
             {marca}
+            {fx}
           </button>
         );
       })}
@@ -191,7 +195,20 @@ function Combate({ partida, accion, ctx }) {
   const mapaRival = useMemo(() => mapaBarcos(partida.flotaRival, flota), [partida.flotaRival, flota]);
   const esUltimo = (por, f, c) => ultimo && ultimo.por === por && ultimo.fila === f && ultimo.col === c;
 
-  const marca = (r) => (r === 'tocado' ? <span className="impacto">✕</span> : r === 'agua' ? <span className="agua-punto" /> : null);
+  const marca = (r) => (r === 'tocado' ? <><Llamita /><span className="impacto">✕</span></> : r === 'agua' ? <span className="agua-punto" /> : null);
+
+  // Cada disparo nuevo: explosión (tocado), explosión grande + sacudón (hundido) o salpicadura (agua).
+  const totalTiros = partida.misDisparos.length + partida.disparosRecibidos.length;
+  const fx = useEfecto(ultimo ? `${totalTiros}-${ultimo.por}-${ultimo.fila}-${ultimo.col}` : null, () => {
+    if (ultimo.resultado === 'agua') efectoSonido.agua();
+    else efectoSonido.explosion(ultimo.resultado === 'hundido');
+    return { ...ultimo, ms: ultimo.resultado === 'hundido' ? 2200 : 1400 };
+  });
+  const fxEn = (por, f, c) => {
+    if (!fx || fx.por !== por || fx.fila !== f || fx.col !== c) return null;
+    return fx.resultado === 'agua' ? <Salpicadura key={fx.id} /> : <Explosion key={fx.id} grande={fx.resultado === 'hundido'} />;
+  };
+  const sacude = (por) => (fx && fx.por === por && fx.resultado !== 'agua' ? (fx.resultado === 'hundido' ? 'sacudon' : 'temblor') : '');
 
   return (
     <>
@@ -199,18 +216,22 @@ function Combate({ partida, accion, ctx }) {
         {estado === 'jugando' ? (miTurno ? '¡Te toca disparar!' : `Turno de ${nombreRival}…`) : 'Partida terminada'}
         {ultimo && <small>{textoUltimo(ultimo, yo, nombreRival, partida.seguirAlTocar)}</small>}
       </div>
+      {fx?.resultado === 'hundido' && (
+        <Cartel key={fx.id} tipo="hundido" texto="¡HUNDIDO!" sub={fx.por === yo ? `Hundiste el ${fx.barco}` : `Te hundieron el ${fx.barco}`} />
+      )}
       <div className="combate">
         <Tablero
           filas={filas}
           columnas={columnas}
           titulo={`Flota de ${nombreRival} · quedan ${partida.restantes.rival}`}
-          className={miTurno ? 'activo' : ''}
+          className={`${miTurno ? 'activo' : ''} ${sacude(yo)}`}
           clickable={miTurno}
           celda={(f, c) => {
             const r = misDisparos.get(k(f, c));
             return {
               clase: `${claseBarco(mapaRival.get(k(f, c)))} ${r || ''} ${!r && miTurno ? 'apuntable' : ''} ${esUltimo(yo, f, c) ? 'ultimo' : ''}`,
               marca: marca(r),
+              fx: fxEn(yo, f, c),
             };
           }}
           onClick={(f, c) => { if (miTurno && !misDisparos.has(k(f, c))) accion('disparar', { fila: f, col: c }); }}
@@ -219,12 +240,13 @@ function Combate({ partida, accion, ctx }) {
           filas={filas}
           columnas={columnas}
           titulo={`Tu flota · quedan ${partida.restantes.mios}`}
-          className="propio"
+          className={`propio ${sacude(rival)}`}
           celda={(f, c) => {
             const r = recibidos.get(k(f, c));
             return {
               clase: `${claseBarco(miMapa.get(k(f, c)))} ${r || ''} ${esUltimo(rival, f, c) ? 'ultimo' : ''}`,
               marca: marca(r),
+              fx: fxEn(rival, f, c),
             };
           }}
         />

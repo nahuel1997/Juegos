@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icono } from '../../iconos.jsx';
+import { Cartel, Confeti } from '../../efectos.jsx';
+import { efectoSonido } from '../../sonido.js';
 
 const PALO = { oros: 'oro', copas: 'copa', espadas: 'espada', bastos: 'basto' };
 const FIGURA = { 10: 'Sota', 11: 'Caballo', 12: 'Rey' };
@@ -24,6 +26,43 @@ function buscarQuince(carta, mesa) {
     if (carta.valor + sel.reduce((s, c) => s + c.valor, 0) === 15) return sel.map((c) => c.id);
   }
   return null;
+}
+
+const SIETE = { id: SIETE_DE_OROS, palo: 'oros', numero: 7, valor: 7 };
+
+// El 7 de oros entra girando en el medio de la pantalla, con rayos y estrellitas.
+function ShowSieteDeOros() {
+  const estrellas = Array.from({ length: 14 }, (_, i) => {
+    const a = (i / 14) * Math.PI * 2;
+    const r = 140 + Math.random() * 120;
+    return { dx: `${Math.cos(a) * r}px`, dy: `${Math.sin(a) * r}px`, ret: `${0.9 + Math.random() * 0.4}s` };
+  });
+  return (
+    <div className="show-oro" aria-live="polite">
+      <div className="rayos" />
+      {estrellas.map((e, i) => (
+        <span key={i} className="estrellita" style={{ '--dx': e.dx, '--dy': e.dy, animationDelay: e.ret }}><Icono id="estrella" tam={34} /></span>
+      ))}
+      <Carta carta={SIETE} />
+      <div className="texto-oro">¡El 7 de oros está en la mesa!</div>
+    </div>
+  );
+}
+
+// Una escoba gigante barre la pantalla levantando polvo.
+function Barrida({ mio, rival, demora }) {
+  const retraso = demora ? 0.9 : 0;
+  return (
+    <>
+      <div className="barrida" aria-hidden="true">
+        <span className="escoba-gigante" style={{ animationDelay: `${retraso}s` }}><Icono id="escoba" tam={180} /></span>
+        {Array.from({ length: 8 }, (_, i) => (
+          <span key={i} className="polvo" style={{ left: `${8 + i * 11}%`, animationDelay: `${retraso + 0.15 + i * 0.16}s` }} />
+        ))}
+      </div>
+      <Cartel tipo="escoba" retraso={retraso} texto="¡ESCOBA!" sub={mio ? 'Barriste la mesa: +1 punto' : `${rival} barrió la mesa`} />
+    </>
+  );
 }
 
 function textoUltima(u, ctx) {
@@ -78,12 +117,13 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
   }, [firma]);
   useEffect(() => setSinQuince(false), [mia]);
 
-  // Animación especial cuando el 7 de oros aparece en la mesa o alguien se lo lleva.
-  const [destello, setDestello] = useState(null);
+  // Momentos especiales: el 7 de oros cae en la mesa, alguien se lo lleva, o alguien hace escoba.
+  const [show, setShow] = useState(null);
   const estabaEnMesa = useRef(partida.mesa.some((c) => c.id === SIETE_DE_OROS));
   const enMesa = partida.mesa.some((c) => c.id === SIETE_DE_OROS);
   const u = partida.ultima;
   const seLoLlevo = u && u.tipo !== 'tiro' && (u.carta?.id === SIETE_DE_OROS || u.cartas?.some((c) => c.id === SIETE_DE_OROS));
+  const hizoEscoba = u && (u.escoba || u.tipo === 'mesa-inicial');
   const claveUltima = u ? `${u.por}-${u.tipo}-${u.carta?.id || ''}-${partida.mano}` : '';
   const montado = useRef(false);
   useEffect(() => {
@@ -92,13 +132,20 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
       montado.current = true;
       return;
     }
-    let nuevo = null;
-    if (enMesa && !estabaEnMesa.current) nuevo = { tipo: 'aparece', texto: '¡El 7 de oros está en la mesa!' };
-    else if (seLoLlevo) nuevo = { tipo: 'llevo', texto: u.por === ctx.yo ? '¡Te llevaste el 7 de oros! +1' : `${ctx.nombreRival} se llevó el 7 de oros` };
+    const aparece = enMesa && !estabaEnMesa.current;
     estabaEnMesa.current = enMesa;
-    if (!nuevo) return;
-    setDestello({ ...nuevo, id: Date.now() });
-    const t = setTimeout(() => setDestello(null), 2600);
+    const mio = u?.por === ctx.yo;
+    const nuevo = {
+      aparece,
+      llevo: !aparece && seLoLlevo ? { mio } : null,
+      escoba: hizoEscoba ? { mio } : null,
+      id: Date.now(),
+    };
+    if (!nuevo.aparece && !nuevo.llevo && !nuevo.escoba) return;
+    if (nuevo.aparece || nuevo.llevo) efectoSonido.fanfarria();
+    if (nuevo.escoba) setTimeout(() => efectoSonido.escoba(), nuevo.aparece || nuevo.llevo ? 900 : 0);
+    setShow(nuevo);
+    const t = setTimeout(() => setShow(null), nuevo.aparece || (nuevo.escoba && nuevo.llevo) ? 3400 : 2600);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enMesa, claveUltima]);
@@ -112,11 +159,14 @@ export default function JuegoEscoba({ partida, accion, ctx }) {
 
   return (
     <div className="escoba">
-      {destello && (
-        <div className={`destello-oro ${destello.tipo}`} key={destello.id}>
-          <Icono id="chispas" tam={34} /><Icono id="oro" tam={34} /> {destello.texto} <Icono id="chispas" tam={34} />
-        </div>
+      {show?.aparece && <ShowSieteDeOros key={show.id} />}
+      {show?.llevo && (
+        <>
+          <Cartel key={`l${show.id}`} tipo="oro" texto="¡7 de oros!" sub={show.llevo.mio ? 'Te lo llevaste: +1 punto' : `Se lo llevó ${ctx.nombreRival}`} />
+          {show.llevo.mio && <Confeti key={`c${show.id}`} cantidad={60} />}
+        </>
       )}
+      {show?.escoba && <Barrida key={`e${show.id}`} mio={show.escoba.mio} rival={ctx.nombreRival} demora={show.aparece || show.llevo} />}
       <div className="marcador">
         <span>Vos <b>{partida.puntos.yo + enMano.yo}</b>{enMano.yo > 0 && <small className="en-mano"> (+{enMano.yo} en esta mano)</small>}</span>
         <span className="ronda">Mano {partida.mano} · a {partida.config.puntosParaGanar}</span>

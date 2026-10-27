@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { JUEGOS } from '../juegos/index.js';
 import { Avatar } from './comunes.jsx';
-import { sonarTurno } from '../sonido.js';
+import { efectoSonido, sonarTurno } from '../sonido.js';
+import { Confeti } from '../efectos.jsx';
 import { Icono } from '../iconos.jsx';
 import { SelectorEmotes } from './Emotes.jsx';
 
@@ -16,8 +17,23 @@ function Final({ sala, emitir, ctx, textoFinal }) {
   if (empate) dibujo = <Icono id="apreton" tam={72} />;
   else if (gane) dibujo = rosa ? <><Icono id="corona" tam={72} /><Icono id="corazon" tam={56} /></> : <Icono id="trofeo" tam={72} />;
   else dibujo = <Icono id={rosa ? 'beso' : 'medalla'} tam={72} />;
+  // Festejo (o lamento) al terminar. Si se recarga la página con el cartel final a la vista no se repite:
+  // la marca se borra recién cuando el cartel se va (revancha, reglas o salir).
+  const marca = `fin-${sala.id}`;
+  const [festejo] = useState(() => {
+    try { return sessionStorage.getItem('fin-visto') !== marca; } catch { return true; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem('fin-visto', marca); } catch { /* sin storage */ }
+    if (festejo && !empate && p.motivoFin !== 'abandono') {
+      if (gane) efectoSonido.ganar(); else efectoSonido.perder();
+    }
+    return () => { try { sessionStorage.removeItem('fin-visto'); } catch { /* sin storage */ } };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div className={`tarjeta final ${gane ? 'gane' : empate ? '' : 'perdi'}`}>
+      {festejo && gane && <Confeti cantidad={120} />}
       <div className="final-emoji">{dibujo}</div>
       <h2>{empate ? '¡Empate!' : gane ? '¡Ganaste!' : `Ganó ${ctx.nombreRival}`}</h2>
       <p className="sub">

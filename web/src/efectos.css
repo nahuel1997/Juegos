@@ -1,0 +1,127 @@
+/* Efectos compartidos: explosión, agua, fuego, papel picado, carteles. */
+
+/* ===== Explosión (centrada sobre la celda, más grande que ella) ===== */
+.explosion, .salpicadura { position: absolute; left: 50%; top: 50%; width: 320%; height: 320%; transform: translate(-50%, -50%); pointer-events: none; z-index: 6; }
+.explosion.grande { width: 520%; height: 520%; }
+.explosion svg, .salpicadura svg { width: 100%; height: 100%; overflow: visible; }
+.ex-flash { fill: #fff; animation: ex-flash .35s ease-out both; }
+.ex-bola { transform-origin: 0 0; animation: ex-bola .9s cubic-bezier(.2, .9, .3, 1) both; }
+.ex-onda { fill: none; stroke: #ffd54a; stroke-width: 3; transform-origin: 0 0; animation: ex-onda .6s ease-out both; }
+.ex-humo { fill: #4a4a52; opacity: 0; animation: ex-humo 1.3s ease-out both; }
+.ex-chispa { stroke: #ffe066; stroke-width: 2.5; stroke-linecap: round; animation: ex-chispa .55s ease-out both; }
+@keyframes ex-flash { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+@keyframes ex-bola { 0% { transform: scale(.1) rotate(0); opacity: 1; } 45% { transform: scale(1.15) rotate(25deg); opacity: 1; } 100% { transform: scale(1.4) rotate(40deg); opacity: 0; } }
+@keyframes ex-onda { 0% { transform: scale(.3); opacity: 1; stroke-width: 6; } 100% { transform: scale(2.3); opacity: 0; stroke-width: .5; } }
+@keyframes ex-humo { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: .75; } 100% { opacity: 0; transform: translateY(-26px) scale(1.5); } }
+@keyframes ex-chispa { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(16px); opacity: 0; } }
+
+/* Hundido: tiembla todo el tablero */
+.tablero-wrap.sacudon .tablero { animation: sacudon .55s cubic-bezier(.36, .07, .19, .97) both; }
+.tablero-wrap.temblor .tablero { animation: temblor .3s ease-out both; }
+@keyframes sacudon {
+  10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); }
+  30%, 50%, 70% { transform: translate(-7px, 3px) rotate(-.6deg); } 40%, 60% { transform: translate(7px, -3px) rotate(.6deg); }
+}
+@keyframes temblor { 25% { transform: translate(-3px, 1px); } 50% { transform: translate(3px, -1px); } 75% { transform: translate(-1px, 1px); } }
+.celda.con-fx { z-index: 5; }
+
+/* ===== Agua ===== */
+.sp-anillo { fill: none; stroke: #bfe8ff; stroke-width: 2.5; transform-origin: 0 0; animation: sp-anillo .8s ease-out both; }
+.sp-anillo.dos { animation-delay: .15s; }
+.sp-gota { fill: #d8f2ff; animation: sp-gota .7s cubic-bezier(.3, .6, .5, 1) both; }
+@keyframes sp-anillo { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes sp-gota { 0% { transform: translate(0, 0) scale(.5); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), calc(var(--dy) + 18px)) scale(.8); opacity: 0; } }
+
+/* ===== Fuego en los barcos tocados ===== */
+.llamita { position: absolute; left: 50%; bottom: 38%; width: 60%; height: 75%; transform: translateX(-50%); pointer-events: none; z-index: 2; }
+.llamita svg { width: 100%; height: 100%; overflow: visible; }
+.ll-afuera { fill: #ff7a1a; transform-origin: 50% 100%; animation: llama .5s ease-in-out infinite alternate; filter: drop-shadow(0 0 3px rgba(255, 122, 26, .8)); }
+.ll-adentro { fill: #ffe066; transform-origin: 50% 100%; animation: llama .35s ease-in-out infinite alternate-reverse; }
+@keyframes llama { 0% { transform: scale(1, 1) skewX(-4deg); } 100% { transform: scale(.88, 1.12) skewX(5deg); } }
+.celda.hundido .llamita { display: none; }
+
+/* ===== Papel picado ===== */
+.confeti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 70; }
+.confeti i { position: absolute; top: -20px; width: 9px; height: 14px; border-radius: 2px; animation-name: confeti; animation-timing-function: cubic-bezier(.25, .5, .5, 1); animation-fill-mode: both; }
+.confeti i.redondo { width: 10px; height: 10px; border-radius: 50%; }
+@keyframes confeti {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate(var(--deriva), 105vh) rotate(var(--giro)); opacity: 0; }
+}
+
+/* ===== Cartel grande en el medio ===== */
+.cartel-grande {
+  position: fixed; left: 50%; top: 40%; z-index: 65; pointer-events: none; text-align: center; white-space: nowrap;
+  animation: cartel-grande 2.2s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.cartel-grande b {
+  display: block; font-size: clamp(2.2rem, 10vw, 4.8rem); font-weight: 900; letter-spacing: .02em; color: #fff;
+  -webkit-text-stroke: 3px #1b1b1b; paint-order: stroke fill; text-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 30px rgba(255, 213, 74, .7);
+}
+.cartel-grande small { display: inline-block; margin-top: 6px; background: rgba(0,0,0,.65); color: #fff; padding: 6px 16px; border-radius: 99px; font-weight: 700; }
+.cartel-grande.hundido b { color: #ff6b4a; }
+.cartel-grande.oro b { color: #ffd54a; }
+.cartel-grande.generala b { color: #ffd54a; font-size: clamp(2.6rem, 13vw, 6rem); }
+.cartel-grande.escoba { top: 62%; }
+.cartel-grande.escoba b { color: #7ee8c3; }
+@keyframes cartel-grande {
+  0% { transform: translate(-50%, -50%) scale(.2) rotate(-10deg); opacity: 0; }
+  14% { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); opacity: 1; }
+  24% { transform: translate(-50%, -50%) scale(1) rotate(0); }
+  80% { opacity: 1; }
+  100% { transform: translate(-50%, -62%) scale(.95); opacity: 0; }
+}
+
+/* ===== Generala: dados que ruedan por la mesa ===== */
+.mesa-dados .dados { position: relative; }
+.dado.rodando { animation: dado-tira var(--dur, .95s) cubic-bezier(.25, .8, .35, 1) var(--ret, 0s) both; }
+@keyframes dado-tira {
+  0% { transform: translate(-160px, 70px) rotate(-540deg) scale(.55); opacity: 0; }
+  12% { opacity: 1; }
+  45% { transform: translate(-40px, -36px) rotate(-160deg) scale(1.08); }
+  70% { transform: translate(6px, 4px) rotate(14deg) scale(1); }
+  84% { transform: translate(0, -8px) rotate(-5deg); }
+  100% { transform: none; }
+}
+.dado.rodando i.pip { background: #555; }
+.dados.combo .dado { animation: dado-brilla 1s ease-in-out 2; }
+@keyframes dado-brilla { 50% { box-shadow: 0 0 0 4px #ffd54a, 0 0 22px 6px rgba(255, 213, 74, .8); transform: translateY(-6px); } }
+.planilla td.recien { animation: recien 1.2s ease-out; }
+@keyframes recien { 0% { background: rgba(255, 213, 74, .8); transform: scale(1.25); } 100% { background: transparent; transform: none; } }
+
+/* ===== Escoba: el 7 de oros y la escoba ===== */
+.show-oro { position: fixed; inset: 0; z-index: 62; pointer-events: none; display: grid; place-items: center; animation: show-fondo 3.2s ease both; background: radial-gradient(circle, rgba(40, 25, 0, .55), rgba(0, 0, 0, .75)); }
+.show-oro .rayos { position: absolute; width: 140vmax; height: 140vmax; background: repeating-conic-gradient(rgba(255, 213, 74, .28) 0 8deg, transparent 8deg 20deg); animation: rayos 3.2s linear both; mask-image: radial-gradient(circle, #000 10%, transparent 55%); -webkit-mask-image: radial-gradient(circle, #000 10%, transparent 55%); }
+.show-oro .carta { position: relative; transform-style: preserve-3d; animation: oro-gira 3.2s cubic-bezier(.2, 1.1, .3, 1) both; width: 150px; height: 220px; font-size: 1.6rem; box-shadow: 0 0 60px 16px rgba(255, 213, 74, .8); }
+.show-oro .carta .palo .icono { width: 96px; height: 96px; }
+.show-oro .estrellita { position: absolute; width: 34px; height: 34px; animation: estrellita 1.4s ease-out both; }
+.show-oro .estrellita svg { width: 100%; height: 100%; }
+.show-oro .texto-oro { position: absolute; top: calc(50% + 130px); font-size: clamp(1.2rem, 5vw, 2rem); font-weight: 900; color: #ffd54a; -webkit-text-stroke: 2px #3a2a00; paint-order: stroke fill; animation: texto-oro 3.2s ease both; white-space: nowrap; }
+@keyframes show-fondo { 0% { opacity: 0; } 8%, 82% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes rayos { from { transform: rotate(0); } to { transform: rotate(60deg); } }
+@keyframes oro-gira {
+  0% { transform: translateY(60vh) rotateY(0) scale(.3); }
+  30% { transform: translateY(0) rotateY(720deg) scale(1.2); }
+  40% { transform: rotateY(720deg) scale(1); }
+  82% { transform: rotateY(720deg) scale(1.04); opacity: 1; }
+  100% { transform: rotateY(720deg) scale(.4); opacity: 0; }
+}
+@keyframes estrellita { 0% { transform: translate(0, 0) scale(0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(180deg); opacity: 0; } }
+@keyframes texto-oro { 0%, 28% { opacity: 0; transform: scale(.5); } 38% { opacity: 1; transform: scale(1.1); } 45%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+.barrida { position: fixed; inset: 0; z-index: 62; pointer-events: none; overflow: hidden; }
+.barrida .escoba-gigante { position: absolute; top: 34%; width: 180px; height: 180px; animation: barre 1.6s cubic-bezier(.45, .05, .55, .95) both; }
+.barrida .escoba-gigante .icono { width: 100%; height: 100%; }
+.barrida .polvo { position: absolute; top: calc(34% + 140px); width: 24px; height: 24px; border-radius: 50%; background: rgba(230, 210, 170, .7); animation: polvo 1s ease-out both; }
+@keyframes barre {
+  0% { left: -200px; transform: rotate(-25deg); }
+  25% { transform: rotate(15deg); } 50% { transform: rotate(-20deg); } 75% { transform: rotate(15deg); }
+  100% { left: calc(100% + 40px); transform: rotate(-10deg); }
+}
+@keyframes polvo { 0% { transform: scale(.3); opacity: 0; } 30% { opacity: .9; } 100% { transform: translate(-30px, -50px) scale(2.4); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .explosion, .salpicadura, .confeti, .barrida .escoba-gigante, .barrida .polvo, .show-oro .rayos, .show-oro .estrellita { display: none; }
+  .tablero-wrap.sacudon .tablero, .tablero-wrap.temblor .tablero, .dado.rodando, .ll-afuera, .ll-adentro, .show-oro .carta { animation: none; }
+}

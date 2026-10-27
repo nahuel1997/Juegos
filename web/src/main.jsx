@@ -5,6 +5,7 @@ import './estilos.css';
 import './juegos.css';
 import './juegos2.css';
 import './juegos3.css';
+import './efectos.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
