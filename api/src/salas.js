@@ -19,6 +19,16 @@ import * as penales from './juegos/penales.js';
 import * as gatoRaton from './juegos/gatoRaton.js';
 import * as uno from './juegos/uno.js';
 import * as chinchon from './juegos/chinchon.js';
+import * as tateti from './juegos/tateti.js';
+import * as cajitas from './juegos/cajitas.js';
+import * as mastermind from './juegos/mastermind.js';
+import * as escaleras from './juegos/escaleras.js';
+import * as caballos from './juegos/caballos.js';
+import * as backgammon from './juegos/backgammon.js';
+import * as sudoku from './juegos/sudoku.js';
+import * as quoridor from './juegos/quoridor.js';
+import * as dibujar from './juegos/dibujar.js';
+import * as monopoly from './juegos/monopoly.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -44,6 +54,16 @@ export const JUEGOS = {
   'gato-raton': { nombre: 'El gato y el ratón', mod: gatoRaton, Clase: gatoRaton.PartidaGatoRaton },
   uno: { nombre: 'UNO', mod: uno, Clase: uno.PartidaUno },
   chinchon: { nombre: 'Chinchón', mod: chinchon, Clase: chinchon.PartidaChinchon },
+  tateti: { nombre: 'Ta te ti', mod: tateti, Clase: tateti.PartidaTateti },
+  cajitas: { nombre: 'Puntos y cajitas', mod: cajitas, Clase: cajitas.PartidaCajitas },
+  mastermind: { nombre: 'Mastermind', mod: mastermind, Clase: mastermind.PartidaMastermind },
+  escaleras: { nombre: 'Escaleras y serpientes', mod: escaleras, Clase: escaleras.PartidaEscaleras },
+  caballos: { nombre: 'Carrera de caballos', mod: caballos, Clase: caballos.PartidaCaballos },
+  backgammon: { nombre: 'Backgammon', mod: backgammon, Clase: backgammon.PartidaBackgammon },
+  sudoku: { nombre: 'Sudoku duelo', mod: sudoku, Clase: sudoku.PartidaSudoku },
+  quoridor: { nombre: 'Quoridor', mod: quoridor, Clase: quoridor.PartidaQuoridor },
+  dibujar: { nombre: 'Dibujá y adiviná', mod: dibujar, Clase: dibujar.PartidaDibujar },
+  monopoly: { nombre: 'Monopoly Lanús', mod: monopoly, Clase: monopoly.PartidaMonopoly },
 };
 
 // Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).

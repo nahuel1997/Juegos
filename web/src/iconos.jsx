@@ -168,6 +168,86 @@ export const ICONOS = {
       <circle cx="46" cy="38" r="5" fill="#ffe0c2" stroke="#3b0a4f" strokeWidth="1.5" transform="rotate(12 45 31)" />
     </>
   ),
+  tateti: (
+    <>
+      <path d="M24 8v48M40 8v48M8 24h48M8 40h48" stroke={T} strokeWidth="4" strokeLinecap="round" />
+      <path d="M11 11l9 9M20 11l-9 9" stroke="#e63946" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="32" cy="32" r="5" fill="none" stroke="#219ebc" strokeWidth="4" />
+      <path d="M43 43l9 9M52 43l-9 9" stroke="#e63946" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  cajitas: (
+    <>
+      <rect x="12" y="12" width="20" height="20" fill="#ffb703" opacity=".7" />
+      <rect x="32" y="32" width="20" height="20" fill="#219ebc" opacity=".7" />
+      <path d="M12 12h40M12 32h40M12 12v40M32 12v20M32 32v20" stroke={T} strokeWidth="3.5" strokeLinecap="round" />
+      {[12, 32, 52].map((x) => [12, 32, 52].map((y) => <circle key={`${x}${y}`} cx={x} cy={y} r="4" fill={T} />))}
+    </>
+  ),
+  mastermind: (
+    <>
+      <rect x="6" y="10" width="52" height="44" rx="8" fill="#8d5a3b" stroke={T} strokeWidth="2.5" />
+      <circle cx="16" cy="24" r="5" fill="#e53935" /><circle cx="28" cy="24" r="5" fill="#1e88e5" /><circle cx="40" cy="24" r="5" fill="#fdd835" />
+      <circle cx="16" cy="40" r="5" fill="#43a047" /><circle cx="28" cy="40" r="5" fill="#e53935" /><circle cx="40" cy="40" r="5" fill="#8e24aa" />
+      <circle cx="51" cy="21" r="2.5" fill="#111" /><circle cx="51" cy="28" r="2.5" fill="#fff" /><circle cx="51" cy="40" r="2.5" fill="#111" />
+    </>
+  ),
+  escaleras: (
+    <>
+      <rect x="6" y="6" width="52" height="52" rx="6" fill="#ffe0a3" stroke={T} strokeWidth="2.5" />
+      <path d="M16 50L34 14M24 54L42 18M19 44l8 4M23 36l8 4M27 28l8 4M31 20l8 4" stroke="#8d5524" strokeWidth="3" strokeLinecap="round" />
+      <path d="M48 14c-8 6 6 12-2 18s6 12-2 20" fill="none" stroke="#43a047" strokeWidth="5" strokeLinecap="round" />
+      <circle cx="48" cy="13" r="4" fill="#43a047" />
+    </>
+  ),
+  caballos: (
+    <>
+      <path d="M14 34c0-7 6-10 14-10h10l9-11 4 2-2 7 7 7-3 3-7-3-2 7c0 5-3 8-8 8H24l-4 10h-5l1-11c-2-2-2-5-2-9z" fill="#8d5524" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+      <rect x="24" y="24" width="11" height="8" rx="2" fill="#f2b705" stroke={T} strokeWidth="1.5" />
+    </>
+  ),
+  backgammon: (
+    <>
+      <rect x="4" y="8" width="56" height="48" rx="6" fill="#6d4c2f" stroke={T} strokeWidth="2.5" />
+      <path d="M8 12l5 18 5-18zM18 12l5 18 5-18zM36 52l5-18 5 18zM46 52l5-18 5 18z" fill="#e8d3a9" />
+      <path d="M8 52l5-18 5 18zM46 12l5 18 5-18z" fill="#a33b2a" />
+      <circle cx="13" cy="16" r="4" fill="#fff" stroke={T} strokeWidth="1.5" /><circle cx="51" cy="48" r="4" fill="#222" stroke="#fff" strokeWidth="1.5" />
+    </>
+  ),
+  sudoku: (
+    <>
+      <rect x="8" y="8" width="48" height="48" rx="4" fill="#fff" stroke={T} strokeWidth="3" />
+      <path d="M24 8v48M40 8v48M8 24h48M8 40h48" stroke={T} strokeWidth="2" />
+      <text x="16" y="21" fontSize="11" fontWeight="900" textAnchor="middle" fill={T}>5</text>
+      <text x="48" y="37" fontSize="11" fontWeight="900" textAnchor="middle" fill="#1e88e5">3</text>
+      <text x="32" y="53" fontSize="11" fontWeight="900" textAnchor="middle" fill={T}>9</text>
+    </>
+  ),
+  quoridor: (
+    <>
+      <rect x="6" y="6" width="52" height="52" rx="6" fill="#5d4037" />
+      {[0, 1, 2].map((f) => [0, 1, 2].map((c) => <rect key={`${f}${c}`} x={10 + c * 16} y={10 + f * 16} width="12" height="12" rx="2" fill="#d7b98e" />))}
+      <rect x="9" y="23" width="28" height="3" rx="1.5" fill="#ffcc80" />
+      <rect x="39" y="25" width="3" height="28" rx="1.5" fill="#ffcc80" />
+      <circle cx="32" cy="48" r="5" fill="#e63946" stroke="#fff" strokeWidth="1.5" /><circle cx="32" cy="16" r="5" fill="#219ebc" stroke="#fff" strokeWidth="1.5" />
+    </>
+  ),
+  dibujar: (
+    <>
+      <rect x="6" y="10" width="44" height="36" rx="4" fill="#fff" stroke={T} strokeWidth="2.5" />
+      <path d="M12 38c6-12 12-12 16-4s10 6 16-8" fill="none" stroke="#e53935" strokeWidth="3" strokeLinecap="round" />
+      <path d="M42 50l14-24 4 2-14 24-6 3z" fill="#ffb703" stroke={T} strokeWidth="2" strokeLinejoin="round" />
+    </>
+  ),
+  monopoly: (
+    <>
+      <rect x="6" y="6" width="52" height="52" rx="4" fill="#dff0d8" stroke="#1b5e20" strokeWidth="3" />
+      <path d="M6 18h52M6 46h52M18 6v52M46 6v52" stroke="#1b5e20" strokeWidth="2" />
+      <rect x="6" y="6" width="12" height="5" fill="#7b1e3a" /><rect x="46" y="6" width="12" height="5" fill="#e53935" /><rect x="6" y="46" width="12" height="5" fill="#43a047" />
+      <rect x="22" y="27" width="20" height="10" fill="#c62828" stroke="#fff" strokeWidth="1.5" transform="rotate(-8 32 32)" />
+      <path d="M28 46l4-4 4 4v6h-8z" fill="#2e7d32" />
+    </>
+  ),
   cartas: (
     <>
       <rect x="8" y="12" width="28" height="40" rx="5" fill="#fff" stroke={T} strokeWidth="2.5" transform="rotate(-12 22 32)" />

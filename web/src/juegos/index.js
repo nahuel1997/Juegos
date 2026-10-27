@@ -35,6 +35,26 @@ import ConfigUno from './uno/Config.jsx';
 import JuegoUno from './uno/Juego.jsx';
 import ConfigChinchon from './chinchon/Config.jsx';
 import JuegoChinchon from './chinchon/Juego.jsx';
+import ConfigTateti from './tateti/Config.jsx';
+import JuegoTateti from './tateti/Juego.jsx';
+import ConfigCajitas from './cajitas/Config.jsx';
+import JuegoCajitas from './cajitas/Juego.jsx';
+import ConfigMastermind from './mastermind/Config.jsx';
+import JuegoMastermind from './mastermind/Juego.jsx';
+import ConfigEscaleras from './escaleras/Config.jsx';
+import JuegoEscaleras from './escaleras/Juego.jsx';
+import ConfigCaballos from './caballos/Config.jsx';
+import JuegoCaballos from './caballos/Juego.jsx';
+import ConfigBackgammon from './backgammon/Config.jsx';
+import JuegoBackgammon from './backgammon/Juego.jsx';
+import ConfigSudoku from './sudoku/Config.jsx';
+import JuegoSudoku from './sudoku/Juego.jsx';
+import ConfigQuoridor from './quoridor/Config.jsx';
+import JuegoQuoridor from './quoridor/Juego.jsx';
+import ConfigDibujar from './dibujar/Config.jsx';
+import JuegoDibujar from './dibujar/Juego.jsx';
+import ConfigMonopoly from './monopoly/Config.jsx';
+import JuegoMonopoly from './monopoly/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -144,5 +164,65 @@ export const JUEGOS = {
     texto: 'Mazo español: ligá escaleras y piernas, cortá con poco y no pases de 100.',
     Config: ConfigChinchon,
     Juego: JuegoChinchon,
+  },
+  tateti: {
+    icono: 'tateti',
+    texto: 'Ta te ti clásico o con movimiento, en 3x3 hasta 5x5. Al mejor de N.',
+    Config: ConfigTateti,
+    Juego: JuegoTateti,
+  },
+  cajitas: {
+    icono: 'cajitas',
+    texto: 'Trazá rayitas entre puntos: el que cierra una cajita se la queda y repite.',
+    Config: ConfigCajitas,
+    Juego: JuegoCajitas,
+  },
+  mastermind: {
+    icono: 'mastermind',
+    texto: 'Armá un código de colores y adiviná el del otro con pistas de negras y blancas.',
+    Config: ConfigMastermind,
+    Juego: JuegoMastermind,
+  },
+  escaleras: {
+    icono: 'escaleras',
+    texto: 'Dado, escaleras que suben y serpientes que bajan. Salen distintas cada partida.',
+    Config: ConfigEscaleras,
+    Juego: JuegoEscaleras,
+  },
+  caballos: {
+    icono: 'caballos',
+    texto: 'Los cuatro caballos del mazo español corren: elegí los tuyos y que gane el mejor.',
+    Config: ConfigCaballos,
+    Juego: JuegoCaballos,
+  },
+  backgammon: {
+    icono: 'backgammon',
+    texto: 'Dos dados, 15 fichas: comé, entrá desde la barra y sacalas todas antes.',
+    Config: ConfigBackgammon,
+    Juego: JuegoBackgammon,
+  },
+  sudoku: {
+    icono: 'sudoku',
+    texto: 'El mismo sudoku para los dos, a la vez: gana el primero que lo termina.',
+    Config: ConfigSudoku,
+    Juego: JuegoSudoku,
+  },
+  quoridor: {
+    icono: 'quoridor',
+    texto: 'Cruzá al otro lado y cortale el camino al otro con paredes. Con 1 ficha o 3 tapitas.',
+    Config: ConfigQuoridor,
+    Juego: JuegoQuoridor,
+  },
+  dibujar: {
+    icono: 'dibujar',
+    texto: 'Uno dibuja en vivo y el otro adivina antes de que se acabe el tiempo.',
+    Config: ConfigDibujar,
+    Juego: JuegoDibujar,
+  },
+  monopoly: {
+    icono: 'monopoly',
+    texto: 'Monopoly Lanús: comprá Derqui, el Moonrock, Santa Emilia y La Fortaleza.',
+    Config: ConfigMonopoly,
+    Juego: JuegoMonopoly,
   },
 };

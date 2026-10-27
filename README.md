@@ -28,6 +28,16 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **El gato y el ratón**: laberinto al azar con varios caminos (tamaño configurable); una moneda al aire decide quién arranca de gato, se mueven de a una casilla por turno con las flechitas, el ratón va de la madriguera al queso y el gato lo persigue (no puede pisar el queso). En cada ronda se cambian los papeles; gana el que gana más rondas.
 - **UNO**: mazo de 108 cartas, Salta/Reversa/+2/+4 (vuelve a jugar el mismo), comodín con elección de color, botón ¡UNO! y acusación si no lo decís (robás 2); el que se queda sin cartas suma lo del otro, hasta N puntos.
 - **Chinchón**: mazo español (con o sin ochos y nueves, con o sin comodines); la app acomoda la mano sola y marca con qué carta se puede cortar; menos diez, chinchón (gana la partida) y el rival pega sus sueltas en las combinaciones del que cortó; pierde el que pasa el límite.
+- **Ta te ti**: 3x3 a 5x5, cuántas en línea, variante con movimiento (solo N fichas y después se mueven); al mejor de N.
+- **Puntos y cajitas**: rayitas entre puntos; el que cierra una cajita se la queda y repite.
+- **Mastermind**: cada uno arma un código (o al azar) y adivinan a la vez con negras y blancas; gana el que usa menos intentos.
+- **Escaleras y serpientes**: 49, 64 o 100 casillas, escaleras y serpientes al azar en cada partida, llegada justa y 6 repite (opcionales).
+- **Carrera de caballos**: con mazo español; cada uno elige dos caballos, la pista hace retroceder; al mejor de N carreras.
+- **Backgammon**: reglas completas (barra, sacar, usar todos los dados), gammon y backgammon; a N puntos.
+- **Sudoku duelo**: el mismo sudoku (solución única) para los dos a la vez, con lápiz para notas; límite de errores.
+- **Quoridor**: cruzar al otro lado poniendo paredes que nunca encierran; con 1 ficha o 3 tapitas.
+- **Dibujá y adiviná**: uno dibuja en vivo (colores, grosores, deshacer) y el otro adivina contra reloj; avisa "¡casi!".
+- **Monopoly Lanús**: calles y lugares de Lanús (Derqui, La Fortaleza, Gimnasio Moonrock, Cafetería Santa Emilia, Hospital Británico, Velódromo, Fútbol 5…), tarjetas de Suerte y Club de barrio, casas y hoteles, hipotecas, Comisaría; hasta la quiebra o por turnos. Los datos del tablero están en api/src/juegos/monopolyDatos.js.
 - **Animaciones**: explosión al pegarle a un barco (más grande al hundirlo) y salpicadura en el agua, dados que ruedan en la generala, show del 7 de oros y escoba que barre la mesa, papel picado al ganar.
 
 Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).

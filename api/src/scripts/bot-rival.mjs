@@ -6,6 +6,32 @@ import { flotaAlAzar } from '../juegos/batallaNaval.js';
 import { PALABRAS } from '../juegos/stopPalabras.js';
 import { distancias, vecinos } from '../juegos/gatoRaton.js';
 import { mejorArreglo } from '../juegos/chinchon.js';
+import { evaluar } from '../juegos/mastermind.js';
+import { PALABRAS as DIBUJOS } from '../juegos/dibujar.js';
+
+const espera = (ms) => new Promise((ok) => setTimeout(ok, ms));
+// Resuelve un sudoku (para que el bot juegue el duelo).
+function resolverSudoku(g) {
+  const puede = (f, c, n) => {
+    for (let i = 0; i < 9; i++) if (g[f][i] === n || g[i][c] === n) return false;
+    const bf = f - (f % 3); const bc = c - (c % 3);
+    for (let i = 0; i < 3; i++) for (let k = 0; k < 3; k++) if (g[bf + i][bc + k] === n) return false;
+    return true;
+  };
+  for (let i = 0; i < 81; i++) {
+    const f = Math.floor(i / 9); const c = i % 9;
+    if (g[f][c]) continue;
+    for (let n = 1; n <= 9; n++) {
+      if (!puede(f, c, n)) continue;
+      g[f][c] = n;
+      if (resolverSudoku(g)) return true;
+      g[f][c] = 0;
+    }
+    return false;
+  }
+  return true;
+}
+let solucionSudoku = null;
 
 const [usuario, clave, base = 'http://localhost:4400'] = process.argv.slice(2);
 const r = await fetch(`${base}/api/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario, clave }) });
@@ -202,6 +228,151 @@ async function jugar(sala) {
       }
       const mejor = [...p.cortes].sort((a, b) => a.puntos - b.puntos)[0];
       return accion(mejor.puntos <= 5 ? 'cortar' : 'tirar', { carta: mejor.id });
+    }
+    case 'tateti': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'fin') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      await espera(700);
+      const libres = []; const mias = [];
+      p.tablero.forEach((fila, f) => fila.forEach((v, c) => { if (!v) libres.push([f, c]); else if (v === 'yo') mias.push([f, c]); }));
+      const [f, c] = libres[azar(libres.length)];
+      return accion('poner', { fila: f, col: c, desde: p.moviendo ? mias[azar(mias.length)] : undefined });
+    }
+    case 'cajitas': {
+      if (p.estado !== 'jugando' || p.turno !== yo) return;
+      await espera(600);
+      const lados = (f, c) => [p.h[f][c], p.h[f + 1][c], p.v[f][c], p.v[f][c + 1]].filter(Boolean).length;
+      const libres = [];
+      p.h.forEach((fila, f) => fila.forEach((x, c) => { if (!x) libres.push({ tipo: 'h', f, c, cajas: [[f - 1, c], [f, c]] }); }));
+      p.v.forEach((fila, f) => fila.forEach((x, c) => { if (!x) libres.push({ tipo: 'v', f, c, cajas: [[f, c - 1], [f, c]] }); }));
+      const valida = ([f, c]) => f >= 0 && c >= 0 && f < p.config.filas && c < p.config.columnas;
+      const cierra = libres.find((l) => l.cajas.filter(valida).some(([f, c]) => lados(f, c) === 3));
+      const segura = libres.filter((l) => l.cajas.filter(valida).every(([f, c]) => lados(f, c) < 2));
+      const r = cierra || segura[azar(segura.length)] || libres[azar(libres.length)];
+      return accion('raya', { tipo: r.tipo, f: r.f, c: r.c });
+    }
+    case 'mastermind': {
+      if (p.estado !== 'jugando') return;
+      const { largo, colores, repetidos } = p.config;
+      const alAzar = () => {
+        const libres = Array.from({ length: colores }, (_, i) => i);
+        return Array.from({ length: largo }, () => (repetidos ? azar(colores) : libres.splice(azar(libres.length), 1)[0]));
+      };
+      if (p.fase === 'secreto') return p.secretoListo.yo ? undefined : accion('secreto', { codigo: alAzar() });
+      if (p.terminado.yo) return;
+      await espera(1500);
+      // Un código que sea coherente con todas las respuestas anteriores.
+      let codigo = alAzar();
+      for (let i = 0; i < 5000; i++) {
+        if (p.misIntentos.every((x) => { const r = evaluar(codigo, x.codigo); return r.negras === x.negras && r.blancas === x.blancas; })) break;
+        codigo = alAzar();
+      }
+      return accion('intento', { codigo });
+    }
+    case 'escaleras':
+      if (p.estado !== 'jugando' || p.turno !== yo) return;
+      await espera(1600);
+      return accion('tirar');
+    case 'caballos': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'fin') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      await espera(900);
+      if (p.fase === 'eligiendo') return accion('elegir', { palo: ['oros', 'copas', 'espadas', 'bastos'].find((x) => !p.duenio[x]) });
+      return accion('carta');
+    }
+    case 'backgammon': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'fin') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      await espera(900);
+      if (!p.dados.length) return accion('tirar');
+      const m = p.legales[azar(p.legales.length)];
+      return accion('mover', { desde: m.desde, hasta: m.hasta });
+    }
+    case 'sudoku': {
+      if (p.estado !== 'jugando') return;
+      if (!solucionSudoku || solucionSudoku.base !== p.inicial.flat().join('')) {
+        const g = p.inicial.map((f) => [...f]);
+        resolverSudoku(g);
+        solucionSudoku = { base: p.inicial.flat().join(''), g };
+      }
+      await espera(2500);
+      const vacias = [];
+      p.grilla.forEach((fila, f) => fila.forEach((x, c) => { if (!x) vacias.push([f, c]); }));
+      if (!vacias.length) return;
+      const [f, c] = vacias[azar(vacias.length)];
+      const bien = solucionSudoku.g[f][c];
+      return accion('poner', { fila: f, col: c, numero: Math.random() < 0.08 ? (bien % 9) + 1 : bien });
+    }
+    case 'quoridor': {
+      if (p.estado !== 'jugando' || p.turno !== yo) return;
+      await espera(900);
+      if (p.quedan.yo && p.posibles.length && Math.random() < 0.25) {
+        const [tipo, f, c] = p.posibles[azar(p.posibles.length)].split(':');
+        return accion('pared', { tipo, fila: Number(f), col: Number(c) });
+      }
+      // Cada ficha: el destino que más la acerca a la fila de arriba.
+      let mejor = null;
+      p.destinos.forEach((lista, i) => lista.forEach(([f, c]) => { if (!mejor || f < mejor.f || (f === mejor.f && Math.random() < 0.5)) mejor = { i, f, c }; }));
+      if (!mejor) return;
+      return accion('mover', { ficha: mejor.i, fila: mejor.f, col: mejor.c });
+    }
+    case 'dibujar': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'revelado') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.dibujoYo) {
+        if (p.fase === 'eligiendo') { await espera(1200); return accion('elegir', { palabra: p.opciones[0] }); }
+        if (p.fase === 'dibujando' && p.trazos.length < 6) {
+          await espera(1500);
+          const x = 100 + azar(800); const y = 100 + azar(800);
+          return accion('trazo', { id: String(Date.now()), puntos: Array.from({ length: 12 }, (_, i) => [x + Math.cos(i / 2) * 120, y + Math.sin(i / 2) * 120]), color: '#1e88e5', grosor: 6 });
+        }
+        return;
+      }
+      if (p.fase === 'dibujando') {
+        await espera(5000);
+        return accion('adivinar', { texto: DIBUJOS[azar(DIBUJOS.length)] });
+      }
+      return;
+    }
+    case 'monopoly': {
+      if (p.estado !== 'jugando') return;
+      const enDeuda = p.deuda?.por === 'yo';
+      if (enDeuda) {
+        await espera(800);
+        if (p.dinero.yo >= p.deuda.monto) return accion('pagarDeuda');
+        const mias = p.casillas.map((c, i) => i).filter((i) => p.duenio[i] === 'yo');
+        const conCasa = mias.find((i) => p.casas[i] > 0);
+        if (conCasa !== undefined) return accion('vender', { casilla: conCasa });
+        const hipotecable = mias.find((i) => !p.hipotecada[i]);
+        if (hipotecable !== undefined) return accion('hipotecar', { casilla: hipotecable });
+        return accion('quebrar');
+      }
+      if (p.turno !== yo) return;
+      await espera(1100);
+      if (p.fase === 'tirar') {
+        if (p.preso.yo && p.dinero.yo > 300) return accion('fianza');
+        return accion('tirar');
+      }
+      if (p.fase === 'decidir') {
+        const c = p.casillas[p.oferta];
+        return accion(p.dinero.yo >= c.precio + 100 ? 'comprar' : 'noComprar');
+      }
+      if (p.fase === 'acciones') {
+        // Construye parejo si le sobra plata.
+        for (const [i, c] of p.casillas.entries()) {
+          if (p.duenio[i] !== 'yo' || c.tipo !== 'propiedad' || p.casas[i] >= 5) continue;
+          const grupo = p.casillas.map((x, k) => (x.grupo === c.grupo ? k : -1)).filter((k) => k >= 0);
+          if (!grupo.every((k) => p.duenio[k] === 'yo' && !p.hipotecada[k])) continue;
+          if (p.casas[i] > Math.min(...grupo.map((k) => p.casas[k]))) continue;
+          if (p.dinero.yo < p.grupos[c.grupo].casa + 250) continue;
+          return accion('construir', { casilla: i });
+        }
+        return accion('terminar');
+      }
+      return;
     }
     case 'gato-raton': {
       if (p.estado !== 'jugando') return;
