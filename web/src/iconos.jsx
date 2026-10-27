@@ -422,6 +422,38 @@ export const ICONOS = {
       <path d="M30 42h4l-2 3zM32 45q-3 4-7 2M32 45q3 4 7 2M6 40h12M46 40h12" stroke={T} strokeWidth="2" fill="none" strokeLinecap="round" />
     </>
   ),
+  raton: (
+    <>
+      <path d="M50 46c6 2 10 6 8 12" stroke="#d48aa0" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <ellipse cx="34" cy="40" rx="18" ry="14" fill="#a8a8b3" stroke={T} strokeWidth="2.5" />
+      <circle cx="16" cy="18" r="9" fill="#ffb3c7" stroke={T} strokeWidth="2.5" />
+      <circle cx="16" cy="18" r="4.5" fill="#ff8fab" />
+      <circle cx="36" cy="16" r="9" fill="#ffb3c7" stroke={T} strokeWidth="2.5" />
+      <circle cx="36" cy="16" r="4.5" fill="#ff8fab" />
+      <path d="M10 34c0-9 7-15 16-15s14 6 14 14c0 7-6 12-14 13l-12 2c-4 0-6-2-4-6z" fill="#bdbdc7" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+      <circle cx="21" cy="30" r="2.6" fill={T} />
+      <circle cx="31" cy="30" r="2.6" fill={T} />
+      <circle cx="8" cy="46" r="3" fill="#ff6f91" />
+      <path d="M12 42l-10-2M12 45l-10 3M14 47l-8 7" stroke={T} strokeWidth="1.5" strokeLinecap="round" />
+    </>
+  ),
+  queso: (
+    <>
+      <path d="M6 44l50-26v24L6 58z" fill="#ffc83d" stroke="#b8860b" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M6 44l50-26c-14-6-32-4-42 6z" fill="#ffe082" stroke="#b8860b" strokeWidth="2.5" strokeLinejoin="round" />
+      <ellipse cx="22" cy="48" rx="4" ry="3" fill="#e0a800" />
+      <ellipse cx="40" cy="40" rx="3" ry="2.5" fill="#e0a800" />
+      <ellipse cx="48" cy="50" rx="2.5" ry="2" fill="#e0a800" />
+      <ellipse cx="30" cy="27" rx="3" ry="1.6" fill="#e0a800" />
+    </>
+  ),
+  madriguera: (
+    <>
+      <path d="M6 56c0-20 12-34 26-34s26 14 26 34z" fill="#8d6e63" stroke="#4e342e" strokeWidth="2.5" />
+      <path d="M16 56c0-12 7-22 16-22s16 10 16 22z" fill="#2b1d16" />
+      <path d="M4 56h56" stroke="#4e342e" strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
   perro: (
     <>
       <ellipse cx="32" cy="36" rx="18" ry="20" fill="#c08552" stroke={T} strokeWidth="2.5" />

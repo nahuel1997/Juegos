@@ -29,6 +29,8 @@ import ConfigPool from './pool/Config.jsx';
 import JuegoPool from './pool/Juego.jsx';
 import ConfigPenales from './penales/Config.jsx';
 import JuegoPenales from './penales/Juego.jsx';
+import ConfigGatoRaton from './gatoRaton/Config.jsx';
+import JuegoGatoRaton from './gatoRaton/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -120,5 +122,11 @@ export const JUEGOS = {
     texto: 'Uno patea y el otro ataja: elegí la esquina y que no te la adivinen.',
     Config: ConfigPenales,
     Juego: JuegoPenales,
+  },
+  'gato-raton': {
+    icono: 'raton',
+    texto: 'Laberinto al azar: el ratón busca el queso y el gato lo persigue. Una casilla cada uno.',
+    Config: ConfigGatoRaton,
+    Juego: JuegoGatoRaton,
   },
 };

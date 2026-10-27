@@ -4,6 +4,7 @@
 import { io } from 'socket.io-client';
 import { flotaAlAzar } from '../juegos/batallaNaval.js';
 import { PALABRAS } from '../juegos/stopPalabras.js';
+import { distancias, vecinos } from '../juegos/gatoRaton.js';
 
 const [usuario, clave, base = 'http://localhost:4400'] = process.argv.slice(2);
 const r = await fetch(`${base}/api/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario, clave }) });
@@ -168,6 +169,23 @@ async function jugar(sala) {
       if (p.yaElegi) return;
       await new Promise((ok) => setTimeout(ok, 1200));
       return accion('elegir', { zona: azar(p.config.zonas) });
+    case 'gato-raton': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.turno !== yo) return;
+      await new Promise((ok) => setTimeout(ok, 700));
+      const igual = (a, b) => a[0] === b[0] && a[1] === b[1];
+      const soyGato = p.miRol === 'gato';
+      const desde = soyGato ? p.gato : p.raton;
+      const opciones = vecinos(p.paredes, desde).filter(({ pos }) => !igual(pos, soyGato ? p.queso : p.gato));
+      if (!opciones.length) return;
+      // Gato: se acerca al ratón. Ratón: va al queso, pero evita quedar pegado al gato. Un poco de azar.
+      const dist = soyGato ? distancias(p.paredes, p.raton, [p.queso]) : distancias(p.paredes, p.queso, [p.gato]);
+      const delGato = distancias(p.paredes, p.gato, [p.queso]);
+      const valor = ({ pos }) => dist[pos[0]][pos[1]] + (!soyGato && delGato[pos[0]][pos[1]] <= 1 ? 50 : 0) + Math.random() * 0.8;
+      opciones.sort((a, b) => valor(a) - valor(b));
+      return accion('mover', { dir: (Math.random() < 0.85 ? opciones[0] : opciones[azar(opciones.length)]).dir });
+    }
   }
 }
 

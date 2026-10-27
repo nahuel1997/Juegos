@@ -16,6 +16,7 @@ import * as ludo from './juegos/ludo.js';
 import * as quien from './juegos/quienEsQuien.js';
 import * as pool from './juegos/pool.js';
 import * as penales from './juegos/penales.js';
+import * as gatoRaton from './juegos/gatoRaton.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -38,6 +39,7 @@ export const JUEGOS = {
   'quien-es-quien': { nombre: '¿Quién es quién?', mod: quien, Clase: quien.PartidaQuienEsQuien },
   pool: { nombre: 'Pool', mod: pool, Clase: pool.PartidaPool },
   penales: { nombre: 'Penales', mod: penales, Clase: penales.PartidaPenales },
+  'gato-raton': { nombre: 'El gato y el ratón', mod: gatoRaton, Clase: gatoRaton.PartidaGatoRaton },
 };
 
 // Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).
