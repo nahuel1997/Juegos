@@ -1,17 +1,44 @@
+import { useState } from 'react';
 import { JUEGOS } from '../juegos/index.js';
+import VistaPrevia from './VistaPrevia.jsx';
 import { Avatar } from './comunes.jsx';
 import { Icono } from '../iconos.jsx';
 
 const fecha = (iso) => new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 export default function Lobby({ lobby, emitir }) {
+  const [viendo, setViendo] = useState(null); // id del juego en vista previa
   if (!lobby) return <div className="cargando">Conectando…</div>;
   const { usuarios, invitaciones, juegos, stats } = lobby;
   const nombre = (u) => usuarios.find((x) => x.usuario === u)?.nombre || u;
   const nombreJuego = (id) => juegos.find((j) => j.id === id)?.nombre || id;
 
+  const botonesDesafio = (juegoId) => usuarios.map((u) => {
+    const enviada = invitaciones.enviadas.find((i) => i.a === u.usuario && i.juego === juegoId);
+    return enviada ? (
+      <button key={u.usuario} className="btn fantasma" onClick={() => emitir('cancelarInvitacion', { a: u.usuario })}>
+        Esperando a {u.nombre}… (cancelar)
+      </button>
+    ) : (
+      <button key={u.usuario} className="btn" disabled={!u.online || !!u.enSala} onClick={() => emitir('invitar', { a: u.usuario, juego: juegoId })}>
+        Desafiar a {u.nombre}
+      </button>
+    );
+  });
+  const recibida = viendo && invitaciones.recibidas.find((i) => i.juego === viendo);
+
   return (
     <div className="lobby">
+      {viendo && (
+        <VistaPrevia
+          id={viendo}
+          nombre={nombreJuego(viendo)}
+          cerrar={() => setViendo(null)}
+          acciones={recibida ? (
+            <button className="btn" onClick={() => { setViendo(null); emitir('responder', { de: recibida.de, acepta: true }); }}>¡Jugar con {nombre(recibida.de)}!</button>
+          ) : botonesDesafio(viendo)}
+        />
+      )}
       {invitaciones.recibidas.map((inv) => (
         <div key={inv.de} className="tarjeta invitacion">
           <div>
@@ -19,6 +46,7 @@ export default function Lobby({ lobby, emitir }) {
           </div>
           <div className="acciones">
             <button className="btn" onClick={() => emitir('responder', { de: inv.de, acepta: true })}>¡Jugar!</button>
+            <button className="btn fantasma" onClick={() => setViendo(inv.juego)}>Ver reglas</button>
             <button className="btn fantasma" onClick={() => emitir('responder', { de: inv.de, acepta: false })}>Ahora no</button>
           </div>
         </div>
@@ -48,7 +76,7 @@ export default function Lobby({ lobby, emitir }) {
           return (
             <section key={j.id} className="tarjeta juego">
               <div className="juego-cab">
-                <span className="juego-emoji"><Icono id={info?.icono} tam={52} /></span>
+                <button type="button" className="juego-emoji vp-abrir" onClick={() => setViendo(j.id)} aria-label={`Ver reglas de ${j.nombre}`}><Icono id={info?.icono} tam={52} /></button>
                 <div>
                   <h2>{j.nombre}</h2>
                   <p className="sub">{info?.texto}</p>
@@ -56,18 +84,8 @@ export default function Lobby({ lobby, emitir }) {
               </div>
               {s && <p className="juego-stats">Jugadas {s.jugadas} · ganadas {s.ganadas}{s.empatadas ? ` · empates ${s.empatadas}` : ''}</p>}
               <div className="acciones">
-                {usuarios.map((u) => {
-                  const enviada = invitaciones.enviadas.find((i) => i.a === u.usuario && i.juego === j.id);
-                  return enviada ? (
-                    <button key={u.usuario} className="btn fantasma" onClick={() => emitir('cancelarInvitacion', { a: u.usuario })}>
-                      Esperando a {u.nombre}… (cancelar)
-                    </button>
-                  ) : (
-                    <button key={u.usuario} className="btn" disabled={!u.online || !!u.enSala} onClick={() => emitir('invitar', { a: u.usuario, juego: j.id })}>
-                      Desafiar a {u.nombre}
-                    </button>
-                  );
-                })}
+                {botonesDesafio(j.id)}
+                <button className="btn fantasma" onClick={() => setViendo(j.id)}>Ver reglas</button>
               </div>
             </section>
           );
