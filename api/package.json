@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "test": "node --test",
-    "hash": "node src/scripts/hash.js"
+    "hash": "node src/scripts/hash.js",
+    "clave": "node src/scripts/clave.js"
   },
   "engines": {
     "node": ">=20"

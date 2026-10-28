@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { login, logout, exigirSesion, publico, buscarUsuario, cambiarClave, firmarSesion } from './auth.js';
 import { montarSalas } from './salas.js';
 import { resumen } from './historial.js';
+import { rutaUsuariosPanel } from './panel.js';
 import { palabrasJugadas } from './juegos/stopPalabras.js';
 import { actualizarPerfil, guardarAvatar, borrarAvatar, archivoAvatar, TEMAS, MAX_AVATAR } from './perfiles.js';
 
@@ -70,6 +71,9 @@ export function crearServidor() {
     res.set({ 'Content-Type': a.tipo, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' });
     res.sendFile(a.ruta);
   });
+
+  // Lista de usuarios para el panel de apps (con token, sin hashes).
+  app.get('/api/panel/usuarios', rutaUsuariosPanel);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'No existe' }));
   app.use((err, _req, res, _next) => {

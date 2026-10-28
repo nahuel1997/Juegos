@@ -14,7 +14,7 @@ function parsearCookies(cabecera) {
 }
 
 // Usuarios fijos del sitio (solo hashes), en un archivo fuera de git: ver usuarios.example.json.
-// Para cambiar una clave: npm run hash -- <clave nueva>.
+// Para cambiar una clave: npm run clave -- <usuario> <clave nueva> (ver scripts/clave.js).
 const ARCHIVO_USUARIOS = process.env.USUARIOS_ARCHIVO || fileURLToPath(new URL('../../usuarios.json', import.meta.url));
 let USUARIOS;
 try {
@@ -44,6 +44,7 @@ export function buscarUsuario(usuario) {
   return base ? { ...base, ...perfilDe(usuario) } : undefined;
 }
 export const todosLosUsuarios = () => USUARIOS.map((u) => publico(buscarUsuario(u.usuario)));
+export const listaUsuarios = () => USUARIOS.map((u) => ({ usuario: u.usuario, nombre: buscarUsuario(u.usuario).nombre }));
 
 export async function cambiarClave(usuario, actual, nueva) {
   const u = buscarUsuario(usuario);
@@ -58,20 +59,21 @@ export function firmarSesion(res, u) {
   res.cookie(COOKIE, token, opcionesCookie());
 }
 
-// Freno simple a la fuerza bruta: 8 intentos fallidos por IP cada 15 minutos.
+// Freno a la fuerza bruta SIN bloquear a nadie: cada clave mal desde una IP hace esperar un poco
+// más la respuesta (0,5 s por fallo, hasta 5 s), y se olvida a los 15 minutos o al entrar bien.
 const fallos = new Map();
 const VENTANA_MS = 15 * 60 * 1000;
-function bloqueada(ip) {
+function demora(ip) {
   const f = fallos.get(ip);
-  if (!f) return false;
-  if (Date.now() - f.desde > VENTANA_MS) { fallos.delete(ip); return false; }
-  return f.cantidad >= 8;
+  if (!f || Date.now() - f.desde > VENTANA_MS) { fallos.delete(ip); return 0; }
+  return Math.min(5000, f.cantidad * 500);
 }
 function sumarFallo(ip) {
   const f = fallos.get(ip);
   if (!f || Date.now() - f.desde > VENTANA_MS) fallos.set(ip, { desde: Date.now(), cantidad: 1 });
   else f.cantidad++;
 }
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function opcionesCookie() {
   return {
@@ -97,7 +99,8 @@ export function usuarioDeCookie(cabecera) {
 
 export async function login(req, res) {
   const ip = req.ip;
-  if (bloqueada(ip)) return res.status(429).json({ error: 'Demasiados intentos. Probá en unos minutos.' });
+  const ms = demora(ip);
+  if (ms) await esperar(ms);
   const usuario = String(req.body?.usuario || '').trim().toLowerCase();
   const clave = String(req.body?.clave || '');
   const u = buscarUsuario(usuario);

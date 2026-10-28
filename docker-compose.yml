@@ -11,6 +11,8 @@ services:
       DATA_DIR: /data
       PORT: 4400
       USUARIOS_ARCHIVO: /app/usuarios.json
+      # Token con el que el panel de apps pide la lista de usuarios (vacío = sin sincronización).
+      PANEL_SYNC_TOKEN: ${PANEL_SYNC_TOKEN:-}
     volumes:
       - juegos_datos:/data
       # Fuera de git: copiar usuarios.example.json y completar los hashes.

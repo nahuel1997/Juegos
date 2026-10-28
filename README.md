@@ -51,7 +51,17 @@ cp usuarios.example.json usuarios.json
 cd api && npm run hash -- "la clave"
 ```
 
-y pegar cada hash en su usuario. Opcional: `"tema": "rosa"` le da a ese usuario la estética rosa con corazones. En Docker se monta como solo lectura en el contenedor de la API.
+y pegar cada hash en su usuario.
+
+Para cambiarle la clave a alguien (pisa la que haya elegido desde su perfil y le cierra las sesiones abiertas):
+
+```bash
+docker compose stop api
+docker compose run --rm --no-deps api node src/scripts/clave.js <usuario> "la clave nueva"
+docker compose start api
+```
+
+El panel de apps lista estos usuarios (pestaña Usuarios) pidiéndolos a `GET /api/panel/usuarios` con `PANEL_SYNC_TOKEN` (en `.env`); nunca viajan hashes. Opcional: `"tema": "rosa"` le da a ese usuario la estética rosa con corazones. En Docker se monta como solo lectura en el contenedor de la API.
 
 ## Desarrollo local
 
