@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTecladoNativo, soloLetras, SIN_AUTOCORRECTOR } from '../../tecladoNativo.js';
 
 const FILAS_TECLADO = ['QWERTYUIOP', 'ASDFGHJKLÑ', 'ZXCVBNM'];
 const segundos = (ms) => (ms == null ? '' : `${(ms / 1000).toFixed(1)} s`);
@@ -28,6 +29,10 @@ export default function JuegoStop({ partida, accion, ctx }) {
   const [palabra, setPalabra] = useState('');
   const [reloj, setReloj] = useState(0);
   const puedoEscribir = partida.estado === 'jugando' && fase === 'jugando' && !mio.terminado;
+  const nativo = useTecladoNativo();
+  const campo = useRef(null);
+  // Letras que ya se sabe que no están (en el celular no hay teclado pintado que las muestre).
+  const descartadas = Object.keys(partida.teclado).filter((l) => partida.teclado[l] === 'g').sort();
 
   useEffect(() => setPalabra(''), [partida.numero, mio.intentos.length]);
 
@@ -95,7 +100,7 @@ export default function JuegoStop({ partida, accion, ctx }) {
         </div>
       )}
 
-      <div className="stop-grid">
+      <div className="stop-grid" onClick={() => nativo && campo.current?.focus()}>
         <Grilla intentos={mio.intentos} largo={config.largo} total={config.intentos} escribiendo={puedoEscribir ? palabra : null} />
         <div className="stop-rival">
           <small>{ctx.nombreRival}</small>
@@ -103,6 +108,23 @@ export default function JuegoStop({ partida, accion, ctx }) {
         </div>
       </div>
 
+      {nativo ? (
+        <form className="teclado-nativo" onSubmit={(e) => { e.preventDefault(); tecla('ENTER'); }}>
+          <input
+            ref={campo}
+            {...SIN_AUTOCORRECTOR}
+            enterKeyHint="send"
+            aria-label="Tu palabra"
+            placeholder={puedoEscribir ? 'Tocá acá y escribí' : ''}
+            value={palabra}
+            maxLength={config.largo}
+            disabled={!puedoEscribir}
+            onChange={(e) => setPalabra(soloLetras(e.target.value).slice(0, config.largo))}
+          />
+          <button className="btn" disabled={!puedoEscribir || palabra.length !== config.largo}>Enviar</button>
+          {descartadas.length > 0 && <p className="descartadas">No están: {descartadas.map((l) => <b key={l}>{l}</b>)}</p>}
+        </form>
+      ) : (
       <div className="stop-teclado">
         {FILAS_TECLADO.map((fila, i) => (
           <div key={fila} className="fila-teclado">
@@ -114,6 +136,7 @@ export default function JuegoStop({ partida, accion, ctx }) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTecladoNativo, soloLetras, SIN_AUTOCORRECTOR } from '../../tecladoNativo.js';
 
 const LETRAS = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
 
@@ -54,6 +55,12 @@ export default function JuegoAhorcado({ partida, accion, ctx }) {
   const adivino = ronda.adivinoYo;
   const [intento, setIntento] = useState('');
   const puedoTirar = adivino && ronda.fase === 'adivinando' && partida.estado === 'jugando';
+  const nativo = useTecladoNativo();
+  // Con el teclado del celular, cada letra que se escribe es una jugada (el campo queda vacío).
+  const tirarDesdeCampo = (texto) => {
+    const l = soloLetras(texto).slice(-1);
+    if (l && LETRAS.includes(l) && !ronda.letras.includes(l)) accion('letra', { letra: l });
+  };
 
   // Teclado físico para el que adivina.
   useEffect(() => {
@@ -108,12 +115,22 @@ export default function JuegoAhorcado({ partida, accion, ctx }) {
                   ),
                 )}
               </div>
-              <div className="teclado">
-                {LETRAS.map((l) => {
+              {nativo && puedoTirar && (
+                <input
+                  className="campo-letra"
+                  {...SIN_AUTOCORRECTOR}
+                  aria-label="Escribí una letra"
+                  placeholder="Tocá acá y escribí una letra"
+                  value=""
+                  onChange={(e) => tirarDesdeCampo(e.target.value)}
+                />
+              )}
+              <div className={`teclado ${nativo ? 'solo-ver' : ''}`}>
+                {(nativo ? LETRAS.filter((l) => ronda.letras.includes(l)) : LETRAS).map((l) => {
                   const usada = ronda.letras.includes(l);
                   const bien = usada && (ronda.mostrada || []).includes(l);
                   return (
-                    <button key={l} type="button" className={`tecla ${usada ? (bien ? 'bien' : 'mal') : ''}`} disabled={!puedoTirar || usada} onClick={() => accion('letra', { letra: l })}>
+                    <button key={l} type="button" className={`tecla ${usada ? (bien ? 'bien' : 'mal') : ''}`} disabled={nativo || !puedoTirar || usada} onClick={() => accion('letra', { letra: l })}>
                       {l}
                     </button>
                   );

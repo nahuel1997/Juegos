@@ -380,3 +380,12 @@
   .dado-svg.rodando, .cb-caballo.corre, .cb-caballo.corre .cb-pata, .qd-casilla.destino, .mn-tarjeta, .mn-token svg { animation: none; }
   .mn-tarjeta { transform: translate(-50%, -50%); }
 }
+
+/* Teclado del celular en los juegos de letras (en vez del teclado dibujado). 16px: iOS no hace zoom. */
+.teclado-nativo { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; max-width: 420px; margin: 0 auto; width: 100%; }
+.teclado-nativo input, .campo-letra { flex: 1; min-width: 0; font-size: 16px; padding: 12px 14px; letter-spacing: .25em; text-transform: uppercase; text-align: center; }
+.campo-letra { width: 100%; margin-bottom: 10px; }
+.teclado-nativo .descartadas { flex-basis: 100%; margin: 2px 0 0; text-align: center; font-size: .85rem; opacity: .8; }
+.teclado-nativo .descartadas b { display: inline-block; margin: 0 3px; text-decoration: line-through; }
+.teclado.solo-ver .tecla:disabled { opacity: 1; }
+.teclado-nativo input::placeholder, .campo-letra::placeholder { letter-spacing: normal; text-transform: none; }
