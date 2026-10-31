@@ -38,6 +38,14 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **Quoridor**: cruzar al otro lado poniendo paredes que nunca encierran; con 1 ficha o 3 tapitas.
 - **Dibujá y adiviná**: uno dibuja en vivo (colores, grosores, deshacer) y el otro adivina contra reloj; avisa "¡casi!".
 - **Monopoly Lanús**: calles y lugares de Lanús (Derqui, La Fortaleza, Gimnasio Moonrock, Cafetería Santa Emilia, Hospital Británico, Velódromo, Fútbol 5…), tarjetas de Suerte y Club de barrio, casas y hoteles, hipotecas, Comisaría; hasta la quiebra o por turnos. Los datos del tablero están en api/src/juegos/monopolyDatos.js.
+- **Truco**: a 15 o 30, envido / real / falta, truco / retruco / vale cuatro, flor opcional, al mazo.
+- **Ajedrez**: reglas completas (enroque, al paso, coronación, tablas) y reloj opcional.
+- **Reversi**: tablero de 6, 8 o 10, con ayuda de jugadas posibles.
+- **Motos de luz (Tron)**: en tiempo real; flechas/WASD o deslizando el dedo.
+- **Botellas de colores**: la misma mezcla para los dos, con colores escondidos opcionales (cada mezcla se genera con solución garantizada).
+- **Adiviná la canción**: se cuenta una canción con dibujitos propios (web/src/juegos/emojis/pictos.jsx).
+- **Memoria de secuencia** (tipo Simón) y **Contrarreloj de colores** (efecto Stroop), los dos a la vez.
+- **Practicar**: cualquier juego contra el bot, sin otra persona (corre la lógica del server en el navegador).
 - **Animaciones**: explosión al pegarle a un barco (más grande al hundirlo) y salpicadura en el agua, dados que ruedan en la generala, show del 7 de oros y escoba que barre la mesa, papel picado al ganar.
 
 Las salas y partidas en curso se guardan en `DATA_DIR/salas.json` en cada jugada: si alguien se desconecta o se reinicia el servidor (o hay un deploy), al volver siguen donde estaban. El historial, el chat y los perfiles (con las fotos) también viven en `DATA_DIR` (volumen Docker).

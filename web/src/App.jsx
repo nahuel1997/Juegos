@@ -4,6 +4,7 @@ import { pedir } from './api.js';
 import Login from './componentes/Login.jsx';
 import Lobby from './componentes/Lobby.jsx';
 import Sala from './componentes/Sala.jsx';
+import Practica from './componentes/Practica.jsx';
 import Perfil from './componentes/Perfil.jsx';
 import Chat from './componentes/Chat.jsx';
 import Avisos from './componentes/Avisos.jsx';
@@ -17,6 +18,7 @@ export default function App() {
   const [lobby, setLobby] = useState(null);
   const [sala, setSala] = useState(undefined);
   const [vista, setVista] = useState('inicio'); // inicio | perfil
+  const [practica, setPractica] = useState(null); // { id, nombre } del juego que se practica contra el bot
   const [conectado, setConectado] = useState(false);
   const [avisos, setAvisos] = useState([]);
   const [mensajes, setMensajes] = useState([]);
@@ -136,8 +138,10 @@ export default function App() {
           <Perfil usuario={usuario} onCambio={setUsuario} volver={() => setVista('inicio')} avisar={avisar} />
         ) : sala ? (
           <Sala sala={sala} emitir={emitir} gente={gente} />
+        ) : practica ? (
+          <Practica key={practica.id} id={practica.id} nombre={practica.nombre} usuario={usuario} volver={() => setPractica(null)} />
         ) : (
-          <Lobby lobby={lobby} emitir={emitir} />
+          <Lobby lobby={lobby} emitir={emitir} practicar={(id, nombre) => setPractica({ id, nombre })} />
         )}
       </main>
       <Chat

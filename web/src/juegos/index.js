@@ -55,6 +55,22 @@ import ConfigDibujar from './dibujar/Config.jsx';
 import JuegoDibujar from './dibujar/Juego.jsx';
 import ConfigMonopoly from './monopoly/Config.jsx';
 import JuegoMonopoly from './monopoly/Juego.jsx';
+import ConfigTruco from './truco/Config.jsx';
+import JuegoTruco from './truco/Juego.jsx';
+import ConfigAjedrez from './ajedrez/Config.jsx';
+import JuegoAjedrez from './ajedrez/Juego.jsx';
+import ConfigReversi from './reversi/Config.jsx';
+import JuegoReversi from './reversi/Juego.jsx';
+import ConfigTron from './tron/Config.jsx';
+import JuegoTron from './tron/Juego.jsx';
+import ConfigBotellas from './botellas/Config.jsx';
+import JuegoBotellas from './botellas/Juego.jsx';
+import ConfigEmojis from './emojis/Config.jsx';
+import JuegoEmojis from './emojis/Juego.jsx';
+import ConfigSimon from './simon/Config.jsx';
+import JuegoSimon from './simon/Juego.jsx';
+import ConfigColores from './colores/Config.jsx';
+import JuegoColores from './colores/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -224,5 +240,53 @@ export const JUEGOS = {
     texto: 'Monopoly Lanús: comprá Derqui, el Moonrock, Santa Emilia y La Fortaleza.',
     Config: ConfigMonopoly,
     Juego: JuegoMonopoly,
+  },
+  truco: {
+    icono: 'truco',
+    texto: 'Truco a 15 o 30: envido, truco, retruco, vale cuatro y flor opcional.',
+    Config: ConfigTruco,
+    Juego: JuegoTruco,
+  },
+  ajedrez: {
+    icono: 'ajedrez',
+    texto: 'Ajedrez completo, con reloj opcional, enroque, al paso y coronación.',
+    Config: ConfigAjedrez,
+    Juego: JuegoAjedrez,
+  },
+  reversi: {
+    icono: 'reversi',
+    texto: 'Encerrá las fichas del rival para darlas vuelta. Gana el que tiene más.',
+    Config: ConfigReversi,
+    Juego: JuegoReversi,
+  },
+  tron: {
+    icono: 'tron',
+    texto: 'Motos de luz en tiempo real: doblá a tiempo y hacé chocar al otro.',
+    Config: ConfigTron,
+    Juego: JuegoTron,
+  },
+  botellas: {
+    icono: 'botellas',
+    texto: 'La misma mezcla para los dos: ordená los colores antes que el otro.',
+    Config: ConfigBotellas,
+    Juego: JuegoBotellas,
+  },
+  emojis: {
+    icono: 'emojis',
+    texto: 'Contá una canción solo con dibujitos y que el otro la adivine.',
+    Config: ConfigEmojis,
+    Juego: JuegoEmojis,
+  },
+  simon: {
+    icono: 'simon',
+    texto: 'Repetí la secuencia de colores que se alarga. El que se equivoca, pierde.',
+    Config: ConfigSimon,
+    Juego: JuegoSimon,
+  },
+  colores: {
+    icono: 'colores',
+    texto: 'Tocá el color de la tinta, no lo que dice. ¡El más rápido gana la carta!',
+    Config: ConfigColores,
+    Juego: JuegoColores,
   },
 };

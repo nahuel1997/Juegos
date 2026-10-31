@@ -7,6 +7,10 @@ import { distancias, vecinos } from './juegos/gatoRaton.js';
 import { mejorArreglo } from './juegos/chinchon.js';
 import { evaluar } from './juegos/mastermind.js';
 import { PALABRAS as DIBUJOS } from './juegos/dibujar.js';
+import { jerarquia } from './juegos/truco.js';
+import { DIRS as DIRS_TRON } from './juegos/tron.js';
+import { resolver as resolverBotellas, cuantoVuelca } from './juegos/botellas.js';
+import { CANCIONES } from './juegos/emojis.js';
 
 const azar = (n) => Math.floor(Math.random() * n);
 const accion = (tipo, datos) => ({ tipo, datos });
@@ -33,6 +37,10 @@ function resolverSudoku(g) {
   return true;
 }
 let solucionSudoku = null;
+// Lo que vio cada bot de la secuencia del Simón (mientras repite ya no se ve).
+const memoriaSimon = new Map();
+// Plan de cada bot en las botellas (si recalcula en cada movida puede dar vueltas en círculo).
+const planesBotellas = new Map();
 
 // espera(ms): cuánto "piensa" el bot (en la simulación se puede saltear).
 export async function jugadaBot(juego, p, yo, { rival, espera = () => Promise.resolve() } = {}) {
@@ -327,6 +335,167 @@ export async function jugadaBot(juego, p, yo, { rival, espera = () => Promise.re
         return accion('terminar');
       }
       return;
+    }
+    case 'truco': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      const ops = p.opciones;
+      if (!ops.length) return;
+      await espera(900);
+      const jer = p.miMano.map(jerarquia).sort((a, b) => b - a);
+      const mejor = jer[0] ?? 0;
+      const ganadas = p.bazas.filter((b) => b.ganador === 'yo').length;
+      if (p.pendiente) {
+        if (p.pendiente.tipo === 'envido') {
+          if (p.miEnvido >= 31 && ops.includes('real') && Math.random() < 0.4) return accion('real');
+          return accion(p.miEnvido >= 27 || (p.miEnvido >= 24 && Math.random() < 0.4) ? 'quiero' : 'noquiero');
+        }
+        if (ops.includes('envido') && p.miEnvido >= 28) return accion('envido');
+        if (ops.includes('truco') && mejor >= 12 && Math.random() < 0.4) return accion('truco');
+        return accion(mejor >= 10 || ganadas > 0 || Math.random() < 0.25 ? 'quiero' : 'noquiero');
+      }
+      if (ops.includes('envido') && p.miEnvido >= 28) return accion(p.miEnvido >= 31 && Math.random() < 0.4 ? 'real' : 'envido');
+      if (ops.includes('truco') && (mejor >= 11 || ganadas > 0) && Math.random() < 0.5) return accion('truco');
+      const baza = p.bazas[p.bazas.length - 1];
+      const cartas = [...p.miMano].sort((a, b) => jerarquia(a) - jerarquia(b));
+      let carta;
+      if (baza && baza.rival && !baza.yo) carta = cartas.find((x) => jerarquia(x) > jerarquia(baza.rival)) || cartas[0];
+      else carta = p.bazas.length === 0 ? cartas[Math.floor(cartas.length / 2)] : cartas[cartas.length - 1];
+      return accion('jugar', { carta: carta.id });
+    }
+    case 'ajedrez': {
+      if (p.estado !== 'jugando' || p.turno !== 'yo' || !p.legales.length) return;
+      await espera(900);
+      const VAL = { P: 1, N: 3, B: 3, R: 5, Q: 9, K: 0 };
+      const puntaje = (m) => {
+        const obj = p.tablero[m.a[0]][m.a[1]];
+        return (obj ? VAL[obj[1]] * 10 : 0) + (m.promo === 'Q' ? 80 : m.promo ? -5 : 0) + Math.random() * 4;
+      };
+      const m = [...p.legales].sort((a, b) => puntaje(b) - puntaje(a))[0];
+      return accion('mover', { de: m.de, a: m.a, promo: m.promo || undefined });
+    }
+    case 'reversi': {
+      if (p.estado !== 'jugando' || p.turno !== 'yo' || !p.posibles.length) return;
+      await espera(800);
+      const L = p.config.lado - 1;
+      const esquina = (x) => (x.f === 0 || x.f === L) && (x.c === 0 || x.c === L);
+      const borde = (x) => x.f === 0 || x.f === L || x.c === 0 || x.c === L;
+      const valor = (x) => x.n + (esquina(x) ? 50 : borde(x) ? 4 : 0) + Math.random() * 2;
+      const x = [...p.posibles].sort((a, b) => valor(b) - valor(a))[0];
+      return accion('poner', { fila: x.f, col: x.c });
+    }
+    case 'tron': {
+      if (p.estado !== 'jugando' || p.fase !== 'jugando' || !p.motos.yo.viva) return;
+      const { ancho, alto } = p;
+      const ocupado = new Set([...p.rastros.yo, ...p.rastros.rival]);
+      const libre = (x, y) => x >= 0 && y >= 0 && x < ancho && y < alto && !ocupado.has(y * ancho + x);
+      const area = (x, y) => {
+        const vistos = new Set([y * ancho + x]);
+        const cola = [[x, y]];
+        while (cola.length && vistos.size < 300) {
+          const [cx, cy] = cola.shift();
+          for (const [dx, dy] of Object.values(DIRS_TRON)) {
+            const nx = cx + dx; const ny = cy + dy; const k = ny * ancho + nx;
+            if (libre(nx, ny) && !vistos.has(k)) { vistos.add(k); cola.push([nx, ny]); }
+          }
+        }
+        return vistos.size;
+      };
+      const moto = p.motos.yo;
+      const OPU = { arriba: 'abajo', abajo: 'arriba', izquierda: 'derecha', derecha: 'izquierda' };
+      let mejor = null;
+      for (const [dir, [dx, dy]] of Object.entries(DIRS_TRON)) {
+        if (dir === OPU[moto.dir]) continue;
+        const nx = moto.x + dx; const ny = moto.y + dy;
+        const v = libre(nx, ny) ? area(nx, ny) + (dir === moto.dir ? 1.5 : 0) + Math.random() : -1;
+        if (!mejor || v > mejor.v) mejor = { dir, v };
+      }
+      if (mejor && mejor.dir !== moto.dir) return accion('girar', { dir: mejor.dir });
+      return;
+    }
+    case 'botellas': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'fin') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      await espera(700);
+      const b = p.botellas;
+      // Si ve todo, lo resuelve; con colores escondidos va probando.
+      if (b.every((x) => x.every((y) => y !== null))) {
+        const clave = JSON.stringify(b);
+        let plan = planesBotellas.get(yo);
+        if (!plan || plan.esperado !== clave || !plan.movs.length) {
+          const sol = resolverBotellas(b, 40000);
+          plan = sol ? { movs: sol } : null;
+        }
+        if (plan?.movs.length) {
+          const [de, a] = plan.movs.shift();
+          const nb = b.map((x) => [...x]);
+          for (let n = cuantoVuelca(nb, de, a); n > 0; n--) nb[a].push(nb[de].pop());
+          planesBotellas.set(yo, { movs: plan.movs, esperado: JSON.stringify(nb) });
+          return accion('volcar', { de, a });
+        }
+      }
+      if (p.movidas > 250) return accion('rendirse');
+      const tope = (x) => x[x.length - 1];
+      const movs = [];
+      b.forEach((x, i) => b.forEach((y, k) => {
+        if (i === k || !x.length || y.length >= p.capacidad) return;
+        if (y.length && tope(y) !== tope(x)) return;
+        const uniforme = x.every((z) => z === x[0]);
+        if (!y.length && uniforme) return;
+        movs.push({ de: i, a: k, v: (y.length ? 3 : 0) + (uniforme ? 2 : 0) + Math.random() * 2 });
+      }));
+      if (!movs.length) return accion(p.puedeDeshacer ? 'deshacer' : 'rendirse');
+      const m = movs.sort((x, y) => y.v - x.v)[0];
+      return accion('volcar', { de: m.de, a: m.a });
+    }
+    case 'emojis': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'revelado') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      if (p.armoYo) {
+        if (p.fase === 'eligiendo') { await espera(1200); return accion('elegir', { opcion: 0 }); }
+        if (p.fase === 'armando') {
+          const c = CANCIONES.find((x) => x.titulo === p.cancion?.titulo);
+          await espera(700);
+          if (c && p.pictos.length < c.pista.length) return accion('picto', { id: c.pista[p.pictos.length] });
+          return p.pictos.length ? accion('listo') : accion('picto', { id: 'nota' });
+        }
+        return;
+      }
+      if (p.fase !== 'adivinando') return;
+      if (p.intentos.length >= 6) return accion('pasar');
+      await espera(4000);
+      // La canción cuya pista se parece más a los dibujitos (y con la misma cantidad de palabras).
+      const vistos = p.pictos.map((x) => x.id);
+      const probadas = new Set(p.intentos.map((x) => x.texto));
+      const parecido = (c) => {
+        const resto = [...vistos];
+        let n = 0;
+        for (const id of c.pista) { const i = resto.indexOf(id); if (i >= 0) { n++; resto.splice(i, 1); } }
+        return n + Math.random() * 0.5;
+      };
+      const candidatas = CANCIONES.filter((c) => !probadas.has(c.titulo) && c.titulo.split(/\s+/).length === p.palabras?.length);
+      const c = (candidatas.length ? candidatas : CANCIONES).sort((a, b) => parecido(b) - parecido(a))[0];
+      return accion('adivinar', { texto: c.titulo });
+    }
+    case 'simon': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'fin') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
+      const clave = `${yo}:${p.partida}`;
+      if (p.fase === 'mostrando' && p.secuencia) { memoriaSimon.set(clave, p.secuencia); return; }
+      if (p.fase !== 'repitiendo' || p.situacion.yo !== 'jugando') return;
+      const sec = memoriaSimon.get(clave);
+      if (!sec) return;
+      await espera(380);
+      const bien = sec[p.progreso.yo];
+      const acierta = Math.random() > 0.012 * p.largo;
+      return accion('tocar', { color: acierta ? bien : (bien + 1) % p.config.colores });
+    }
+    case 'colores': {
+      if (p.estado !== 'jugando' || p.fase !== 'carta' || p.bloqueado) return;
+      await espera(800 + azar(900));
+      const c = p.carta;
+      const bien = c.pide === 'tinta' ? c.tinta : c.palabra;
+      return accion('responder', { color: Math.random() < 0.85 ? bien : (bien + 1) % p.config.colores });
     }
     case 'gato-raton': {
       if (p.estado !== 'jugando') return;

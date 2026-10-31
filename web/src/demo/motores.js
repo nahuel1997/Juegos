@@ -28,6 +28,14 @@ import * as sudoku from '../../../api/src/juegos/sudoku.js';
 import * as quoridor from '../../../api/src/juegos/quoridor.js';
 import * as dibujar from '../../../api/src/juegos/dibujar.js';
 import * as monopoly from '../../../api/src/juegos/monopoly.js';
+import * as truco from '../../../api/src/juegos/truco.js';
+import * as ajedrez from '../../../api/src/juegos/ajedrez.js';
+import * as reversi from '../../../api/src/juegos/reversi.js';
+import * as tron from '../../../api/src/juegos/tron.js';
+import * as botellas from '../../../api/src/juegos/botellas.js';
+import * as emojis from '../../../api/src/juegos/emojis.js';
+import * as simon from '../../../api/src/juegos/simon.js';
+import * as colores from '../../../api/src/juegos/colores.js';
 
 export { jugadaBot } from '../../../api/src/bots.js';
 
@@ -63,4 +71,12 @@ export const MOTORES = {
   quoridor: m(quoridor, quoridor.PartidaQuoridor, { lado: 7, paredes: 5 }),
   dibujar: m(dibujar, dibujar.PartidaDibujar, { turnos: 1, tiempo: 30 }),
   monopoly: m(monopoly, monopoly.PartidaMonopoly),
+  truco: m(truco, truco.PartidaTruco, { meta: 15 }),
+  ajedrez: m(ajedrez, ajedrez.PartidaAjedrez),
+  reversi: m(reversi, reversi.PartidaReversi, { lado: 6 }),
+  tron: m(tron, tron.PartidaTron, { tamanio: 'chico', velocidad: 'lenta' }),
+  botellas: m(botellas, botellas.PartidaBotellas, { colores: 5, escondidos: true }),
+  emojis: m(emojis, emojis.PartidaEmojis, { turnos: 1, tiempo: 30 }),
+  simon: m(simon, simon.PartidaSimon, { velocidad: 'rapida' }),
+  colores: m(colores, colores.PartidaColores, { cartas: 10 }),
 };

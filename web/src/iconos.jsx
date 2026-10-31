@@ -647,6 +647,83 @@ export const ICONOS = {
       {[[24, 34], [36, 32], [30, 42], [40, 42], [22, 44]].map(([x, y], i) => <ellipse key={i} cx={x} cy={y} rx="1.5" ry="2.5" fill="#ffe57f" />)}
     </>
   ),
+  truco: (
+    <>
+      <rect x="6" y="14" width="24" height="36" rx="4" fill="#fffaf0" stroke={T} strokeWidth="2.5" transform="rotate(-12 18 32)" />
+      <rect x="22" y="10" width="24" height="36" rx="4" fill="#fffaf0" stroke={T} strokeWidth="2.5" />
+      <path d="M34 16v20M30 32h8M34 36v5" stroke="#455a64" strokeWidth="3" strokeLinecap="round" />
+      <path d="M34 14l-2 4h4z" fill="#455a64" />
+      <path d="M44 40c6-2 12 2 12 8s-4 10-10 10c-4 0-6-2-6-2" fill="#c8a165" stroke={T} strokeWidth="2.5" />
+      <path d="M52 40l4-10" stroke="#9e9e9e" strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
+  ajedrez: (
+    <>
+      <path d="M24 56h22v-6H24zM26 50c0-10 6-12 6-20-4 2-8 2-10-2 4-6 8-12 16-14 8 2 12 10 10 22-1 6-4 10-4 14z" fill="#2b2233" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+      <circle cx="34" cy="22" r="2" fill="#fff" />
+      <path d="M10 56h14v-5H10zM12 51c0-6 2-8 2-12h6c0 4 2 6 2 12zM13 39h8l1-8H12zM12 31v-4h3v2h2v-2h2v2h2v-2h3v4z" fill="#fff" stroke={T} strokeWidth="2" strokeLinejoin="round" />
+    </>
+  ),
+  reversi: (
+    <>
+      <rect x="6" y="6" width="52" height="52" rx="6" fill="#2e7d32" stroke={T} strokeWidth="2.5" />
+      <path d="M32 6v52M6 32h52" stroke="#1b5e20" strokeWidth="2" />
+      <circle cx="19" cy="19" r="9" fill="#fff" stroke={T} strokeWidth="2" />
+      <circle cx="45" cy="45" r="9" fill="#fff" stroke={T} strokeWidth="2" />
+      <circle cx="45" cy="19" r="9" fill="#2b2233" stroke={T} strokeWidth="2" />
+      <circle cx="19" cy="45" r="9" fill="#2b2233" stroke={T} strokeWidth="2" />
+    </>
+  ),
+  tron: (
+    <>
+      <rect x="4" y="8" width="56" height="48" rx="8" fill="#0b1026" stroke={T} strokeWidth="2.5" />
+      <path d="M10 44h18V22h14" fill="none" stroke="#ff4f9a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M54 16H40v16H26v10" fill="none" stroke="#4fc3f7" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="39" y="19" width="6" height="6" fill="#fff" />
+      <rect x="23" y="39" width="6" height="6" fill="#fff" />
+    </>
+  ),
+  botellas: (
+    <>
+      {[[8, ['#e53935', '#1e88e5', '#e53935']], [24, ['#1e88e5', '#43a047', '#fdd835']], [40, ['#fdd835', '#fdd835', '#43a047']]].map(([x, capas]) => (
+        <g key={x}>
+          {capas.map((c, i) => <rect key={i} x={x + 2} y={46 - i * 10} width="12" height="10" fill={c} />)}
+          <path d={`M${x} 18h16v38a4 4 0 0 1-4 4h-8a4 4 0 0 1-4-4z`} fill="none" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+          <path d={`M${x + 2} 12h12v6h-12z`} fill="#fff" stroke={T} strokeWidth="2" />
+        </g>
+      ))}
+      <path d="M56 8l2 4 4 1-4 2-2 4-2-4-4-2 4-1z" fill="#ffd60a" />
+    </>
+  ),
+  emojis: (
+    <>
+      <rect x="4" y="12" width="56" height="40" rx="10" fill="#fff" stroke={T} strokeWidth="2.5" />
+      <path d="M18 40V20l12-3v19" fill="none" stroke="#7b1fa2" strokeWidth="3" strokeLinecap="round" />
+      <ellipse cx="15" cy="40" rx="4" ry="3" fill="#7b1fa2" />
+      <ellipse cx="27" cy="36" rx="4" ry="3" fill="#7b1fa2" />
+      <path d="M46 44c-8-5-10-10-8-13 2-3 6-3 8 0 2-3 6-3 8 0 2 3 0 8-8 13z" fill="#e63946" stroke={T} strokeWidth="2" />
+      <path d="M40 22l2 4 4 1-4 2-2 4-2-4-4-2 4-1z" fill="#ffd60a" />
+      <path d="M50 52l-6 8-2-8" fill="#fff" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  simon: (
+    <>
+      <circle cx="32" cy="32" r="27" fill="#2b2233" />
+      <path d="M32 8a24 24 0 0 1 24 24H34V10z" fill="#e53935" transform="translate(-1 1)" />
+      <path d="M56 34a24 24 0 0 1-24 24V36z" fill="#1e88e5" transform="translate(-1 -1)" />
+      <path d="M30 58A24 24 0 0 1 8 36h22z" fill="#43a047" transform="translate(1 -1)" />
+      <path d="M8 30A24 24 0 0 1 30 8v22z" fill="#ffeb3b" transform="translate(1 1)" />
+      <circle cx="32" cy="32" r="9" fill="#2b2233" stroke="#fff" strokeWidth="2" />
+    </>
+  ),
+  colores: (
+    <>
+      <rect x="4" y="10" width="56" height="44" rx="10" fill="#fff" stroke={T} strokeWidth="2.5" />
+      <text x="32" y="38" textAnchor="middle" fontSize="17" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#1e88e5">ROJO</text>
+      <circle cx="14" cy="48" r="3.5" fill="#e53935" /><circle cx="25" cy="48" r="3.5" fill="#1e88e5" /><circle cx="36" cy="48" r="3.5" fill="#43a047" /><circle cx="47" cy="48" r="3.5" fill="#fdd835" />
+      <path d="M48 14l4 6-6-2" fill="none" stroke="#e53935" strokeWidth="2.5" strokeLinecap="round" />
+    </>
+  ),
 };
 
 // Emoticones que se pueden mandar en una partida (el orden es el del selector).

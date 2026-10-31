@@ -64,6 +64,14 @@ export function sonarTurno() {
   nota(c, 1047, t + 0.14, 0.5); // do
 }
 
+// Una nota suelta (los colores del Simón).
+export function tono(frecuencia, duracion = 0.3) {
+  if (!sonidoActivo()) return;
+  const c = contexto();
+  if (!c) return;
+  nota(c, frecuencia, c.currentTime + 0.01, duracion, 0.2);
+}
+
 // ===== Efectos de los juegos (todo sintetizado, sin archivos) =====
 
 let ruidoBuf = null;

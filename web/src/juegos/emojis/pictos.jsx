@@ -1,0 +1,86 @@
+// Dibujitos propios para "Adiviná la canción" (viewBox 64x64). Los ids son los de api/src/juegos/emojis.js.
+const T = '#2b2233';
+const s = { stroke: T, strokeWidth: 2.5, strokeLinejoin: 'round', strokeLinecap: 'round' };
+const Cara = ({ fill = '#ffd166', children }) => (<><circle cx="32" cy="32" r="24" fill={fill} {...s} />{children}</>);
+const corazon = 'M32 54C10 40 6 28 10 19c4-9 16-10 22-1 6-9 18-8 22 1 4 9 0 21-22 35z';
+
+export const PICTOS = {
+  corazon: <path d={corazon} fill="#e63946" {...s} />,
+  corazonRoto: <><path d={corazon} fill="#e63946" {...s} /><path d="M32 18l-5 10 8 6-6 10 3 10" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinejoin="round" /></>,
+  fuego: <><path d="M32 58c-12 0-18-8-18-17 0-10 9-15 9-25 6 4 9 10 9 15 2-4 4-6 4-10 7 6 14 13 14 22 0 9-6 15-18 15z" fill="#ff7b00" {...s} /><path d="M32 56c-5 0-8-3-8-8 0-4 4-7 5-11 3 3 5 5 5 8 1-2 2-3 2-4 3 2 4 5 4 8 0 4-3 7-8 7z" fill="#ffd60a" /></>,
+  sol: <><circle cx="32" cy="32" r="12" fill="#ffc83d" {...s} />{[0, 45, 90, 135, 180, 225, 270, 315].map((a) => <path key={a} d="M32 6v9" {...s} stroke="#f4a100" strokeWidth="4" transform={`rotate(${a} 32 32)`} />)}</>,
+  luna: <path d="M40 8a24 24 0 1 0 16 38A20 20 0 0 1 40 8z" fill="#ffe08a" {...s} />,
+  estrella: <path d="M32 6l7.6 16 17.4 2.2-12.8 12 3.4 17.3L32 45l-15.6 8.5 3.4-17.3L7 24.2 24.4 22z" fill="#ffd60a" {...s} />,
+  nube: <path d="M18 46a10 10 0 0 1-1-20 14 14 0 0 1 27-4 11 11 0 0 1 4 24z" fill="#f1f5ff" {...s} />,
+  lluvia: <><path d="M18 34a9 9 0 0 1-1-18 12 12 0 0 1 24-3 10 10 0 0 1 4 21z" fill="#cfd8ec" {...s} />{[[20, 42], [32, 46], [44, 42], [26, 54], [38, 56]].map(([x, y]) => <path key={`${x}${y}`} d={`M${x} ${y}l-3 6`} stroke="#1e88e5" strokeWidth="3.5" strokeLinecap="round" />)}</>,
+  rayo: <path d="M36 4L14 36h14l-6 24 26-34H33z" fill="#ffd60a" {...s} />,
+  arcoiris: <>{['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa'].map((c, i) => <path key={c} d={`M${6 + i * 3} 50a${26 - i * 3} ${26 - i * 3} 0 0 1 ${52 - i * 6} 0`} fill="none" stroke={c} strokeWidth="3.4" />)}</>,
+  nieve: <>{[0, 60, 120].map((a) => <path key={a} d="M32 8v48M26 14l6 6 6-6M26 50l6-6 6 6" fill="none" stroke="#4fc3f7" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" transform={`rotate(${a} 32 32)`} />)}</>,
+  viento: <path d="M6 24h34a7 7 0 1 0-7-7M6 34h46a7 7 0 1 1-7 7M6 44h22" fill="none" stroke="#7fb3d5" strokeWidth="4" strokeLinecap="round" />,
+  ola: <><path d="M4 44c8 0 8-8 16-8s8 8 16 8 8-8 16-8 8 8 8 8v14H4z" fill="#1e88e5" {...s} /><path d="M10 30c4-12 18-18 26-10-8-2-12 4-10 10" fill="#4fc3f7" {...s} /></>,
+  palmera: <><path d="M32 58c0-14 2-26 6-34" fill="none" stroke="#8d5524" strokeWidth="5" strokeLinecap="round" /><path d="M38 24c-8-8-20-6-24 0 8-2 16 0 24 0zM38 24c4-10 16-12 20-6-8-1-14 2-20 6zM38 24c-2-10 4-18 12-18-6 4-10 10-12 18zM38 24c8 0 16 6 16 14-6-6-10-10-16-14z" fill="#43a047" {...s} /><path d="M20 58h28" {...s} /></>,
+  montania: <><path d="M2 54l20-34 12 18 8-12 20 28z" fill="#8d6e63" {...s} /><path d="M22 20l-6 10 6-3 5 4zM42 26l-4 6 4-2 4 3z" fill="#fff" /></>,
+  flor: <><path d="M32 36v22" stroke="#43a047" strokeWidth="4" /><path d="M32 50c-6-6-14-4-14-4s4 8 14 6" fill="#66bb6a" {...s} />{[0, 72, 144, 216, 288].map((a) => <ellipse key={a} cx="32" cy="16" rx="7" ry="10" fill="#ff6fae" {...s} transform={`rotate(${a} 32 26)`} />)}<circle cx="32" cy="26" r="6" fill="#ffd60a" {...s} /></>,
+  cactus: <><path d="M26 58V16a6 6 0 0 1 12 0v42zM26 38h-8a4 4 0 0 1-4-4v-8a3 3 0 0 1 6 0v6h6M38 32h8v-8a3 3 0 0 1 6 0v8a4 4 0 0 1-4 4h-10" fill="#43a047" {...s} /><path d="M18 58h28" {...s} /></>,
+  arbol: <><path d="M28 58V40h8v18" fill="#8d5524" {...s} /><circle cx="32" cy="26" r="18" fill="#43a047" {...s} /></>,
+  mariposa: <><path d="M32 30C22 10 6 12 8 24c1 8 12 10 24 8zM32 30c10-20 26-18 24-6-1 8-12 10-24 8zM32 32c-8 4-18 12-12 20 6 4 10-6 12-14zM32 32c8 4 18 12 12 20-6 4-10-6-12-14z" fill="#ff8fab" {...s} /><path d="M32 22v26M32 22l-4-8M32 22l4-8" {...s} fill="none" /></>,
+  pajaro: <><path d="M10 36c0-12 10-20 22-20 8 0 12 4 14 8l10 2-8 4c0 12-10 20-22 20-8 0-16-4-16-14z" fill="#4fc3f7" {...s} /><path d="M18 34c6 0 12 4 14 10-8 2-14-2-14-10z" fill="#1e88e5" {...s} /><circle cx="40" cy="26" r="2.5" fill={T} /></>,
+  pez: <><path d="M8 32c8-12 24-16 36-6l12-8v28l-12-8C32 48 16 44 8 32z" fill="#ff9f1c" {...s} /><circle cx="20" cy="30" r="3" fill={T} /></>,
+  gato: <Cara fill="#ffb74d"><path d="M12 22l2-16 12 8M52 22l-2-16-12 8" fill="#ffb74d" {...s} /><circle cx="24" cy="30" r="3" fill={T} /><circle cx="40" cy="30" r="3" fill={T} /><path d="M29 38l3 3 3-3M8 38h12M8 44l12-3M56 38H44M56 44l-12-3" fill="none" {...s} /></Cara>,
+  perro: <Cara fill="#d7a26b"><path d="M10 16c-4 10 0 22 6 22l4-24zM54 16c4 10 0 22-6 22l-4-24z" fill="#8d5524" {...s} /><circle cx="24" cy="30" r="3" fill={T} /><circle cx="40" cy="30" r="3" fill={T} /><ellipse cx="32" cy="40" rx="5" ry="4" fill={T} /><path d="M32 44v4M26 48c4 3 8 3 12 0" fill="none" {...s} /></Cara>,
+  raton: <><circle cx="16" cy="18" r="10" fill="#b0bec5" {...s} /><circle cx="48" cy="18" r="10" fill="#b0bec5" {...s} /><path d="M32 58C16 58 10 44 12 34c2-10 10-14 20-14s18 4 20 14c2 10-4 24-20 24z" fill="#cfd8dc" {...s} /><circle cx="24" cy="36" r="3" fill={T} /><circle cx="40" cy="36" r="3" fill={T} /><circle cx="32" cy="48" r="3" fill="#ff8fab" /></>,
+  tortuga: <><path d="M10 40c0-14 10-22 22-22s22 8 22 22z" fill="#66bb6a" {...s} /><path d="M20 40l4-12h16l4 12M24 28l8-8 8 8" fill="none" stroke="#2e7d32" strokeWidth="2.5" /><path d="M54 36c4-2 8 0 8 4s-4 4-8 2zM14 40v8M48 40v8" fill="#a5d6a7" {...s} /><path d="M6 40h52" {...s} /></>,
+  auto: <><path d="M6 42v-8l6-2 8-12h22l10 12 6 2v8z" fill="#e53935" {...s} /><path d="M22 22h8v10H16zM34 22h6l6 10H34z" fill="#bbdefb" {...s} /><circle cx="18" cy="44" r="6" fill="#444" {...s} /><circle cx="46" cy="44" r="6" fill="#444" {...s} /></>,
+  avion: <path d="M58 30c0-3-3-4-6-4H40L26 8h-6l7 18H14l-5-6H5l3 12-3 12h4l5-6h13l-7 18h6l14-18h12c3 0 6-1 6-4z" fill="#90caf9" {...s} />,
+  tren: <><rect x="12" y="8" width="40" height="40" rx="8" fill="#e53935" {...s} /><rect x="18" y="14" width="28" height="14" rx="3" fill="#bbdefb" {...s} /><circle cx="22" cy="38" r="3" fill="#ffd60a" /><circle cx="42" cy="38" r="3" fill="#ffd60a" /><path d="M20 48l-6 10M44 48l6 10M16 56h32" {...s} /></>,
+  barco: <><path d="M6 40h52l-8 14H14z" fill="#8d5524" {...s} /><path d="M30 8v32M30 10l20 26H30zM28 14L12 36h16" fill="#fff" {...s} /><path d="M4 58c6-3 10 3 16 0s10 3 16 0 10 3 16 0 6 0 8 0" fill="none" stroke="#1e88e5" strokeWidth="3" strokeLinecap="round" /></>,
+  bici: <><circle cx="16" cy="40" r="11" fill="none" {...s} strokeWidth="3.5" /><circle cx="48" cy="40" r="11" fill="none" {...s} strokeWidth="3.5" /><path d="M16 40l10-18h16l6 18M26 22l8 18 8-18M22 16h8M42 22l-2-8h6" fill="none" stroke="#e53935" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" /></>,
+  cohete: <><path d="M32 4c10 8 14 20 12 34H20C18 24 22 12 32 4z" fill="#eceff1" {...s} /><circle cx="32" cy="22" r="5" fill="#4fc3f7" {...s} /><path d="M20 30l-8 12 8 2zM44 30l8 12-8 2z" fill="#e53935" {...s} /><path d="M24 40c0 8 4 14 8 18 4-4 8-10 8-18z" fill="#ff7b00" {...s} /></>,
+  casa: <><path d="M8 30L32 10l24 20" fill="none" {...s} strokeWidth="3.5" /><path d="M14 26v30h36V26L32 12z" fill="#ffe0a3" {...s} /><path d="M26 56V40h12v16" fill="#8d5524" {...s} /><rect x="18" y="30" width="8" height="8" fill="#bbdefb" {...s} /></>,
+  edificio: <><rect x="8" y="20" width="20" height="38" fill="#90a4ae" {...s} /><rect x="30" y="6" width="26" height="52" fill="#b0bec5" {...s} />{[12, 20, 28, 36, 44].map((y) => <path key={y} d={`M36 ${y}h4M46 ${y}h4`} stroke="#ffd60a" strokeWidth="3" />)}{[28, 36, 44].map((y) => <path key={y} d={`M13 ${y}h4M19 ${y}h4`} stroke="#ffd60a" strokeWidth="3" />)}</>,
+  puente: <><path d="M2 40h60" {...s} strokeWidth="4" /><path d="M6 40c8-20 44-20 52 0" fill="none" stroke="#e53935" strokeWidth="4" /><path d="M14 31v9M24 26v14M32 25v15M40 26v14M50 31v9" {...s} /><path d="M2 54c6-3 10 3 16 0s10 3 16 0 10 3 16 0 8 0 12 0" fill="none" stroke="#1e88e5" strokeWidth="3" strokeLinecap="round" /></>,
+  camino: <><path d="M26 6h12l18 52H8z" fill="#616161" {...s} /><path d="M32 10v6M32 22v8M32 36v10M32 50v6" stroke="#fff" strokeWidth="3" strokeLinecap="round" /></>,
+  nota: <><path d="M24 46V12l28-6v34" fill="none" {...s} strokeWidth="4" /><ellipse cx="18" cy="46" rx="8" ry="6" fill="#7b1fa2" {...s} /><ellipse cx="46" cy="40" rx="8" ry="6" fill="#7b1fa2" {...s} /></>,
+  guitarra: <><path d="M40 18l14-14 6 6-14 14" fill="#8d5524" {...s} /><path d="M30 24c4-4 10-4 12 0s0 8-4 10c4 4 2 12-6 16-10 6-22-2-22-12 0-8 6-12 12-12 2-4 4-6 8-2z" fill="#ff9f1c" {...s} /><circle cx="26" cy="38" r="4" fill={T} /><path d="M44 20L26 38" stroke="#fff" strokeWidth="1.5" /></>,
+  microfono: <><rect x="22" y="4" width="20" height="30" rx="10" fill="#90a4ae" {...s} /><path d="M14 28c0 10 8 16 18 16s18-6 18-16M32 44v12M22 58h20" fill="none" {...s} strokeWidth="3" /></>,
+  beso: <><path d="M6 32c8-10 18-12 26-6 8-6 18-4 26 6-8 2-14 14-26 14S14 34 6 32z" fill="#e63946" {...s} /><path d="M6 32c10 2 18 0 26-2 8 2 16 4 26 2" fill="none" stroke="#9d0208" strokeWidth="2.5" /></>,
+  ojo: <><path d="M4 32c8-14 18-20 28-20s20 6 28 20c-8 14-18 20-28 20S12 46 4 32z" fill="#fff" {...s} /><circle cx="32" cy="32" r="11" fill="#4e8cff" {...s} /><circle cx="32" cy="32" r="5" fill={T} /><circle cx="36" cy="28" r="2" fill="#fff" /></>,
+  risa: <Cara><path d="M18 24l6 4-6 4M46 24l-6 4 6 4" fill="none" {...s} /><path d="M16 36h32c0 10-8 16-16 16s-16-6-16-16z" fill="#9d0208" {...s} /><path d="M24 46c4 3 12 3 16 0" stroke="#ff8fab" strokeWidth="3" fill="none" /></Cara>,
+  llanto: <Cara><path d="M18 28c2-3 8-3 10 0M36 28c2-3 8-3 10 0" fill="none" {...s} /><path d="M22 46c6-6 14-6 20 0" fill="none" {...s} /><path d="M20 32c-4 8-6 12-2 14s6-4 2-14zM44 32c4 8 6 12 2 14s-6-4-2-14z" fill="#4fc3f7" {...s} /></Cara>,
+  diablo: <Cara fill="#e53935"><path d="M12 18L8 4l12 8M52 18l4-14-12 8" fill="#9d0208" {...s} /><path d="M18 26l10 4M46 26l-10 4" {...s} /><circle cx="24" cy="32" r="2.5" fill={T} /><circle cx="40" cy="32" r="2.5" fill={T} /><path d="M20 42c6 6 18 6 24 0" fill="none" {...s} /></Cara>,
+  angel: <><ellipse cx="32" cy="9" rx="14" ry="4" fill="none" stroke="#ffd60a" strokeWidth="3.5" /><circle cx="32" cy="36" r="20" fill="#ffd166" {...s} /><path d="M22 34c2-3 6-3 8 0M34 34c2-3 6-3 8 0M24 44c4 4 12 4 16 0" fill="none" {...s} /></>,
+  calavera: <><path d="M32 6C18 6 10 16 10 28c0 8 4 12 8 14v10h28V42c4-2 8-6 8-14C54 16 46 6 32 6z" fill="#f5f5f5" {...s} /><circle cx="23" cy="28" r="6" fill={T} /><circle cx="41" cy="28" r="6" fill={T} /><path d="M32 36l-3 6h6zM24 52v-6M32 52v-6M40 52v-6" {...s} fill={T} /></>,
+  fantasma: <><path d="M12 58V28a20 20 0 0 1 40 0v30l-7-6-6 6-7-6-7 6-6-6z" fill="#f3f0ff" {...s} /><ellipse cx="25" cy="28" rx="4" ry="6" fill={T} /><ellipse cx="39" cy="28" rx="4" ry="6" fill={T} /><ellipse cx="32" cy="42" rx="5" ry="4" fill={T} /></>,
+  corona: <><path d="M8 46l-2-28 14 12 12-18 12 18 14-12-2 28z" fill="#ffd60a" {...s} /><path d="M8 46h48v8H8z" fill="#f4a100" {...s} /><circle cx="32" cy="34" r="4" fill="#e53935" /></>,
+  trofeo: <><path d="M18 6h28v14c0 10-6 18-14 18s-14-8-14-18z" fill="#ffd60a" {...s} /><path d="M18 12H8c0 10 6 14 12 14M46 12h10c0 10-6 14-12 14" fill="none" {...s} /><path d="M28 38h8v10h-8zM18 48h28v8H18z" fill="#f4a100" {...s} /></>,
+  copa: <><path d="M16 6h32c0 18-6 26-16 26S16 24 16 6z" fill="#fff" {...s} /><path d="M17 14h30c-1 10-6 15-15 15s-14-5-15-15z" fill="#9d0208" /><path d="M32 32v18M20 56h24" {...s} strokeWidth="3.5" /></>,
+  diamante: <><path d="M14 8h36l10 14-28 34L4 22z" fill="#80deea" {...s} /><path d="M4 22h56M24 8l-6 14 14 34 14-34-6-14" fill="none" {...s} /></>,
+  dinero: <><rect x="4" y="16" width="56" height="32" rx="4" fill="#81c784" {...s} /><circle cx="32" cy="32" r="9" fill="#a5d6a7" {...s} /><path d="M35 27c-1-2-6-2-6 1s6 2 6 5-5 3-6 1M32 24v16" fill="none" stroke="#1b5e20" strokeWidth="2.2" strokeLinecap="round" /></>,
+  reloj: <><circle cx="32" cy="32" r="24" fill="#fff" {...s} strokeWidth="3.5" /><path d="M32 16v16l10 8" fill="none" {...s} strokeWidth="3.5" /></>,
+  telefono: <><rect x="18" y="4" width="28" height="56" rx="6" fill={T} /><rect x="21" y="10" width="22" height="40" rx="2" fill="#4fc3f7" /><circle cx="32" cy="55" r="2.5" fill="#fff" /></>,
+  paraguas: <><path d="M4 32C6 16 18 8 32 8s26 8 28 24c-4-4-8-4-10 0-3-4-8-4-10 0-3-4-8-4-10 0-3-4-8-4-10 0-3-4-8-4-10 0z" fill="#8e24aa" {...s} /><path d="M32 32v20a5 5 0 0 1-10 0" fill="none" {...s} strokeWidth="3" /></>,
+  regalo: <><rect x="8" y="24" width="48" height="32" fill="#e53935" {...s} /><rect x="6" y="16" width="52" height="10" fill="#ef5350" {...s} /><path d="M32 16v40" stroke="#ffd60a" strokeWidth="6" /><path d="M32 16c-8-12-20-8-14 0zM32 16c8-12 20-8 14 0z" fill="#ffd60a" {...s} /></>,
+  pelota: <><circle cx="32" cy="32" r="24" fill="#fff" {...s} /><path d="M32 22l9 6-3 11h-12l-3-11z" fill={T} /><path d="M32 8v14M41 28l13-4M38 39l8 12M26 39l-8 12M23 28l-13-4" {...s} fill="none" /></>,
+  bandera: <><path d="M10 6v54" {...s} strokeWidth="3.5" /><path d="M12 8h44v12H12z" fill="#74acdf" /><path d="M12 20h44v12H12z" fill="#fff" /><path d="M12 32h44v12H12z" fill="#74acdf" /><circle cx="34" cy="26" r="4" fill="#f6b40e" /><path d="M12 8h44v36H12z" fill="none" {...s} /></>,
+  mundo: <><circle cx="32" cy="32" r="24" fill="#4fc3f7" {...s} /><path d="M18 14c6 2 8 8 4 12s2 10 8 8 6 10 0 16M44 12c-4 4-2 10 4 10s8 6 4 12" fill="#66bb6a" {...s} /></>,
+  arriba: <path d="M32 6l22 24H40v26H24V30H10z" fill="#43a047" {...s} />,
+  abajo: <path d="M32 58l22-24H40V8H24v26H10z" fill="#e53935" {...s} />,
+  baile: <><circle cx="34" cy="10" r="6" fill="#ffd166" {...s} /><path d="M34 16l-4 18 10 8-4 16M30 34l-10 6-4 14M32 22l12 6 8-8M32 22l-12-2-6-8" fill="none" stroke="#8e24aa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /><path d="M24 30l14 2 4 12H20z" fill="#e53935" {...s} /></>,
+  mujer: <><path d="M14 36c0-16 6-28 18-28s18 12 18 28c0 6-4 8-4 8H18s-4-2-4-8z" fill="#8d5524" {...s} /><circle cx="32" cy="28" r="12" fill="#ffd8b5" {...s} /><path d="M14 60c2-10 8-14 18-14s16 4 18 14z" fill="#ec407a" {...s} /><circle cx="27" cy="28" r="2" fill={T} /><circle cx="37" cy="28" r="2" fill={T} /></>,
+  hombre: <><circle cx="32" cy="26" r="13" fill="#ffd8b5" {...s} /><path d="M19 22c0-10 6-14 13-14s13 4 13 14c-4-4-10-6-13-6s-9 2-13 6z" fill="#3e2723" {...s} /><path d="M12 60c2-10 8-16 20-16s18 6 20 16z" fill="#1e88e5" {...s} /><circle cx="27" cy="27" r="2" fill={T} /><circle cx="37" cy="27" r="2" fill={T} /></>,
+  bebe: <><circle cx="32" cy="34" r="20" fill="#ffd8b5" {...s} /><path d="M30 14c0-4 6-4 6 0" fill="none" {...s} /><circle cx="25" cy="32" r="2.5" fill={T} /><circle cx="39" cy="32" r="2.5" fill={T} /><rect x="27" y="40" width="10" height="7" rx="3" fill="#4fc3f7" {...s} /><circle cx="32" cy="50" r="4" fill="#4fc3f7" {...s} /></>,
+  anillo: <><circle cx="32" cy="40" r="16" fill="none" stroke="#ffd60a" strokeWidth="5" /><path d="M24 22l8-14 8 14-8 6z" fill="#80deea" {...s} /></>,
+  llave: <><circle cx="18" cy="32" r="12" fill="none" stroke="#f4a100" strokeWidth="5" /><path d="M30 32h28M50 32v8M42 32v6" stroke="#f4a100" strokeWidth="5" strokeLinecap="round" /></>,
+  puerta: <><rect x="14" y="4" width="36" height="56" rx="3" fill="#8d5524" {...s} /><rect x="20" y="10" width="24" height="20" fill="#a1887f" {...s} /><circle cx="42" cy="36" r="3" fill="#ffd60a" {...s} /></>,
+  fiesta: <><path d="M6 58L22 14l28 28z" fill="#ffd60a" {...s} /><path d="M12 42l10 6M16 30l18 12" stroke="#e53935" strokeWidth="3" />{[[40, 10, '#e53935'], [54, 18, '#1e88e5'], [48, 30, '#43a047'], [56, 6, '#8e24aa']].map(([x, y, c]) => <circle key={c} cx={x} cy={y} r="3" fill={c} />)}<path d="M34 8c4 2 2 6 6 6M50 40c2 4 6 2 8 6" fill="none" stroke="#ec407a" strokeWidth="2.5" /></>,
+  cafe: <><path d="M10 24h36v18c0 8-6 14-14 14h-8c-8 0-14-6-14-14z" fill="#fff" {...s} /><path d="M46 28h4a6 6 0 0 1 0 12h-4" fill="none" {...s} /><path d="M12 28h32" stroke="#6d4c41" strokeWidth="5" /><path d="M22 18c-2-4 2-6 0-10M32 18c-2-4 2-6 0-10" fill="none" stroke="#b0bec5" strokeWidth="3" strokeLinecap="round" /></>,
+  noche: <><rect x="4" y="4" width="56" height="56" rx="12" fill="#1a237e" /><path d="M38 12a16 16 0 1 0 12 26 14 14 0 0 1-12-26z" fill="#ffe08a" />{[[14, 16], [22, 44], [48, 50], [12, 34]].map(([x, y]) => <path key={`${x}${y}`} d={`M${x} ${y - 3}l1 2 2 1-2 1-1 2-1-2-2-1 2-1z`} fill="#fff" />)}</>,
+};
+
+export function Picto({ id, tam = 44 }) {
+  const d = PICTOS[id];
+  if (!d) return null;
+  return (
+    <svg viewBox="0 0 64 64" width={tam} height={tam} className="picto" aria-hidden="true">{d}</svg>
+  );
+}

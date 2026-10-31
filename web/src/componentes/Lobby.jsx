@@ -6,7 +6,7 @@ import { Icono } from '../iconos.jsx';
 
 const fecha = (iso) => new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-export default function Lobby({ lobby, emitir }) {
+export default function Lobby({ lobby, emitir, practicar }) {
   const [viendo, setViendo] = useState(null); // id del juego en vista previa
   if (!lobby) return <div className="cargando">Conectando…</div>;
   const { usuarios, invitaciones, juegos, stats } = lobby;
@@ -36,7 +36,7 @@ export default function Lobby({ lobby, emitir }) {
           cerrar={() => setViendo(null)}
           acciones={recibida ? (
             <button className="btn" onClick={() => { setViendo(null); emitir('responder', { de: recibida.de, acepta: true }); }}>¡Jugar con {nombre(recibida.de)}!</button>
-          ) : botonesDesafio(viendo)}
+          ) : <>{botonesDesafio(viendo)}<button className="btn fantasma" onClick={() => { const v = viendo; setViendo(null); practicar(v, nombreJuego(v)); }}>Practicar contra el bot</button></>}
         />
       )}
       {invitaciones.recibidas.map((inv) => (
@@ -85,6 +85,7 @@ export default function Lobby({ lobby, emitir }) {
               {s && <p className="juego-stats">Jugadas {s.jugadas} · ganadas {s.ganadas}{s.empatadas ? ` · empates ${s.empatadas}` : ''}</p>}
               <div className="acciones">
                 {botonesDesafio(j.id)}
+                <button className="btn fantasma" onClick={() => practicar(j.id, j.nombre)}>Practicar</button>
                 <button className="btn fantasma" onClick={() => setViendo(j.id)}>Ver reglas</button>
               </div>
             </section>

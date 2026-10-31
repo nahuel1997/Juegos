@@ -29,6 +29,14 @@ import * as sudoku from './juegos/sudoku.js';
 import * as quoridor from './juegos/quoridor.js';
 import * as dibujar from './juegos/dibujar.js';
 import * as monopoly from './juegos/monopoly.js';
+import * as truco from './juegos/truco.js';
+import * as ajedrez from './juegos/ajedrez.js';
+import * as reversi from './juegos/reversi.js';
+import * as tron from './juegos/tron.js';
+import * as botellas from './juegos/botellas.js';
+import * as emojis from './juegos/emojis.js';
+import * as simon from './juegos/simon.js';
+import * as colores from './juegos/colores.js';
 import { registrarPartida, resumen } from './historial.js';
 import { montarChat } from './chat.js';
 import { cargarSalas, crearGuardador } from './persistencia.js';
@@ -64,6 +72,14 @@ export const JUEGOS = {
   quoridor: { nombre: 'Quoridor', mod: quoridor, Clase: quoridor.PartidaQuoridor },
   dibujar: { nombre: 'Dibujá y adiviná', mod: dibujar, Clase: dibujar.PartidaDibujar },
   monopoly: { nombre: 'Monopoly Lanús', mod: monopoly, Clase: monopoly.PartidaMonopoly },
+  truco: { nombre: 'Truco', mod: truco, Clase: truco.PartidaTruco },
+  ajedrez: { nombre: 'Ajedrez', mod: ajedrez, Clase: ajedrez.PartidaAjedrez },
+  reversi: { nombre: 'Reversi', mod: reversi, Clase: reversi.PartidaReversi },
+  tron: { nombre: 'Motos de luz (Tron)', mod: tron, Clase: tron.PartidaTron },
+  botellas: { nombre: 'Botellas de colores', mod: botellas, Clase: botellas.PartidaBotellas },
+  emojis: { nombre: 'Adiviná la canción', mod: emojis, Clase: emojis.PartidaEmojis },
+  simon: { nombre: 'Memoria de secuencia', mod: simon, Clase: simon.PartidaSimon },
+  colores: { nombre: 'Contrarreloj de colores', mod: colores, Clase: colores.PartidaColores },
 };
 
 // Emoticones que se pueden mandar en una sala (los dibujos están en web/src/iconos.jsx).
