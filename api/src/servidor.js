@@ -1,8 +1,9 @@
 import { createServer } from 'node:http';
 import express from 'express';
 import { Server } from 'socket.io';
-import { login, logout, exigirSesion, publico, buscarUsuario, cambiarClave, firmarSesion } from './auth.js';
-import { montarSalas } from './salas.js';
+import { login, logout, exigirSesion, exigirAlguien, publico, buscarUsuario, cambiarClave, firmarSesion, rutaInvitado } from './auth.js';
+import { montarSalas, JUEGOS } from './salas.js';
+import { limpiarSkins } from './skins.js';
 import { resumen } from './historial.js';
 import { rutaUsuariosPanel } from './panel.js';
 import { palabrasJugadas } from './juegos/stopPalabras.js';
@@ -23,7 +24,9 @@ export function crearServidor() {
   app.get('/api/salud', (_req, res) => res.json({ ok: true }));
   app.post('/api/login', login);
   app.post('/api/logout', logout);
-  app.get('/api/yo', exigirSesion, (req, res) => res.json({ usuario: publico(req.usuario) }));
+  app.get('/api/yo', exigirAlguien, (req, res) => res.json({ usuario: req.usuario.invitado ? req.usuario : publico(req.usuario) }));
+  // Entrar sin cuenta a una sala con el código que te pasaron.
+  app.post('/api/invitado', rutaInvitado((codigo, nombre) => salas.unirInvitado(codigo, nombre)));
   app.get('/api/historial', exigirSesion, (req, res) => res.json(resumen(req.usuario.usuario)));
   app.get('/api/stop/palabras', exigirSesion, (_req, res) => res.json(palabrasJugadas()));
 
@@ -38,6 +41,13 @@ export function crearServidor() {
     actualizarPerfil(req.usuario.usuario, { nombre, color, tema });
     refrescar();
     res.json({ usuario: publico(buscarUsuario(req.usuario.usuario)) });
+  });
+
+  // Skins elegidas por juego (o '*' para todos). Solo las ve cada uno.
+  app.put('/api/perfil/skins', exigirSesion, (req, res) => {
+    const skins = limpiarSkins(req.body?.skins, Object.keys(JUEGOS));
+    actualizarPerfil(req.usuario.usuario, { skins });
+    res.json({ skins });
   });
 
   app.put('/api/perfil/clave', exigirSesion, async (req, res, next) => {
@@ -64,7 +74,7 @@ export function crearServidor() {
     res.json({ usuario: publico(buscarUsuario(req.usuario.usuario)) });
   });
 
-  app.get('/api/avatar/:usuario', exigirSesion, (req, res) => {
+  app.get('/api/avatar/:usuario', exigirAlguien, (req, res) => {
     const a = archivoAvatar(String(req.params.usuario).replace(/[^a-z0-9_-]/gi, ''));
     if (!a) return res.status(404).end();
     // La URL lleva la versión (?v=), así que se puede cachear.

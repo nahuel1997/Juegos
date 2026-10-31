@@ -45,6 +45,10 @@ En cualquier sala se le pueden mandar emoticones animados al rival. Todos los í
 - **Botellas de colores**: la misma mezcla para los dos, con colores escondidos opcionales (cada mezcla se genera con solución garantizada).
 - **Adiviná la canción**: se cuenta una canción con dibujitos propios (web/src/juegos/emojis/pictos.jsx).
 - **Memoria de secuencia** (tipo Simón) y **Contrarreloj de colores** (efecto Stroop), los dos a la vez.
+- **Palabras cruzadas** (estilo Scrabble, 2 a 4, las jugadas las revisan los demás), **Jenga** (2 a 4, con pulso), **Nim**, y para 2 a 8: **Más o menos**, **Tocá el punto**, **Contá los objetos**, **Ruleta de emojis** y **Adiviná** (países, comidas, cosas y clubes).
+- **El gato y el ratón**: en tiempo real, con varios quesos, madrigueras donde el gato no entra y gato un poco más rápido (configurable).
+- **Salas con código**: desde cualquier juego se arma una sala con un código de 5 letras (y un link `/?codigo=…`). Entran usuarios del sitio o **invitados sin cuenta** (ponen su nombre; su sesión solo sirve para esa sala). Los juegos con `max` en `api/src/salas.js` admiten más de 2 (tuti fruti hasta 8); las reglas las elige el que armó la sala, que también puede sacar gente.
+- **Skins**: cada jugador elige la estética de cada juego (o una para todos) con el botón "Skin"; se guardan en su perfil (los invitados, en el navegador). Colores en `web/src/skins.css`.
 - **Practicar**: cualquier juego contra el bot, sin otra persona (corre la lógica del server en el navegador).
 - **Animaciones**: explosión al pegarle a un barco (más grande al hundirlo) y salpicadura en el agua, dados que ruedan en la generala, show del 7 de oros y escoba que barre la mesa, papel picado al ganar.
 

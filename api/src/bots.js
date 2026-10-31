@@ -11,6 +11,12 @@ import { jerarquia } from './juegos/truco.js';
 import { DIRS as DIRS_TRON } from './juegos/tron.js';
 import { resolver as resolverBotellas, cuantoVuelca } from './juegos/botellas.js';
 import { CANCIONES } from './juegos/emojis.js';
+import { nimSuma } from './juegos/nim.js';
+import { CATEGORIAS as CATEGORIAS_MOM } from './juegos/masOMenos.js';
+import { COMBOS } from './juegos/ruletaEmojis.js';
+import { CATEGORIAS as CATEGORIAS_ADIVINA } from './juegos/adivina.js';
+import { LEXICO, evaluarJugada, LADO as LADO_PC, CENTRO as CENTRO_PC } from './juegos/palabrasCruzadas.js';
+import { anchoZona, puedeSacar as puedeSacarJenga, marca as marcaJenga } from './juegos/jenga.js';
 
 const azar = (n) => Math.floor(Math.random() * n);
 const accion = (tipo, datos) => ({ tipo, datos });
@@ -41,9 +47,69 @@ let solucionSudoku = null;
 const memoriaSimon = new Map();
 // Plan de cada bot en las botellas (si recalcula en cada movida puede dar vueltas en círculo).
 const planesBotellas = new Map();
+// Lo que contó cada bot mientras se veían los dibujitos (después se esconden).
+const memoriaConteo = new Map();
+// En qué pista ya probó cada bot (para no adivinar de más).
+const intentosAdivina = new Set();
+
+// Palabras cruzadas: prueba cada palabra que conoce en cada lugar donde cruce algo del tablero
+// (o por el centro, si está vacío) y se queda con una de las que más suman.
+function mejorJugadaCruzadas(tablero, atril) {
+  const vacio = tablero.every((fila) => fila.every((x) => !x));
+  const libre = (f, c) => f < 0 || c < 0 || f >= LADO_PC || c >= LADO_PC || !tablero[f][c];
+  const mejores = [];
+  for (const palabra of LEXICO) {
+    const letras = [...palabra];
+    const n = letras.length;
+    if (n < 2) continue;
+    for (const [df, dc] of [[0, 1], [1, 0]]) {
+      const inicios = [];
+      if (vacio) {
+        if (df === 1) continue;
+        for (let c = CENTRO_PC - n + 1; c <= CENTRO_PC; c++) inicios.push([CENTRO_PC, c]);
+      } else {
+        for (let f = 0; f + df * (n - 1) < LADO_PC; f++) for (let c = 0; c + dc * (n - 1) < LADO_PC; c++) inicios.push([f, c]);
+      }
+      for (const [f0, c0] of inicios) {
+        if (c0 < 0 || !libre(f0 - df, c0 - dc) || !libre(f0 + df * n, c0 + dc * n)) continue;
+        const disponibles = [...atril];
+        const fichas = [];
+        let cruza = vacio;
+        let ok = true;
+        for (let k = 0; k < n && ok; k++) {
+          const f = f0 + df * k; const c = c0 + dc * k;
+          const x = tablero[f][c];
+          if (x) {
+            if (x.l !== letras[k]) ok = false;
+            cruza = true;
+            continue;
+          }
+          let i = disponibles.findIndex((d) => d.l === letras[k]);
+          if (i < 0) i = disponibles.findIndex((d) => d.l === '');
+          if (i < 0) { ok = false; break; }
+          const [d] = disponibles.splice(i, 1);
+          fichas.push({ id: d.id, f, c, l: letras[k], v: d.v });
+        }
+        if (!ok || !cruza || !fichas.length) continue;
+        try {
+          const ev = evaluarJugada(tablero, fichas);
+          if (!ev.palabras.every((p) => LEXICO.has(p.texto))) continue;
+          mejores.push({ fichas, total: ev.total });
+        } catch { /* no entra */ }
+      }
+    }
+  }
+  if (!mejores.length) return null;
+  mejores.sort((a, b) => b.total - a.total);
+  const elegida = mejores[Math.min(mejores.length - 1, azar(3))];
+  return elegida.fichas.map(({ id, f, c, l }) => ({ id, f, c, l }));
+}
 
 // espera(ms): cuánto "piensa" el bot (en la simulación se puede saltear).
 export async function jugadaBot(juego, p, yo, { rival, espera = () => Promise.resolve() } = {}) {
+  if (juego === 'conta-objetos' && p.fase === 'mirando' && p.escena) {
+    memoriaConteo.set(`${yo}:${p.numero}`, p.escena.filter((x) => x.p === p.objetivo).length);
+  }
   switch (juego) {
     case 'batalla-naval':
       if (p.estado === 'colocando' && !p.listo.yo) return accion('colocar', { barcos: flotaAlAzar(p.flota, p.filas, p.columnas, { pegados: p.pegados }) });
@@ -65,11 +131,12 @@ export async function jugadaBot(juego, p, yo, { rival, espera = () => Promise.re
     }
     case 'tuti-fruti': {
       const ronda = p.rondas[p.rondas.length - 1];
-      if (p.fase === 'escribiendo' || (p.fase === 'basta' && p.bastaPor !== yo)) {
+      if (p.fase === 'escribiendo' || (p.fase === 'basta' && !p.terminaron.includes(yo))) {
         await new Promise((ok) => setTimeout(ok, (p.arrancaEnMs || 0) + 2500));
         return accion('basta', { valores: p.config.columnas.map((c) => `${ronda.letra}${c.toLowerCase().slice(1, 5)}`) });
       }
-      if (p.fase === 'puntuando' && !p.confirmados.includes(yo) && p.confirmados.includes(rival)) return accion('confirmar');
+      const otros = p.jugadores.filter((x) => x !== yo && !p.fuera.includes(x));
+      if (p.fase === 'puntuando' && !p.confirmados.includes(yo) && otros.every((x) => p.confirmados.includes(x))) return accion('confirmar');
       return;
     }
     case 'generala': {
@@ -500,19 +567,126 @@ export async function jugadaBot(juego, p, yo, { rival, espera = () => Promise.re
     case 'gato-raton': {
       if (p.estado !== 'jugando') return;
       if (p.fase === 'resumen') return p.listosSiguiente.includes('yo') ? undefined : accion('siguiente');
-      if (p.turno !== yo) return;
-      await espera(700);
+      if (p.fase !== 'jugando' || Math.random() < 0.12) return; // a veces se distrae
       const igual = (a, b) => a[0] === b[0] && a[1] === b[1];
       const soyGato = p.miRol === 'gato';
       const desde = soyGato ? p.gato : p.raton;
-      const opciones = vecinos(p.paredes, desde).filter(({ pos }) => !igual(pos, soyGato ? p.queso : p.gato));
+      const madri = p.madrigueras;
+      const opciones = vecinos(p.paredes, desde).filter(({ pos }) => !(soyGato && madri.some((m) => igual(m, pos))));
       if (!opciones.length) return;
-      // Gato: se acerca al ratón. Ratón: va al queso, pero evita quedar pegado al gato. Un poco de azar.
-      const dist = soyGato ? distancias(p.paredes, p.raton, [p.queso]) : distancias(p.paredes, p.queso, [p.gato]);
-      const delGato = distancias(p.paredes, p.gato, [p.queso]);
-      const valor = ({ pos }) => dist[pos[0]][pos[1]] + (!soyGato && delGato[pos[0]][pos[1]] <= 1 ? 50 : 0) + Math.random() * 0.8;
+      const delGato = distancias(p.paredes, p.gato, madri);
+      let valor;
+      if (soyGato) {
+        // Va derecho al ratón (sin pasar por las madrigueras).
+        const dist = distancias(p.paredes, p.raton, madri);
+        valor = ({ pos }) => dist[pos[0]][pos[1]];
+      } else {
+        // Al queso más cercano esquivando al gato; si el gato está encima, a una madriguera.
+        const peligro = delGato[p.raton[0]][p.raton[1]] <= 3;
+        const metas = peligro ? madri : p.quesos;
+        const dist = metas.map((q) => distancias(p.paredes, q, [p.gato]));
+        valor = ({ pos }) => {
+          const d = Math.min(...dist.map((x) => x[pos[0]][pos[1]]));
+          const g = delGato[pos[0]][pos[1]];
+          return d + (g <= 1 ? 100 : g <= 2 ? 8 : 0);
+        };
+      }
       opciones.sort((a, b) => valor(a) - valor(b));
-      return accion('mover', { dir: (Math.random() < 0.85 ? opciones[0] : opciones[azar(opciones.length)]).dir });
+      const dir = opciones[0].dir;
+      return dir !== p.miDir ? accion('mover', { dir }) : undefined;
+    }
+    case 'nim': {
+      if (p.estado !== 'jugando' || p.fase !== 'jugando' || p.turno !== yo) return;
+      await espera(900 + azar(700));
+      const { pilas } = p;
+      const limite = p.config.limite;
+      const tope = (i) => (limite ? Math.min(limite, pilas[i]) : pilas[i]);
+      const jugadas = pilas.flatMap((n, i) => Array.from({ length: tope(i) }, (_, k) => ({ pila: i, cantidad: k + 1 })));
+      const pierdeUltimo = p.config.ultimo === 'pierde';
+      // Cerca del final del modo "el último pierde": dejar una cantidad impar de pilas de 1.
+      const evaluar = ({ pila, cantidad }) => {
+        const resto = pilas.map((n, i) => (i === pila ? n - cantidad : n));
+        if (resto.every((n) => n === 0)) return pierdeUltimo ? -1 : 2;
+        if (pierdeUltimo && !limite && resto.every((n) => n <= 1)) return resto.filter((n) => n === 1).length % 2 === 1 ? 2 : -1;
+        return nimSuma(resto, limite) === 0 ? 1 : 0;
+      };
+      const ordenadas = jugadas.map((x) => ({ ...x, v: evaluar(x) + Math.random() * 0.5 })).sort((a, b) => b.v - a.v);
+      const elegida = Math.random() < 0.8 ? ordenadas[0] : ordenadas[azar(ordenadas.length)];
+      return accion('sacar', { pila: elegida.pila, cantidad: elegida.cantidad });
+    }
+    case 'mas-o-menos': {
+      if (p.estado !== 'jugando' || p.fase !== 'pregunta' || p.mia) return;
+      await espera(1500 + azar(4000));
+      const cat = CATEGORIAS_MOM[p.categoria.id];
+      const valor = (n) => cat.items.find(([x]) => x === n)?.[1];
+      const bien = valor(p.b.nombre) > valor(p.a.nombre) ? 'mas' : 'menos';
+      return accion('responder', { r: Math.random() < 0.7 ? bien : bien === 'mas' ? 'menos' : 'mas' });
+    }
+    case 'toca-el-punto': {
+      if (p.estado !== 'jugando' || p.fase !== 'jugando') return;
+      await espera(520 + azar(420));
+      return accion('tocar', { i: p.aciertos[yo] });
+    }
+    case 'conta-objetos': {
+      if (p.estado !== 'jugando' || p.fase !== 'respondiendo' || p.mia !== null) return;
+      await espera(2000 + azar(3000));
+      const real = memoriaConteo.get(`${yo}:${p.numero}`) ?? 5;
+      const error = Math.random() < 0.5 ? 0 : Math.random() < 0.5 ? 1 : -1;
+      return accion('responder', { n: Math.max(0, real + error) });
+    }
+    case 'ruleta-emojis': {
+      if (p.estado !== 'jugando' || (p.fase !== 'adivinando' && p.fase !== 'pista') || p.acertaron.includes(yo)) return;
+      await espera(3000 + azar(9000));
+      const combo = COMBOS.find(([pictos]) => pictos.join() === (p.pictos || []).join());
+      if (!combo || Math.random() < 0.35) return accion('adivinar', { texto: 'ni idea' });
+      return accion('adivinar', { texto: combo[1] });
+    }
+    case 'adivina': {
+      if (p.estado !== 'jugando' || p.fase !== 'pistas' || p.acertaron.some((a) => a.j === yo)) return;
+      // Prueba una sola vez por pista; cuantas más pistas, más chances de que la saque.
+      const clave = `${yo}:${p.numero}:${p.pista}`;
+      if (intentosAdivina.has(clave)) return;
+      intentosAdivina.add(clave);
+      if (intentosAdivina.size > 500) intentosAdivina.clear();
+      if (Math.random() > [0, 0.1, 0.25, 0.45, 0.65, 0.85][p.pista]) return;
+      await espera(1200 + azar(2000));
+      const item = Object.values(CATEGORIAS_ADIVINA).flatMap((c) => c.items).find(([, , pistas]) => pistas[0] === p.pistas[0]);
+      return accion('adivinar', { texto: item ? item[0] : 'no sé' });
+    }
+    case 'palabras-cruzadas': {
+      if (p.estado !== 'jugando') return;
+      if (p.fase === 'revision') return p.pendiente && p.pendiente.j !== yo && !p.pendiente.votos[yo] ? accion('aceptar') : undefined;
+      if (p.fase !== 'turno' || p.turno !== yo) return;
+      await espera(1500 + azar(1500));
+      const jugada = mejorJugadaCruzadas(p.tablero, p.atril);
+      if (jugada) return accion('jugar', { fichas: jugada });
+      if (p.bolsa >= 3) return accion('cambiar', { ids: p.atril.slice(0, 3).map((x) => x.id) });
+      return accion('pasar');
+    }
+    case 'jenga': {
+      if (p.estado !== 'jugando' || p.turno !== yo) return;
+      if (p.fase === 'eligiendo') {
+        await espera(1000 + azar(1200));
+        // El bloque con la zona verde más grande (con un poco de azar).
+        const opciones = [];
+        p.torre.forEach((fila, piso) => fila.forEach((_, pos) => {
+          if (puedeSacarJenga(p.torre, piso, pos)) opciones.push({ piso, pos, a: anchoZona(p.torre, piso, pos) + Math.random() * 0.05 });
+        }));
+        opciones.sort((a, b) => b.a - a.a);
+        const o = opciones[0];
+        return o ? accion('elegir', { piso: o.piso, pos: o.pos }) : undefined;
+      }
+      if (p.fase === 'sacando' && p.intento) {
+        // Espera a que la marca pase por la zona verde (con algo de error humano).
+        const { centro, ancho, transcurrido } = p.intento;
+        const periodo = p.periodo;
+        const objetivo = centro + (Math.random() - 0.5) * ancho * 1.5;
+        let t = transcurrido + 150;
+        for (let k = 0; k < 200; k++, t += 10) if (Math.abs(marcaJenga(t) - objetivo) < 0.02) break;
+        await espera(Math.max(0, t - transcurrido));
+        return accion('sacar', { t: Math.min(t, transcurrido + periodo * 2) });
+      }
+      return;
     }
   }
 }

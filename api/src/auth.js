@@ -30,12 +30,13 @@ export const COOKIE = 'juegos_sesion';
 const DURACION_DIAS = 30;
 
 // tema: estética personal del usuario (azul, rosa o negro); solo la ve él.
-export const publico = ({ usuario, nombre, color, tema, avatarVersion }) => ({
+export const publico = ({ usuario, nombre, color, tema, avatarVersion, skins }) => ({
   usuario,
   nombre,
   color,
   tema: TEMAS.includes(tema) ? tema : 'azul',
   avatar: avatarVersion ? `/api/avatar/${usuario}?v=${avatarVersion}` : null,
+  skins: skins || {},
 });
 
 // usuarios.json + lo que cada uno cambió en su perfil.
@@ -117,6 +118,7 @@ export async function login(req, res) {
 
 export function logout(_req, res) {
   res.clearCookie(COOKIE, { ...opcionesCookie(), maxAge: undefined });
+  res.clearCookie(COOKIE_INVITADO, { ...opcionesCookie(), maxAge: undefined });
   res.json({ ok: true });
 }
 
@@ -125,4 +127,61 @@ export function exigirSesion(req, res, next) {
   if (!u) return res.status(401).json({ error: 'Tenés que iniciar sesión' });
   req.usuario = u;
   next();
+}
+
+// Cualquiera con sesión: usuario del sitio o invitado con código.
+export function exigirAlguien(req, res, next) {
+  const u = usuarioDeCookie(req.headers.cookie) || invitadoDeCookie(req.headers.cookie);
+  if (!u) return res.status(401).json({ error: 'Tenés que iniciar sesión' });
+  req.usuario = u;
+  next();
+}
+
+// Invitados: gente sin usuario que entra a UNA sala con el código que le pasaron. La sesión dura
+// 2 días y solo sirve mientras esa sala exista (lo controla salas.js).
+export const COOKIE_INVITADO = 'juegos_invitado';
+const COLORES_INVITADO = ['#ff7043', '#ab47bc', '#26a69a', '#5c6bc0', '#ec407a', '#9ccc65', '#ffa726', '#29b6f6'];
+
+export const publicoInvitado = (inv) => ({
+  usuario: inv.id,
+  nombre: inv.nombre,
+  color: COLORES_INVITADO[[...inv.id].reduce((t, c) => t + c.charCodeAt(0), 0) % COLORES_INVITADO.length],
+  tema: 'azul',
+  avatar: null,
+  invitado: true,
+  sala: inv.sala,
+});
+
+export function invitadoDeCookie(cabecera) {
+  try {
+    const token = parsearCookies(cabecera || '')[COOKIE_INVITADO];
+    if (!token) return null;
+    const { inv, nombre, sala } = jwt.verify(token, SECRETO);
+    return inv && String(inv).startsWith('inv-') ? publicoInvitado({ id: inv, nombre, sala }) : null;
+  } catch {
+    return null;
+  }
+}
+
+// POST /api/invitado { codigo, nombre }. `unir` (de salas.js) mete al invitado en la sala o tira error.
+// Los códigos mal suman demora por IP, igual que las claves mal (sin bloquear a nadie).
+export function rutaInvitado(unir) {
+  return async (req, res) => {
+    const ip = req.ip;
+    const ms = demora(ip);
+    if (ms) await esperar(ms);
+    const codigo = String(req.body?.codigo || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    const nombre = String(req.body?.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 20);
+    if (!nombre) return res.status(400).json({ error: 'Poné tu nombre para entrar' });
+    try {
+      const inv = unir(codigo, nombre);
+      fallos.delete(ip);
+      const token = jwt.sign({ inv: inv.id, nombre: inv.nombre, sala: inv.sala }, SECRETO, { expiresIn: '2d' });
+      res.cookie(COOKIE_INVITADO, token, { ...opcionesCookie(), maxAge: 2 * 24 * 3600 * 1000 });
+      res.json({ usuario: publicoInvitado(inv) });
+    } catch (e) {
+      if (e.codigoMal) sumarFallo(ip);
+      res.status(400).json({ error: e.message || 'No se pudo entrar' });
+    }
+  };
 }

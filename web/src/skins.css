@@ -1,0 +1,71 @@
+/* Skins: cada una define sus colores (--sk-*) y abajo se aplican a la mesa, los tableros y las cartas
+   de cada juego. Con la clásica no hay data-skin y queda todo como siempre. */
+.skin-marco[data-skin="madera"] { --sk-fondo: radial-gradient(circle at 30% 20%, #5a3b22, #2e1d10); --sk-mesa: #8b5a2b; --sk-claro: #e7c69a; --sk-oscuro: #9b6a3c; --sk-linea: #4a2f18; --sk-acento: #ffcc66; --sk-texto: #fff4e2; --sk-suave: #e2c9a6; --sk-tarjeta: #6b4423; --sk-borde: #a0703f; --sk-dorso: #6b3a1c; }
+.skin-marco[data-skin="noche"] { --sk-fondo: radial-gradient(circle at 50% 0%, #1d2a55, #080d1f); --sk-mesa: #1d2747; --sk-claro: #3b4a7a; --sk-oscuro: #1a2240; --sk-linea: #8fa3ff; --sk-acento: #ffd166; --sk-texto: #eef1ff; --sk-suave: #a8b3dc; --sk-tarjeta: #18213f; --sk-borde: #34437a; --sk-dorso: #2c3a6e; }
+.skin-marco[data-skin="neon"] { --sk-fondo: radial-gradient(circle at 50% 40%, #16102a, #050508); --sk-mesa: #111122; --sk-claro: #1f1f3d; --sk-oscuro: #0b0b18; --sk-linea: #00e5ff; --sk-acento: #ff2fd6; --sk-texto: #f4f4ff; --sk-suave: #9de9ff; --sk-tarjeta: #12121f; --sk-borde: #00e5ff; --sk-dorso: #2a0d36; }
+.skin-marco[data-skin="pastel"] { --sk-fondo: linear-gradient(160deg, #fdeef4, #e9f7f2); --sk-mesa: #c9f2e6; --sk-claro: #fff6fb; --sk-oscuro: #f6c6da; --sk-linea: #b28dd6; --sk-acento: #ff6f9f; --sk-texto: #4a3358; --sk-suave: #876f96; --sk-tarjeta: #ffffff; --sk-borde: #e3cdea; --sk-dorso: #b28dd6; }
+.skin-marco[data-skin="oceano"] { --sk-fondo: linear-gradient(180deg, #0b4560, #04202f); --sk-mesa: #0d5c7a; --sk-claro: #8fd3e8; --sk-oscuro: #1b7a9c; --sk-linea: #cdeffa; --sk-acento: #ffd166; --sk-texto: #eafaff; --sk-suave: #a6dcec; --sk-tarjeta: #0a4a63; --sk-borde: #2c8cb0; --sk-dorso: #0f6d8e; }
+.skin-marco[data-skin="selva"] { --sk-fondo: radial-gradient(circle at 20% 10%, #24502e, #0b1f11); --sk-mesa: #2e6b35; --sk-claro: #b6d99a; --sk-oscuro: #4f8f3a; --sk-linea: #f2e8c9; --sk-acento: #ffb703; --sk-texto: #f3fbe9; --sk-suave: #bcd9a8; --sk-tarjeta: #1d4423; --sk-borde: #4f8f3a; --sk-dorso: #2e6b35; }
+.skin-marco[data-skin="retro"] { --sk-fondo: repeating-linear-gradient(45deg, #2b1d0e 0 18px, #33230f 18px 36px); --sk-mesa: #c1652f; --sk-claro: #f4e1b5; --sk-oscuro: #d08a3c; --sk-linea: #3a2614; --sk-acento: #ffde59; --sk-texto: #fff3d6; --sk-suave: #e9c99a; --sk-tarjeta: #4a2f15; --sk-borde: #c1652f; --sk-dorso: #9b3f1a; }
+.skin-marco[data-skin="granate"] { --sk-fondo: linear-gradient(90deg, #3d0b16 0 33%, #5a1020 33% 66%, #3d0b16 66%); --sk-mesa: #7a1428; --sk-claro: #fbeef0; --sk-oscuro: #a3243b; --sk-linea: #ffffff; --sk-acento: #ffd166; --sk-texto: #ffffff; --sk-suave: #f2c2cb; --sk-tarjeta: #5a1020; --sk-borde: #a3243b; --sk-dorso: #7a1428; }
+.skin-marco[data-skin="espacio"] { --sk-fondo: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 60%, #fff, transparent), radial-gradient(1.5px 1.5px at 40% 80%, #cfe, transparent), radial-gradient(1px 1px at 85% 15%, #fff, transparent), radial-gradient(circle at 50% 50%, #1b1036, #05030f); --sk-mesa: #1b1036; --sk-claro: #3b2a6a; --sk-oscuro: #22164a; --sk-linea: #c9b6ff; --sk-acento: #7cf9ff; --sk-texto: #f1ecff; --sk-suave: #b9aee0; --sk-tarjeta: #1a1135; --sk-borde: #4b3a8a; --sk-dorso: #3b2a6a; }
+
+/* Lo común: el marco toma el fondo de la skin y las variables de la app se cambian adentro. */
+.skin-marco[data-skin] {
+  --acento: var(--sk-acento); --texto: var(--sk-texto); --suave: var(--sk-suave); --tarjeta: var(--sk-tarjeta);
+  --borde: var(--sk-borde); --fondo: var(--sk-oscuro); --fondo2: var(--sk-mesa); --mar: var(--sk-oscuro); --mar2: var(--sk-mesa);
+  background: var(--sk-fondo); color: var(--sk-texto); border-radius: 18px; padding: 12px; margin: 0 -4px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sk-borde) 60%, transparent);
+}
+.skin-marco[data-skin] .tarjeta { background: var(--sk-tarjeta); border-color: var(--sk-borde); color: var(--sk-texto); }
+
+/* Tableros de casillas */
+.skin-marco[data-skin] .casilla.clara, .skin-marco[data-skin] .aj-casilla.clara { background: var(--sk-claro); }
+.skin-marco[data-skin] .casilla.oscura, .skin-marco[data-skin] .aj-casilla.oscura { background: var(--sk-oscuro); }
+.skin-marco[data-skin] .rv-tablero { background: var(--sk-linea); }
+.skin-marco[data-skin] .rv-celda { background: var(--sk-mesa); }
+.skin-marco[data-skin] .rv-celda.ultima, .skin-marco[data-skin] .rv-celda.puede:hover { background: color-mix(in srgb, var(--sk-mesa) 70%, var(--sk-acento)); }
+.skin-marco[data-skin] .cuatro-tablero { background: var(--sk-mesa); }
+.skin-marco[data-skin] .hueco { background: var(--sk-oscuro); }
+.skin-marco[data-skin] .es-casilla { background: var(--sk-claro); color: #2b2233; }
+.skin-marco[data-skin] .es-casilla.b { background: color-mix(in srgb, var(--sk-claro) 65%, var(--sk-oscuro)); }
+.skin-marco[data-skin] .gr-laberinto { --pared: var(--sk-linea); --piso: var(--sk-claro); --piso2: color-mix(in srgb, var(--sk-claro) 82%, var(--sk-oscuro)); }
+.skin-marco[data-skin] .bg-tablero { background: var(--sk-mesa); border-color: var(--sk-oscuro); }
+.skin-marco[data-skin] .bg-triangulo { background: var(--sk-claro); }
+.skin-marco[data-skin] .cb-hipodromo { background: linear-gradient(var(--sk-mesa), var(--sk-oscuro)); }
+.skin-marco[data-skin] .tr-mesa { background: radial-gradient(circle at 50% 40%, var(--sk-mesa), var(--sk-oscuro)); }
+.skin-marco[data-skin] .sm-tablero { background: var(--sk-mesa); }
+.skin-marco[data-skin] .qd-fondo { background: var(--sk-mesa); }
+
+/* Dorsos de cartas y fichas */
+.skin-marco[data-skin] .memo-dorso { background: repeating-linear-gradient(45deg, var(--sk-dorso) 0 8px, color-mix(in srgb, var(--sk-dorso) 75%, #fff) 8px 16px); }
+.skin-marco[data-skin] .ficha-dorso { background: linear-gradient(135deg, var(--sk-dorso), var(--sk-oscuro)); }
+.skin-marco[data-skin] .uno-carta.dorso { background: var(--sk-dorso); }
+
+/* Juegos que leen las variables directo (pool, tron, palabras cruzadas, jenga, nim…). */
+.skin-marco[data-skin] { --sk-pano: var(--sk-mesa); --sk-pista: var(--sk-oscuro); }
+
+/* Selector */
+.skin-selector { position: relative; }
+.skin-selector > .btn { display: inline-flex; align-items: center; gap: 6px; }
+.skin-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: min(300px, 86vw); padding: 12px; }
+.skin-menu .sub { margin: 0 0 8px; }
+.skin-lista { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.skin-op { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; border: 2px solid transparent; background: var(--fondo2); color: var(--texto); cursor: pointer; text-align: left; font: inherit; }
+.skin-op.activa { border-color: var(--acento); }
+.skin-op:hover { background: color-mix(in srgb, var(--acento) 15%, var(--fondo2)); }
+.skin-muestra { display: inline-grid; grid-template-columns: repeat(3, 1fr); border-radius: 8px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.skin-muestra i { display: block; }
+.skin-menu .acciones { margin-top: 10px; flex-wrap: wrap; }
+@media (max-width: 520px) {
+  .skin-menu { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; }
+}
+
+/* Que los temas de la app (rosa, negro) no pisen la cinta de estado adentro de una skin. */
+.skin-marco[data-skin] .estado-cinta { background: var(--sk-tarjeta); border-color: var(--sk-borde); color: var(--sk-texto); }
+.skin-marco[data-skin] .estado-cinta small { color: var(--sk-suave); }
+.skin-marco[data-skin] .estado-cinta.tu-turno { border-color: var(--sk-acento); color: var(--sk-acento); }
+.skin-marco[data-skin] .marcador, .skin-marco[data-skin] .marcador-n { background: var(--sk-tarjeta); border-color: var(--sk-borde); color: var(--sk-texto); }
+/* En las skins oscuras, los bloques del Jenga con borde de luz para que se vean. */
+.skin-marco[data-skin] .jg-bloque { box-shadow: inset 0 -3px 0 rgba(0,0,0,.25), inset 0 0 0 1px color-mix(in srgb, var(--sk-linea) 70%, transparent); }
+.skin-marco[data-skin="neon"] .jg-bloque, .skin-marco[data-skin="espacio"] .jg-bloque, .skin-marco[data-skin="noche"] .jg-bloque { background: linear-gradient(180deg, color-mix(in srgb, var(--sk-claro) 60%, var(--sk-linea)), var(--sk-claro)); }

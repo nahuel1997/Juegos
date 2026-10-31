@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MarcadorN } from '../../componentes/comunes.jsx';
 
 const LETRAS = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
 const RAPIDOS = [0, 5, 10, 20];
@@ -47,41 +48,45 @@ function CeldaPuntos({ valor, onChange }) {
 
 function Puntuar({ partida, ronda, accion, ctx }) {
   const { columnas } = partida.config;
+  const jugadores = partida.jugadores.filter((j) => !partida.fuera.includes(j));
   const confirmeYo = partida.confirmados.includes(ctx.yo);
-  const confirmoRival = partida.confirmados.includes(ctx.rival);
+  const faltan = jugadores.filter((j) => !partida.confirmados.includes(j) && j !== ctx.yo);
   const suma = (arr) => arr.reduce((s, p) => s + (p || 0), 0);
+  // Yo primero y después los demás.
+  const orden = [ctx.yo, ...jugadores.filter((j) => j !== ctx.yo)];
   return (
     <div className="tarjeta puntuar">
       <h3>Puntos de la ronda <span className="letra-chica">{ronda.letra}</span></h3>
-      <p className="ayuda">Los pueden cambiar los dos. Cuando estén de acuerdo, confirmen.</p>
-      <div className="puntuar-tabla" style={{ '--n': 2 }}>
-        <div className="pt-cab" />
-        <div className="pt-cab">Vos</div>
-        <div className="pt-cab">{ctx.nombreRival}</div>
-        {columnas.map((c, i) => (
-          <div className="pt-fila" key={c}>
-            <div className="pt-col">{c}</div>
-            <div className="pt-resp">
-              <span className={ronda.mias[i] ? '' : 'vacia'}>{ronda.mias[i] || '(vacío)'}</span>
-              <CeldaPuntos valor={ronda.puntos.yo[i]} onChange={(valor) => accion('puntos', { jugador: ctx.yo, col: i, valor })} />
+      <p className="ayuda">Los pueden cambiar todos. Cuando estén de acuerdo, confirmen.</p>
+      <div className="puntuar-scroll">
+        <div className="puntuar-tabla" style={{ '--n': orden.length }}>
+          <div className="pt-cab" />
+          {orden.map((j) => <div key={j} className="pt-cab">{ctx.nombreDe(j)}</div>)}
+          {columnas.map((c, i) => (
+            <div className="pt-fila" key={c}>
+              <div className="pt-col">{c}</div>
+              {orden.map((j) => {
+                const v = ronda.respuestas[j]?.[i];
+                return (
+                  <div className="pt-resp" key={j}>
+                    <span className={v ? '' : 'vacia'}>{v || '(vacío)'}</span>
+                    <CeldaPuntos valor={ronda.puntos[j][i]} onChange={(valor) => accion('puntos', { jugador: j, col: i, valor })} />
+                  </div>
+                );
+              })}
             </div>
-            <div className="pt-resp">
-              <span className={ronda.rival?.[i] ? '' : 'vacia'}>{ronda.rival?.[i] || '(vacío)'}</span>
-              <CeldaPuntos valor={ronda.puntos.rival[i]} onChange={(valor) => accion('puntos', { jugador: ctx.rival, col: i, valor })} />
-            </div>
+          ))}
+          <div className="pt-fila total">
+            <div className="pt-col">Total ronda</div>
+            {orden.map((j) => <div key={j}><b>{suma(ronda.puntos[j])}</b></div>)}
           </div>
-        ))}
-        <div className="pt-fila total">
-          <div className="pt-col">Total ronda</div>
-          <div><b>{suma(ronda.puntos.yo)}</b></div>
-          <div><b>{suma(ronda.puntos.rival)}</b></div>
         </div>
       </div>
       <div className="acciones">
         <button className="btn" disabled={confirmeYo} onClick={() => accion('confirmar')}>
           {confirmeYo ? 'Confirmado ✓' : 'Confirmar puntos'}
         </button>
-        <small className="sub">{confirmoRival ? `${ctx.nombreRival} ya confirmó` : `${ctx.nombreRival} todavía no confirmó`}</small>
+        <small className="sub">{faltan.length ? `Falta que confirme: ${faltan.map(ctx.nombreDe).join(', ')}` : 'Ya confirmaron todos los demás'}</small>
       </div>
     </div>
   );
@@ -138,14 +143,13 @@ export default function JuegoTuti({ partida, accion, ctx }) {
 
   const completo = valores.every((v) => v.trim());
   const yoBasta = partida.bastaPor === ctx.yo;
+  const yaTermine = partida.terminaron.includes(ctx.yo);
+  const muchos = partida.jugadores.length > 2;
+  const quienBasta = ctx.nombreDe(partida.bastaPor);
 
   return (
     <div className="tuti">
-      <div className="marcador">
-        <span>Vos <b>{partida.totales.yo}</b></span>
-        <span className="ronda">Ronda {partida.numero} de {partida.config.rondas}</span>
-        <span><b>{partida.totales.rival}</b> {ctx.nombreRival}</span>
-      </div>
+      <MarcadorN jugadores={partida.jugadores} puntos={partida.totales} ctx={ctx} fuera={partida.fuera} extra={`Ronda ${partida.numero} de ${partida.config.rondas}`} />
 
       <div className="tuti-cab">
         <Ruleta key={partida.numero} letra={actual.letra} alTerminar={() => setListaLetra(true)} />
@@ -156,12 +160,12 @@ export default function JuegoTuti({ partida, accion, ctx }) {
               : listaLetra && <div className="preparate"><span>Preparate, arranca en</span><b key={preparacion}>{preparacion}</b></div>
           )}
           {partida.fase === 'basta' && (
-            <b className="alerta">{yoBasta ? `¡Cantaste basta! ${ctx.nombreRival} tiene` : `¡${ctx.nombreRival} cantó basta! Te quedan`} {restante ?? ''} s</b>
+            <b className="alerta">{yoBasta ? `¡Cantaste basta! ${muchos ? 'Los demás tienen' : `${ctx.nombreRival} tiene`}` : yaTermine ? 'Listo: esperando a los demás…' : `¡${quienBasta} cantó basta! Te quedan`} {restante ?? ''} s</b>
           )}
           {partida.fase === 'puntuando' && <b>Ronda cerrada: pongan los puntos.</b>}
           {escribiendo && (
-            <button className="btn grande basta" disabled={!completo || !puedeEscribir || yoBasta} onClick={() => { clearTimeout(envio.current); accion('basta', { valores }); }}>
-              {yoBasta ? 'Esperando…' : '¡BASTA!'}
+            <button className="btn grande basta" disabled={!completo || !puedeEscribir || yaTermine} onClick={() => { clearTimeout(envio.current); accion('basta', { valores }); }}>
+              {yaTermine ? 'Esperando…' : '¡BASTA!'}
             </button>
           )}
         </div>
@@ -179,8 +183,7 @@ export default function JuegoTuti({ partida, accion, ctx }) {
           <tbody>
             {partida.rondas.map((r, n) => {
               const esActual = n === partida.rondas.length - 1;
-              const sumaYo = r.puntos.yo.reduce((s, p) => s + (p || 0), 0);
-              const sumaRival = r.puntos.rival.reduce((s, p) => s + (p || 0), 0);
+              const orden = [ctx.yo, ...partida.jugadores.filter((j) => j !== ctx.yo)];
               if (esActual && escribiendo) {
                 return (
                   <tr key={n} className="fila-activa">
@@ -210,21 +213,21 @@ export default function JuegoTuti({ partida, accion, ctx }) {
                   </tr>
                 );
               }
-              return [
-                <tr key={`${n}y`} className="fila-pasada">
-                  <td className="letra-celda" rowSpan={2}>{r.letra}</td>
-                  {r.mias.map((v, i) => <td key={i}>{v || '—'} {r.puntos.yo[i] != null && <small className="pts">{r.puntos.yo[i]}</small>}</td>)}
-                  <td><b>{sumaYo}</b></td>
-                </tr>,
-                <tr key={`${n}r`} className="fila-pasada rival">
-                  {(r.rival || columnas.map(() => '')).map((v, i) => <td key={i}>{v || '—'} {r.puntos.rival[i] != null && <small className="pts">{r.puntos.rival[i]}</small>}</td>)}
-                  <td><b>{sumaRival}</b></td>
-                </tr>,
-              ];
+              return orden.map((j, k) => {
+                const resp = j === ctx.yo ? r.mias : r.respuestas[j];
+                const suma = r.puntos[j].reduce((s, p) => s + (p || 0), 0);
+                return (
+                  <tr key={`${n}-${j}`} className={`fila-pasada ${k > 0 ? 'rival' : ''}`}>
+                    {k === 0 && <td className="letra-celda" rowSpan={orden.length}>{r.letra}</td>}
+                    {(resp || columnas.map(() => '')).map((v, i) => <td key={i}>{v || '—'} {r.puntos[j][i] != null && <small className="pts">{r.puntos[j][i]}</small>}</td>)}
+                    <td><b>{suma}</b>{orden.length > 2 && <small className="quien"> {ctx.nombreDe(j)}</small>}</td>
+                  </tr>
+                );
+              });
             })}
           </tbody>
         </table>
-        <p className="ayuda">En cada ronda, la primera línea son tus respuestas y la segunda las de {ctx.nombreRival}. Tab o Enter pasa a la casilla siguiente.</p>
+        <p className="ayuda">En cada ronda, la primera línea son tus respuestas y abajo las de {partida.jugadores.length > 2 ? 'los demás' : ctx.nombreRival}. Tab o Enter pasa a la casilla siguiente.</p>
       </div>
 
       {partida.fase === 'puntuando' && partida.estado === 'jugando' && <Puntuar partida={partida} ronda={actual} accion={accion} ctx={ctx} />}
@@ -232,7 +235,7 @@ export default function JuegoTuti({ partida, accion, ctx }) {
   );
 }
 
-JuegoTuti.textoFinal = (p) => `Terminó ${p.totales.yo} a ${p.totales.rival}.`;
+JuegoTuti.textoFinal = (p, _gane, ctx) => [...p.jugadores].sort((a, b) => p.totales[b] - p.totales[a]).map((j) => `${ctx?.nombreDe?.(j) ?? j} ${p.totales[j]}`).join(' · ');
 
 // Suena cuando sale una letra nueva.
 JuegoTuti.claveTurno = (p) => (p.estado === 'jugando' && p.fase === 'escribiendo' ? `t-${p.numero}` : null);

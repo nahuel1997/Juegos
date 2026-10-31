@@ -66,12 +66,12 @@ test('tuti fruti: columnas propias, letras sin repetir y excluidas', () => {
 test('tuti fruti: basta exige completar, oculta respuestas y los puntos son manuales', () => {
   const p = new PartidaTutiFruti(J, cfgTuti({ cuentaAtras: 0,  columnas: ['Animal', 'Color'], rondas: 1, segundosBasta: 0 }));
   p.accion('nahuel', 'respuestas', { valores: ['Mono', ''] });
-  assert.equal(p.vistaPara('iara').rondas[0].rival, null);
+  assert.equal(p.vistaPara('iara').rondas[0].respuestas.nahuel, undefined); // las del otro no se ven
   assert.throws(() => p.accion('nahuel', 'basta', { valores: ['Mono', ''] }), /Completá/);
   p.accion('iara', 'basta', { valores: ['Mulita', 'Marrón'] });
   const v = p.vistaPara('nahuel');
   assert.equal(v.fase, 'puntuando');
-  assert.deepEqual(v.rondas[0].rival, ['Mulita', 'Marrón']);
+  assert.deepEqual(v.rondas[0].respuestas.iara, ['Mulita', 'Marrón']);
   p.accion('nahuel', 'puntos', { jugador: 'iara', col: 0, valor: 10 });
   p.accion('iara', 'puntos', { jugador: 'iara', col: 1, valor: 10 });
   p.accion('iara', 'puntos', { jugador: 'nahuel', col: 0, valor: 5 });
@@ -82,7 +82,28 @@ test('tuti fruti: basta exige completar, oculta respuestas y los puntos son manu
   p.accion('nahuel', 'confirmar');
   assert.equal(p.estado, 'terminada');
   assert.equal(p.ganador, 'iara');
-  assert.deepEqual(p.vistaPara('iara').totales, { yo: 20, rival: 10 });
+  assert.deepEqual(p.vistaPara('iara').totales, { iara: 20, nahuel: 10 });
+});
+
+test('tuti fruti: con tres jugadores, todos confirman y el que abandona queda afuera', () => {
+  const T = ['iara', 'nahuel', 'inv-1234'];
+  const p = new PartidaTutiFruti(T, cfgTuti({ cuentaAtras: 0, columnas: ['Animal'], rondas: 1, segundosBasta: 30 }));
+  p.accion('iara', 'basta', { valores: ['Oso'] });
+  assert.equal(p.actual.fase, 'basta');
+  p.accion('nahuel', 'basta', { valores: ['Orca'] });
+  assert.equal(p.actual.fase, 'basta', 'falta el tercero');
+  p.accion('inv-1234', 'basta', { valores: ['Oveja'] });
+  assert.equal(p.actual.fase, 'puntuando', 'terminaron todos: se cierra sin esperar');
+  clearTimeout(p.timer);
+  assert.deepEqual(p.vistaPara('nahuel').rondas[0].respuestas['inv-1234'], ['Oveja']);
+  p.accion('iara', 'puntos', { jugador: 'inv-1234', col: 0, valor: 10 });
+  p.accion('iara', 'confirmar');
+  p.accion('nahuel', 'confirmar');
+  assert.equal(p.estado, 'jugando');
+  p.abandonar('nahuel'); // ya no hace falta que confirme él
+  p.accion('inv-1234', 'confirmar');
+  assert.equal(p.estado, 'terminada');
+  assert.equal(p.ganador, 'inv-1234');
 });
 
 test('tuti fruti: hay que esperar la cuenta antes de escribir', () => {

@@ -36,6 +36,14 @@ import * as botellas from '../../../api/src/juegos/botellas.js';
 import * as emojis from '../../../api/src/juegos/emojis.js';
 import * as simon from '../../../api/src/juegos/simon.js';
 import * as colores from '../../../api/src/juegos/colores.js';
+import * as palabrasCruzadas from '../../../api/src/juegos/palabrasCruzadas.js';
+import * as jenga from '../../../api/src/juegos/jenga.js';
+import * as nim from '../../../api/src/juegos/nim.js';
+import * as masOMenos from '../../../api/src/juegos/masOMenos.js';
+import * as tocaElPunto from '../../../api/src/juegos/tocaElPunto.js';
+import * as contaObjetos from '../../../api/src/juegos/contaObjetos.js';
+import * as ruletaEmojis from '../../../api/src/juegos/ruletaEmojis.js';
+import * as adivina from '../../../api/src/juegos/adivina.js';
 
 export { jugadaBot } from '../../../api/src/bots.js';
 
@@ -79,4 +87,12 @@ export const MOTORES = {
   emojis: m(emojis, emojis.PartidaEmojis, { turnos: 1, tiempo: 30 }),
   simon: m(simon, simon.PartidaSimon, { velocidad: 'rapida' }),
   colores: m(colores, colores.PartidaColores, { cartas: 10 }),
+  'palabras-cruzadas': m(palabrasCruzadas, palabrasCruzadas.PartidaPalabrasCruzadas, { revision: 'no' }),
+  jenga: m(jenga, jenga.PartidaJenga, { pisos: 12, rondas: 1 }),
+  nim: m(nim, nim.PartidaNim),
+  'mas-o-menos': m(masOMenos, masOMenos.PartidaMasOMenos, { preguntas: 4, segundos: 6 }),
+  'toca-el-punto': m(tocaElPunto, tocaElPunto.PartidaTocaElPunto, { segundos: 15, rondas: 1, tamanio: 'grande' }),
+  'conta-objetos': m(contaObjetos, contaObjetos.PartidaContaObjetos, { preguntas: 3, dificultad: 'facil' }),
+  'ruleta-emojis': m(ruletaEmojis, ruletaEmojis.PartidaRuletaEmojis, { rondas: 3, segundos: 20 }),
+  adivina: m(adivina, adivina.PartidaAdivina, { rondas: 3, segundos: 4 }),
 };

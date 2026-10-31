@@ -1,19 +1,28 @@
-// El gato y el ratón: laberinto al azar (con varios caminos posibles), una casilla por turno cada uno.
-// El ratón sale de la madriguera y tiene que llegar al queso; el gato tiene que atraparlo. Una moneda al aire
-// decide quién arranca de gato; en cada ronda se cambian los papeles y laberinto nuevo. Gana el que suma más rondas.
+// El gato y el ratón en tiempo real: laberinto al azar con vueltas. Los dos avanzan solos hacia donde
+// apuntan (como el Pac-Man): vos solo doblás. El ratón tiene que comerse todos los quesos antes de que
+// se termine el tiempo; el gato tiene que atraparlo. El gato es un poco más rápido, pero no puede
+// entrar a las madrigueras, donde el ratón se esconde. En cada ronda se cambian los papeles.
 import { ErrorJuego, entero, ganadorPorPuntos } from './comun.js';
 
 export const CAMINOS = { pocos: 0.15, varios: 0.4, muchos: 0.75 }; // cuántos callejones se abren en vueltas
-export const CONFIG_DEFECTO = { lado: 11, rondas: 2, limite: 40, caminos: 'varios' };
+// Milisegundos por casilla del gato; el ratón va siempre a RATON_MS.
+export const VENTAJAS = { igual: 210, poca: 185, mucha: 160 };
+export const RATON_MS = 210;
+export const CONFIG_DEFECTO = { lado: 11, rondas: 2, quesos: 3, tiempo: 60, caminos: 'varios', ventaja: 'poca' };
+const CUENTA_MS = 3000;
+const TIC_MS = 30;
 
 export function validarConfig(c = {}) {
   const config = {
-    lado: entero(c.lado ?? CONFIG_DEFECTO.lado, 6, 21, 'El tamaño del laberinto'),
+    lado: entero(c.lado ?? CONFIG_DEFECTO.lado, 7, 19, 'El tamaño del laberinto'),
     rondas: entero(c.rondas ?? CONFIG_DEFECTO.rondas, 1, 10, 'Las rondas'),
-    limite: entero(c.limite ?? CONFIG_DEFECTO.limite, 10, 200, 'El límite de movimientos del ratón'),
+    quesos: entero(c.quesos ?? CONFIG_DEFECTO.quesos, 1, 6, 'Los quesos'),
+    tiempo: entero(c.tiempo ?? CONFIG_DEFECTO.tiempo, 20, 180, 'El tiempo'),
     caminos: c.caminos ?? CONFIG_DEFECTO.caminos,
+    ventaja: c.ventaja ?? CONFIG_DEFECTO.ventaja,
   };
   if (!(config.caminos in CAMINOS)) throw new ErrorJuego('Cantidad de caminos inválida');
+  if (!(config.ventaja in VENTAJAS)) throw new ErrorJuego('Ventaja del gato inválida');
   return config;
 }
 
@@ -100,6 +109,8 @@ export class PartidaGatoRaton {
     this.ronda = 0;
     this.rondas = [];
     this.listosSiguiente = new Set();
+    this.timer = null;
+    this.notificar = null;
     this.#nuevaRonda();
   }
 
@@ -109,34 +120,146 @@ export class PartidaGatoRaton {
   }
 
   #nuevaRonda() {
-    const { lado, caminos } = this.config;
+    const { lado, caminos, quesos } = this.config;
     const rand = this.rand ?? Math.random;
     this.ronda++;
-    this.fase = 'jugando';
+    this.fase = 'cuenta';
     this.listosSiguiente = new Set();
     this.gatoEs = this.ronda % 2 === 1 ? this.moneda : this.rival(this.moneda);
     this.ratonEs = this.rival(this.gatoEs);
-    // Madriguera en una esquina, queso en el cuadrante opuesto (lejos del borde, así tiene varias entradas)
-    // y el gato en una de las otras dos esquinas.
+    this.paredes = generarLaberinto(lado, caminos, rand);
+    // El ratón sale de una esquina (su madriguera), hay madrigueras en las dos esquinas vecinas
+    // y el gato sale de la esquina opuesta.
     const esquinas = [[0, 0], [0, lado - 1], [lado - 1, lado - 1], [lado - 1, 0]];
     const e = Math.floor(rand() * 4);
-    this.madriguera = esquinas[e];
-    this.gato = esquinas[(e + (rand() < 0.5 ? 1 : 3)) % 4];
-    const lejos = (x) => (x === 0 ? lado - 1 : 0);
-    const mitad = Math.max(1, Math.floor(lado / 3));
-    const cerca = (x) => (x === 0 ? 1 + Math.floor(rand() * mitad) : lado - 2 - Math.floor(rand() * mitad));
-    this.queso = [cerca(lejos(this.madriguera[0])), cerca(lejos(this.madriguera[1]))];
-    this.paredes = generarLaberinto(lado, caminos, rand);
-    // Al queso se tiene que poder entrar por al menos tres lados.
-    const [qf, qc] = this.queso;
-    const cerradas = LISTA.filter((d) => this.paredes[qf][qc] & d.bit);
-    while (4 - cerradas.length < 3 && cerradas.length) quitarPared(this.paredes, qf, qc, cerradas.splice(Math.floor(rand() * cerradas.length), 1)[0]);
-    this.raton = [...this.madriguera];
-    this.turno = this.ratonEs; // el ratón mueve primero
-    this.movsRaton = 0;
-    this.movsGato = 0;
+    this.madrigueras = [esquinas[e], esquinas[(e + 1) % 4], esquinas[(e + 3) % 4]];
+    this.raton = [...esquinas[e]];
+    this.gato = [...esquinas[(e + 2) % 4]];
+    // El gato no pasa por las madrigueras: si alguna zona quedó colgando de una, se le abre otra entrada.
+    for (;;) {
+      const dist = distancias(this.paredes, this.gato, this.madrigueras);
+      const fuera = (f, c) => dist[f][c] === Infinity && !this.madrigueras.some((m) => igual(m, [f, c]));
+      let abierta = false;
+      for (let f = 0; f < lado && !abierta; f++) {
+        for (let c = 0; c < lado && !abierta; c++) {
+          if (!fuera(f, c)) continue;
+          const d = LISTA.find((x) => {
+            const nf = f + x.df; const nc = c + x.dc;
+            return nf >= 0 && nc >= 0 && nf < lado && nc < lado && dist[nf][nc] !== Infinity;
+          });
+          if (d) { quitarPared(this.paredes, f, c, d); abierta = true; }
+        }
+      }
+      if (!abierta) break;
+    }
+    // Quesos repartidos lejos de las madrigueras y entre ellos.
+    const lista = [];
+    const ocupadas = [...this.madrigueras, this.gato];
+    const lejos = (pos, otras, min) => otras.every((o) => Math.abs(o[0] - pos[0]) + Math.abs(o[1] - pos[1]) >= min);
+    for (let intento = 0; lista.length < quesos && intento < 3000; intento++) {
+      const pos = [Math.floor(rand() * lado), Math.floor(rand() * lado)];
+      const min = intento < 2000 ? Math.max(3, Math.floor(lado / 3)) : 1;
+      if (lejos(pos, [...ocupadas, ...lista], min)) lista.push(pos);
+    }
+    this.quesos = lista;
+    this.comidos = 0;
+    this.dirs = { [this.gatoEs]: null, [this.ratonEs]: null };
+    this.quiere = { [this.gatoEs]: null, [this.ratonEs]: null };
+    this.antes = { gato: null, raton: null };
     this.ultimo = null;
     this.rastro = [[...this.raton]];
+    this.movs = 0;
+    this.inicio = Date.now() + CUENTA_MS;
+    this.hasta = this.inicio + this.config.tiempo * 1000;
+    this.prox = { gato: this.inicio, raton: this.inicio };
+    this.#programar();
+  }
+
+  get msGato() {
+    return VENTAJAS[this.config.ventaja];
+  }
+
+  #programar() {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.#tic(), TIC_MS);
+    this.timer.unref?.();
+  }
+
+  #tic() {
+    if (this.estado !== 'jugando' || this.fase === 'resumen') return;
+    const ahora = Date.now();
+    let cambio = false;
+    if (this.fase === 'cuenta') {
+      if (ahora < this.inicio) return this.#programar();
+      this.fase = 'jugando';
+      cambio = true;
+    }
+    if (ahora >= this.hasta) {
+      this.#finRonda('gato', 'tiempo');
+      return this.notificar?.();
+    }
+    this.avanzar(ahora);
+    if (this.fase === 'jugando') this.#programar();
+    if (cambio || this.huboPaso) this.notificar?.();
+  }
+
+  // Mueve a los dos los pasos que les tocan hasta `ahora` (el ratón primero). Público para los tests.
+  avanzar(ahora = Date.now()) {
+    this.huboPaso = false;
+    for (const quien of ['raton', 'gato']) {
+      while (this.fase === 'jugando' && ahora >= this.prox[quien]) {
+        this.prox[quien] += quien === 'gato' ? this.msGato : RATON_MS;
+        if (this.#paso(quien)) this.huboPaso = true;
+      }
+    }
+  }
+
+  // ¿Puede pasar de `pos` hacia `dir`? (el gato no entra a las madrigueras)
+  libre(quien, pos, dir) {
+    const d = DIRS[dir];
+    if (!d || this.paredes[pos[0]][pos[1]] & d.bit) return false;
+    const h = [pos[0] + d.df, pos[1] + d.dc];
+    return !(quien === 'gato' && this.madrigueras.some((m) => igual(m, h)));
+  }
+
+  // Un paso: dobla si puede hacia donde quiere; si no, sigue derecho; si hay pared, se queda quieto.
+  #paso(quien) {
+    const j = quien === 'gato' ? this.gatoEs : this.ratonEs;
+    const pos = quien === 'gato' ? this.gato : this.raton;
+    if (this.quiere[j] && this.libre(quien, pos, this.quiere[j])) {
+      this.dirs[j] = this.quiere[j];
+      this.quiere[j] = null;
+    }
+    const dir = this.dirs[j];
+    if (!dir || !this.libre(quien, pos, dir)) return false;
+    const d = DIRS[dir];
+    const nueva = [pos[0] + d.df, pos[1] + d.dc];
+    this.antes[quien] = [...pos];
+    if (quien === 'gato') this.gato = nueva;
+    else {
+      this.raton = nueva;
+      this.rastro.push([...nueva]);
+      if (this.rastro.length > 60) this.rastro.shift();
+    }
+    this.movs++;
+    this.ultimo = { quien, dir };
+    // Atrapado: en la misma casilla, o se cruzaron de frente en el mismo instante.
+    const otro = quien === 'gato' ? 'raton' : 'gato';
+    const posOtro = quien === 'gato' ? this.raton : this.gato;
+    const cruce = this.antes[otro] && igual(this.antes[otro], nueva) && igual(posOtro, pos);
+    if (igual(this.gato, this.raton) || cruce) {
+      this.#finRonda('gato', 'atrapado');
+      return true;
+    }
+    if (quien === 'raton') {
+      const i = this.quesos.findIndex((q) => igual(q, nueva));
+      if (i >= 0) {
+        this.quesos.splice(i, 1);
+        this.comidos++;
+        if (!this.quesos.length) this.#finRonda('raton', 'quesos');
+      }
+    }
+    return true;
   }
 
   accion(j, tipo, datos = {}) {
@@ -149,51 +272,26 @@ export class PartidaGatoRaton {
       return;
     }
     if (tipo !== 'mover') throw new ErrorJuego('Acción desconocida');
-    if (this.fase !== 'jugando') throw new ErrorJuego('La ronda terminó');
-    if (this.turno !== j) throw new ErrorJuego('No es tu turno');
-    const d = DIRS[datos.dir];
-    if (!d) throw new ErrorJuego('Dirección inválida');
-    const soyGato = j === this.gatoEs;
-    const desde = soyGato ? this.gato : this.raton;
-    if (this.paredes[desde[0]][desde[1]] & d.bit) throw new ErrorJuego('Ahí hay una pared');
-    const hacia = [desde[0] + d.df, desde[1] + d.dc];
-
-    if (soyGato) {
-      if (igual(hacia, this.queso)) throw new ErrorJuego('El gato no puede pisar el queso');
-      this.gato = hacia;
-      this.movsGato++;
-      this.ultimo = { quien: 'gato', dir: datos.dir };
-      if (igual(hacia, this.raton)) return this.#finRonda('gato', 'atrapado');
-      this.turno = this.ratonEs;
-      if (!this.#movidasRaton().length) return this.#finRonda('gato', 'acorralado');
-      return;
+    if (this.fase === 'resumen') return;
+    if (!DIRS[datos.dir]) throw new ErrorJuego('Dirección inválida');
+    const quien = j === this.gatoEs ? 'gato' : 'raton';
+    const pos = quien === 'gato' ? this.gato : this.raton;
+    // Si ya se puede doblar, dobla en el próximo paso; si no, queda anotado hasta que haya lugar.
+    if (!this.dirs[j] || this.libre(quien, pos, datos.dir)) {
+      this.dirs[j] = datos.dir;
+      this.quiere[j] = null;
+    } else {
+      this.quiere[j] = datos.dir;
     }
-
-    if (igual(hacia, this.gato)) throw new ErrorJuego('¡Ahí está el gato!');
-    this.raton = hacia;
-    this.movsRaton++;
-    this.rastro.push([...hacia]);
-    this.ultimo = { quien: 'raton', dir: datos.dir };
-    if (igual(hacia, this.queso)) return this.#finRonda('raton', 'queso');
-    if (this.movsRaton >= this.config.limite) return this.#finRonda('gato', 'tiempo');
-    // Si el gato no tiene para dónde ir (encerrado contra el queso), pierde el turno.
-    if (this.#movidasGato().length) this.turno = this.gatoEs;
-  }
-
-  #movidasRaton() {
-    return vecinos(this.paredes, this.raton).filter((v) => !igual(v.pos, this.gato));
-  }
-
-  #movidasGato() {
-    return vecinos(this.paredes, this.gato).filter((v) => !igual(v.pos, this.queso));
   }
 
   #finRonda(rol, motivo) {
+    clearTimeout(this.timer);
     const ganadorRonda = rol === 'gato' ? this.gatoEs : this.ratonEs;
     this.puntos[ganadorRonda]++;
-    this.rondas.push({ ronda: this.ronda, ganador: ganadorRonda, rol, motivo, movs: this.movsRaton });
+    const segundos = Math.max(0, Math.round((Math.min(Date.now(), this.hasta) - this.inicio) / 1000));
+    this.rondas.push({ ronda: this.ronda, ganador: ganadorRonda, rol, motivo, comidos: this.comidos, segundos });
     this.fase = 'resumen';
-    this.turno = null;
     if (this.ronda >= this.config.rondas) {
       this.estado = 'terminada';
       this.ganador = ganadorPorPuntos(this.jugadores, this.puntos);
@@ -201,9 +299,18 @@ export class PartidaGatoRaton {
     }
   }
 
+  // Después de restaurar: la ronda en curso vuelve a arrancar.
+  reanudar() {
+    if (this.estado !== 'jugando') return;
+    if (this.fase === 'resumen' && this.quesos) return; // (sin quesos = guardada con la versión por turnos)
+    this.ronda--;
+    this.#nuevaRonda();
+  }
+
   abandonar(j) {
     const rival = this.rival(j);
     if (this.estado === 'terminada') return;
+    clearTimeout(this.timer);
     this.estado = 'terminada';
     this.ganador = rival;
     this.motivoFin = 'abandono';
@@ -216,6 +323,7 @@ export class PartidaGatoRaton {
   vistaPara(j) {
     const rival = this.rival(j);
     const ultimaRonda = this.rondas[this.rondas.length - 1];
+    const ahora = Date.now();
     return {
       estado: this.estado,
       ganador: this.ganador,
@@ -223,18 +331,23 @@ export class PartidaGatoRaton {
       config: this.config,
       ronda: this.ronda,
       fase: this.fase,
-      turno: this.turno,
       miRol: j === this.gatoEs ? 'gato' : 'raton',
       monedaGato: this.moneda === j ? 'yo' : 'rival',
       paredes: this.paredes,
       raton: this.raton,
       gato: this.gato,
-      queso: this.queso,
-      madriguera: this.madriguera,
+      quesos: this.quesos,
+      comidos: this.comidos,
+      madrigueras: this.madrigueras,
       rastro: this.rastro,
-      movsRaton: this.movsRaton,
-      movsGato: this.movsGato,
+      movs: this.movs,
+      miDir: this.dirs[j],
+      quiero: this.quiere[j],
       ultimo: this.ultimo,
+      msGato: this.msGato,
+      msRaton: RATON_MS,
+      faltaCuentaMs: this.fase === 'cuenta' ? Math.max(0, this.inicio - ahora) : 0,
+      faltaMs: this.fase === 'resumen' ? 0 : Math.max(0, this.hasta - Math.max(ahora, this.inicio)),
       puntos: { yo: this.puntos[j], rival: this.puntos[rival] },
       rondas: this.rondas.map((r) => ({ ...r, mia: r.ganador === j })),
       ultimaRonda: ultimaRonda && this.fase === 'resumen' ? { ...ultimaRonda, mia: ultimaRonda.ganador === j } : null,

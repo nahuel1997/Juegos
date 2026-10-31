@@ -12,6 +12,18 @@ import { Avatar } from './componentes/comunes.jsx';
 import { sonidoActivo, setSonidoActivo, sonarTurno } from './sonido.js';
 import { Icono } from './iconos.jsx';
 import { EmoteGrande } from './componentes/Emotes.jsx';
+import { ProveedorSkins } from './skins.jsx';
+
+// Link para entrar a una sala: https://…/?codigo=ABC12 (se saca de la barra al leerlo).
+function leerCodigoUrl() {
+  try {
+    const c = new URLSearchParams(location.search).get('codigo');
+    if (c) history.replaceState(null, '', location.pathname);
+    return c ? c.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) : '';
+  } catch {
+    return '';
+  }
+}
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined); // undefined = cargando, null = sin sesión
@@ -25,6 +37,7 @@ export default function App() {
   const [escribiendo, setEscribiendo] = useState(null);
   const [sonido, setSonido] = useState(sonidoActivo);
   const [emote, setEmote] = useState(null);
+  const [codigoUrl, setCodigoUrl] = useState(leerCodigoUrl);
   const socketRef = useRef(null);
 
   const avisar = useCallback((texto, tipo = 'info') => {
@@ -59,6 +72,11 @@ export default function App() {
     s.on('disconnect', () => setConectado(false));
     s.on('connect_error', (e) => {
       if (e.message === 'sin-sesion') setUsuario(null);
+      if (e.message === 'sala-cerrada') {
+        avisar('Esa sala ya se cerró');
+        pedir('/logout', { metodo: 'POST' }).catch(() => {});
+        setUsuario(null);
+      }
     });
     s.on('lobby', setLobby);
     s.on('sala', setSala);
@@ -105,9 +123,11 @@ export default function App() {
   }
 
   if (usuario === undefined) return <div className="cargando">Cargando…</div>;
-  if (!usuario) return <Login onEntrar={setUsuario} />;
+  if (!usuario) return <><Login onEntrar={(u) => { setCodigoUrl(''); setUsuario(u); }} codigoInicial={codigoUrl} /><Avisos avisos={avisos} /></>;
+  const invitado = !!usuario.invitado;
 
   return (
+    <ProveedorSkins usuario={usuario}>
     <div className="app">
       <header className="barra">
         <button className="marca" onClick={() => setVista('inicio')}>
@@ -125,37 +145,48 @@ export default function App() {
             <Icono id={sonido ? 'campana' : 'campanaNo'} tam={20} />
           </button>
           <span className={`punto ${conectado ? 'on' : 'off'}`} title={conectado ? 'Conectado' : 'Reconectando…'} />
-          <button className="yo" onClick={() => setVista('perfil')} title="Tu perfil">
-            <Avatar usuario={usuario} tam={30} />
-            <span>{usuario.nombre}</span>
-          </button>
+          {invitado ? (
+            <span className="yo"><Avatar usuario={usuario} tam={30} /><span>{usuario.nombre} <small className="sub">(invitado)</small></span></span>
+          ) : (
+            <button className="yo" onClick={() => setVista('perfil')} title="Tu perfil">
+              <Avatar usuario={usuario} tam={30} />
+              <span>{usuario.nombre}</span>
+            </button>
+          )}
           <button className="btn chico fantasma" onClick={salir}>Salir</button>
         </div>
       </header>
       <main>
         {!conectado && <div className="cinta">Reconectando con el servidor…</div>}
-        {vista === 'perfil' ? (
+        {invitado && !sala ? (
+          <div className="tarjeta sin-sala">
+            <h2>{sala === undefined ? 'Entrando a la sala…' : 'Ya no estás en la sala'}</h2>
+            {sala === null && <p className="sub">La sala se cerró o te sacaron. Si te pasan otro código, podés volver a entrar.</p>}
+            {sala === null && <button className="btn" onClick={salir}>Volver al inicio</button>}
+          </div>
+        ) : vista === 'perfil' ? (
           <Perfil usuario={usuario} onCambio={setUsuario} volver={() => setVista('inicio')} avisar={avisar} />
         ) : sala ? (
-          <Sala sala={sala} emitir={emitir} gente={gente} />
+          <Sala sala={sala} emitir={emitir} gente={gente} usuarios={invitado ? [] : lobby?.usuarios || []} invitacionesEnviadas={lobby?.invitaciones?.enviadas || []} />
         ) : practica ? (
           <Practica key={practica.id} id={practica.id} nombre={practica.nombre} usuario={usuario} volver={() => setPractica(null)} />
         ) : (
-          <Lobby lobby={lobby} emitir={emitir} practicar={(id, nombre) => setPractica({ id, nombre })} />
+          <Lobby lobby={lobby} emitir={emitir} practicar={(id, nombre) => setPractica({ id, nombre })} codigoUrl={codigoUrl} olvidarCodigo={() => setCodigoUrl('')} />
         )}
       </main>
-      <Chat
+      {!invitado && <Chat
         mensajes={mensajes}
         gente={gente}
         yo={usuario.usuario}
         escribiendo={escribiendo}
         enviar={(texto) => emitir('chat:enviar', { texto })}
         avisarEscribiendo={() => socketRef.current?.emit('chat:escribiendo')}
-      />
+      />}
       <Avisos avisos={avisos} />
       {sala && <EmoteGrande emote={emote} yo={usuario.usuario} gente={gente} />}
       {usuario.tema === 'rosa' && <Corazones />}
     </div>
+    </ProveedorSkins>
   );
 }
 

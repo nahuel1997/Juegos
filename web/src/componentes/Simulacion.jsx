@@ -4,8 +4,13 @@ import { silenciar } from '../sonido.js';
 
 const ANCHO = 820; // ancho al que se dibuja el juego antes de achicarlo
 const ALTO_MAX = 440; // alto máximo de la simulación en la ventana
-const PASO_MS = { pool: 3200, 'piedra-papel-tijera': 1300, penales: 1300, sudoku: 450, cajitas: 600, tateti: 800, escaleras: 1600, monopoly: 1300, caballos: 900, memotest: 1100, 'tuti-fruti': 1800, tron: 90, simon: 300, colores: 400, botellas: 700, truco: 1300, emojis: 900 };
-const CTX = { yo: 'vos', rival: 'rival', nombreRival: 'Rival', rivalOnline: true, colorYo: '#ff4f9a', colorRival: '#4fc3f7' };
+const PASO_MS = { pool: 3200, 'piedra-papel-tijera': 1300, penales: 1300, sudoku: 450, cajitas: 600, tateti: 800, escaleras: 1600, monopoly: 1300, caballos: 900, memotest: 1100, 'tuti-fruti': 1800, tron: 90, 'gato-raton': 120, 'toca-el-punto': 250, jenga: 900, nim: 1200, 'palabras-cruzadas': 1500, 'mas-o-menos': 700, 'conta-objetos': 700, 'ruleta-emojis': 900, adivina: 800, simon: 300, colores: 400, botellas: 700, truco: 1300, emojis: 900 };
+const CTX = {
+  yo: 'vos', rival: 'rival', nombreRival: 'Rival', rivalOnline: true, colorYo: '#ff4f9a', colorRival: '#4fc3f7',
+  jugadores: [{ id: 'vos', nombre: 'Vos', color: '#ff4f9a' }, { id: 'rival', nombre: 'Rival', color: '#4fc3f7' }],
+  nombreDe: (id) => (id === 'vos' ? 'Vos' : 'Rival'),
+  colorDe: (id) => (id === 'vos' ? '#ff4f9a' : '#4fc3f7'),
+};
 const otro = (j) => (j === 'vos' ? 'rival' : 'vos');
 
 // Si la pantalla del juego falla con algún estado de la simulación, se esconde (no rompe la página).

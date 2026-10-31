@@ -1,24 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icono } from '../../iconos.jsx';
 import { Cartel, Confeti, useEfecto } from '../../efectos.jsx';
 import { efectoSonido } from '../../sonido.js';
 
-// Mismas direcciones y bits de pared que el servidor.
-const DIRS = {
-  arriba: { bit: 1, df: -1, dc: 0 },
-  derecha: { bit: 2, df: 0, dc: 1 },
-  abajo: { bit: 4, df: 1, dc: 0 },
-  izquierda: { bit: 8, df: 0, dc: -1 },
-};
 const TECLAS = {
   ArrowUp: 'arriba', ArrowRight: 'derecha', ArrowDown: 'abajo', ArrowLeft: 'izquierda',
   w: 'arriba', d: 'derecha', s: 'abajo', a: 'izquierda',
 };
 const MOTIVO = {
-  queso: (gane) => (gane ? '¡Llegaste al queso!' : 'El ratón llegó al queso'),
+  quesos: (gane) => (gane ? '¡Te comiste todos los quesos!' : 'El ratón se comió todos los quesos'),
   atrapado: (gane) => (gane ? '¡Lo atrapaste!' : '¡Te atrapó el gato!'),
-  acorralado: (gane) => (gane ? 'Lo acorralaste: no tenía salida' : 'Te acorralaron: no tenías salida'),
-  tiempo: (gane) => (gane ? 'Se le acabaron los movimientos al ratón' : 'Se te acabaron los movimientos'),
+  tiempo: (gane) => (gane ? 'Se le terminó el tiempo al ratón' : 'Se te terminó el tiempo'),
 };
 
 // Flechita SVG propia para el control en pantalla.
@@ -37,137 +29,175 @@ function Moneda({ gatoSoyYo, nombreRival }) {
         <span className="cara raton-cara"><Icono id="raton" tam={84} /></span>
       </div>
       <p className="moneda-texto">
-        {gatoSoyYo ? <>¡Salió gato! <b>Vos sos el gato</b>: atrapá a {nombreRival}</> : <>¡Salió ratón! <b>Vos sos el ratón</b>: llegá al queso</>}
+        {gatoSoyYo ? <>¡Salió gato! <b>Vos sos el gato</b>: atrapá a {nombreRival}</> : <>¡Salió ratón! <b>Vos sos el ratón</b>: comete los quesos</>}
       </p>
     </div>
   );
 }
 
 export default function JuegoGatoRaton({ partida, accion, ctx }) {
-  const { paredes, raton, gato, queso, madriguera, miRol, config } = partida;
+  const p = partida;
+  const { paredes, raton, gato, quesos, madrigueras, miRol, config } = p;
   const lado = paredes.length;
-  const jugando = partida.estado === 'jugando' && partida.fase === 'jugando';
-  const miTurno = jugando && partida.turno === ctx.yo;
-  const yoPos = miRol === 'gato' ? gato : raton;
-  const quedan = config.limite - partida.movsRaton;
+  const jugando = p.estado === 'jugando' && (p.fase === 'jugando' || p.fase === 'cuenta');
+
+  // Reloj local (el server manda cuánto falta en cada cambio).
+  const base = useMemo(() => ({ t: Date.now(), falta: p.faltaMs, cuenta: p.faltaCuentaMs }), [p.faltaMs, p.faltaCuentaMs]);
+  const [ahora, setAhora] = useState(Date.now());
+  useEffect(() => {
+    if (!jugando) return undefined;
+    const t = setInterval(() => setAhora(Date.now()), 200);
+    return () => clearInterval(t);
+  }, [jugando]);
+  const pasado = Math.max(0, ahora - base.t);
+  const cuenta = p.fase === 'cuenta' ? Math.ceil(Math.max(0, base.cuenta - pasado) / 1000) : 0;
+  const segundos = Math.ceil(Math.max(0, base.falta - (p.fase === 'jugando' ? pasado : 0)) / 1000);
 
   // Para dónde mira cada uno (según su último paso).
   const [mira, setMira] = useState({ gato: 1, raton: 1 });
   useEffect(() => {
-    const u = partida.ultimo;
+    const u = p.ultimo;
     if (u && (u.dir === 'izquierda' || u.dir === 'derecha')) setMira((m) => ({ ...m, [u.quien]: u.dir === 'izquierda' ? -1 : 1 }));
-  }, [partida.ultimo, partida.movsRaton, partida.movsGato]);
+  }, [p.ultimo, p.movs]);
 
-  const puede = (dir) => {
-    if (!miTurno) return false;
-    const d = DIRS[dir];
-    if (paredes[yoPos[0]][yoPos[1]] & d.bit) return false;
-    const h = [yoPos[0] + d.df, yoPos[1] + d.dc];
-    if (miRol === 'gato') return !(h[0] === queso[0] && h[1] === queso[1]);
-    return !(h[0] === gato[0] && h[1] === gato[1]);
-  };
-  const mover = (dir) => { if (puede(dir)) accion('mover', { dir }); };
+  const mover = (dir) => { if (jugando) accion('mover', { dir }); };
+  const moverRef = useRef(mover);
+  moverRef.current = mover;
 
   // Flechitas del teclado (y WASD). No molesta si estás escribiendo en el chat.
   useEffect(() => {
     const tecla = (e) => {
       const dir = TECLAS[e.key] ?? TECLAS[e.key?.toLowerCase?.()];
-      if (!dir || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (!dir || e.repeat || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       e.preventDefault();
-      mover(dir);
+      moverRef.current(dir);
     };
     window.addEventListener('keydown', tecla);
     return () => window.removeEventListener('keydown', tecla);
-  });
+  }, []);
+
+  // En el celular: deslizar el dedo sobre el laberinto.
+  const toque = useRef(null);
+  const empezarToque = (e) => { const t = e.touches[0]; toque.current = [t.clientX, t.clientY]; };
+  const moverToque = (e) => {
+    if (!toque.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - toque.current[0]; const dy = t.clientY - toque.current[1];
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) return;
+    mover(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'derecha' : 'izquierda') : (dy > 0 ? 'abajo' : 'arriba'));
+    toque.current = [t.clientX, t.clientY];
+  };
 
   // La moneda al aire solo al arrancar la partida.
-  const [moneda, setMoneda] = useState(() => partida.ronda === 1 && partida.movsRaton === 0 && partida.movsGato === 0 && jugando);
+  const [moneda, setMoneda] = useState(() => p.ronda === 1 && p.fase === 'cuenta' && p.movs === 0);
   useEffect(() => {
-    if (!moneda) return;
-    const t = setTimeout(() => setMoneda(false), 3600);
+    if (!moneda) return undefined;
+    const t = setTimeout(() => setMoneda(false), 2800);
     return () => clearTimeout(t);
   }, [moneda]);
 
-  // Cambio de ronda (se invierten los papeles) y final de ronda.
-  const cambio = useEfecto(`r${partida.ronda}`, () => ({ rol: miRol }), 2400);
-  const fin = useEfecto(partida.ultimaRonda ? `f${partida.ultimaRonda.ronda}` : null, () => {
-    const u = partida.ultimaRonda;
-    if (u.motivo === 'atrapado' || u.motivo === 'acorralado') efectoSonido.explosion(false);
+  // Queso comido, cambio de ronda y final de ronda.
+  const comio = useRef(p.comidos);
+  useEffect(() => {
+    if (p.comidos > comio.current) efectoSonido.moneda?.();
+    comio.current = p.comidos;
+  }, [p.comidos]);
+  const cambio = useEfecto(`r${p.ronda}`, () => ({ rol: miRol }), 2400);
+  const fin = useEfecto(p.ultimaRonda ? `f${p.ultimaRonda.ronda}` : null, () => {
+    const u = p.ultimaRonda;
+    if (u.motivo === 'atrapado') efectoSonido.explosion(false);
     else if (u.mia) efectoSonido.fanfarria();
     return { ...u };
   }, 2600);
 
-  const posiblesPasos = new Set(Object.keys(DIRS).filter(puede).map((dir) => `${yoPos[0] + DIRS[dir].df},${yoPos[1] + DIRS[dir].dc}`));
-  const dirHacia = (f, c) => Object.keys(DIRS).find((dir) => yoPos[0] + DIRS[dir].df === f && yoPos[1] + DIRS[dir].dc === c);
-  const rastro = new Set(partida.rastro.map(([f, c]) => `${f},${c}`));
+  const rastro = new Set(p.rastro.map(([f, c]) => `${f},${c}`));
   const pos = ([f, c]) => ({ left: `${(c / lado) * 100}%`, top: `${(f / lado) * 100}%`, width: `${100 / lado}%`, height: `${100 / lado}%` });
+  const total = config.quesos;
 
   let estado;
-  if (partida.fase === 'resumen') estado = `Fin de la ronda ${partida.ronda}`;
-  else if (miTurno) estado = miRol === 'gato' ? '¡Te toca! Mové al gato' : '¡Te toca! Mové al ratón';
-  else estado = `Mueve ${ctx.nombreRival} (${miRol === 'gato' ? 'ratón' : 'gato'})…`;
+  if (p.fase === 'resumen') estado = `Fin de la ronda ${p.ronda}`;
+  else if (p.fase === 'cuenta') estado = '¡Preparate!';
+  else estado = miRol === 'gato' ? '¡Atrapalo!' : '¡A comer quesos!';
 
   return (
     <div className="gr">
       {moneda && <Moneda gatoSoyYo={miRol === 'gato'} nombreRival={ctx.nombreRival} />}
-      {cambio && !moneda && <Cartel key={cambio.id} texto={`Ronda ${partida.ronda}`} sub={cambio.rol === 'gato' ? 'Ahora sos el gato' : 'Ahora sos el ratón'} />}
+      {cambio && !moneda && p.ronda > 1 && <Cartel key={cambio.id} texto={`Ronda ${p.ronda}`} sub={cambio.rol === 'gato' ? 'Ahora sos el gato' : 'Ahora sos el ratón'} />}
       {fin && (
         <>
-          <Cartel key={fin.id} tipo={fin.rol === 'gato' ? 'hundido' : 'oro'} texto={fin.rol === 'gato' ? '¡ATRAPADO!' : '¡AL QUESO!'} sub={MOTIVO[fin.motivo](fin.mia)} />
+          <Cartel key={fin.id} tipo={fin.rol === 'gato' ? 'hundido' : 'oro'} texto={fin.motivo === 'atrapado' ? '¡ATRAPADO!' : fin.motivo === 'tiempo' ? '¡TIEMPO!' : '¡TODOS LOS QUESOS!'} sub={MOTIVO[fin.motivo](fin.mia)} />
           {fin.mia && <Confeti key={`c${fin.id}`} cantidad={60} />}
         </>
       )}
 
       <div className="marcador">
-        <span>Vos <b>{partida.puntos.yo}</b></span>
-        <span className="ronda">Ronda {partida.ronda} de {config.rondas}</span>
-        <span><b>{partida.puntos.rival}</b> {ctx.nombreRival}</span>
+        <span>Vos <b>{p.puntos.yo}</b></span>
+        <span className="ronda">Ronda {p.ronda} de {config.rondas}</span>
+        <span><b>{p.puntos.rival}</b> {ctx.nombreRival}</span>
       </div>
-      <div className={`estado-cinta ${miTurno ? 'tu-turno' : ''}`}>
+      <div className={`estado-cinta ${p.fase === 'jugando' ? 'tu-turno' : ''}`}>
         <span className="con-iconos gr-rol"><Icono id={miRol} tam={26} /> Sos el {miRol === 'gato' ? 'gato' : 'ratón'}</span>
         {estado}
         <small>
-          {miRol === 'gato' ? 'Atrapalo antes de que llegue al queso (vos no podés pisar el queso).' : 'Llegá de la madriguera al queso sin que te agarre el gato.'}
-          {' '}Al ratón le quedan {quedan} movimiento{quedan === 1 ? '' : 's'}.
+          {miRol === 'gato'
+            ? 'Sos un poco más rápido, pero no podés entrar a las madrigueras.'
+            : 'Escondete en las madrigueras: ahí el gato no entra.'}
         </small>
       </div>
 
+      <div className="gr-datos">
+        <span className={`gr-reloj ${segundos <= 10 && p.fase === 'jugando' ? 'apurado' : ''}`}>
+          <Icono id="reloj" tam={22} /> {p.fase === 'resumen' ? '—' : `${segundos} s`}
+        </span>
+        <span className="gr-quesos" aria-label={`Quesos comidos: ${p.comidos} de ${total}`}>
+          {Array.from({ length: total }, (_, i) => <i key={i} className={i < p.comidos ? 'comido' : ''}><Icono id="queso" tam={22} /></i>)}
+        </span>
+      </div>
+
       <div className="gr-zona">
-        <div className={`gr-laberinto ${miTurno ? 'activo' : ''}`} style={{ '--lado': lado }}>
-          {paredes.map((fila, f) => fila.map((p, c) => {
+        <div
+          className={`gr-laberinto ${p.fase === 'jugando' ? 'activo' : ''}`}
+          style={{ '--lado': lado, '--ms-gato': `${p.msGato}ms`, '--ms-raton': `${p.msRaton}ms` }}
+          onTouchStart={empezarToque}
+          onTouchMove={moverToque}
+          onTouchEnd={() => { toque.current = null; }}
+        >
+          {paredes.map((fila, f) => fila.map((v, c) => {
             const k = `${f},${c}`;
-            const paso = posiblesPasos.has(k);
-            return (
-              <div
-                key={k}
-                className={`gr-celda ${p & 1 ? 'pa' : ''} ${p & 2 ? 'pd' : ''} ${p & 4 ? 'pb' : ''} ${p & 8 ? 'pi' : ''} ${rastro.has(k) ? 'rastro' : ''} ${paso ? 'paso' : ''}`}
-                onClick={paso ? () => mover(dirHacia(f, c)) : undefined}
-              />
-            );
+            return <div key={k} className={`gr-celda ${v & 1 ? 'pa' : ''} ${v & 2 ? 'pd' : ''} ${v & 4 ? 'pb' : ''} ${v & 8 ? 'pi' : ''} ${rastro.has(k) ? 'rastro' : ''}`} />;
           }))}
-          <span className="gr-pieza madriguera" style={pos(madriguera)}><Icono id="madriguera" /></span>
-          <span className="gr-pieza queso" style={pos(queso)}><Icono id="queso" /></span>
+          {madrigueras.map((m) => <span key={`m${m}`} className="gr-pieza madriguera" style={pos(m)}><Icono id="madriguera" /></span>)}
+          {quesos.map((q) => <span key={`q${q}`} className="gr-pieza queso" style={pos(q)}><Icono id="queso" /></span>)}
           <span className={`gr-pieza raton ${miRol === 'raton' ? 'mia' : ''}`} style={{ ...pos(raton), '--mira': mira.raton }}><Icono id="raton" /></span>
           <span className={`gr-pieza gato ${miRol === 'gato' ? 'mia' : ''}`} style={{ ...pos(gato), '--mira': mira.gato }}><Icono id="gato" /></span>
+          {cuenta > 0 && !moneda && <div className="gr-cuenta" key={cuenta}>{cuenta}</div>}
         </div>
 
         <div className="gr-control" aria-label="Mover">
-          <button type="button" className="btn fantasma arriba" disabled={!puede('arriba')} onClick={() => mover('arriba')} aria-label="Arriba"><Flecha giro={0} /></button>
-          <button type="button" className="btn fantasma izquierda" disabled={!puede('izquierda')} onClick={() => mover('izquierda')} aria-label="Izquierda"><Flecha giro={-90} /></button>
+          {[['arriba', 0], ['izquierda', -90], ['derecha', 90], ['abajo', 180]].map(([dir, giro]) => (
+            <button
+              key={dir}
+              type="button"
+              className={`btn fantasma ${dir} ${p.miDir === dir ? 'va' : ''} ${p.quiero === dir ? 'quiere' : ''}`}
+              disabled={!jugando}
+              onPointerDown={(e) => { e.preventDefault(); mover(dir); }}
+              aria-label={dir}
+            >
+              <Flecha giro={giro} />
+            </button>
+          ))}
           <span className="centro"><Icono id={miRol} tam={30} /></span>
-          <button type="button" className="btn fantasma derecha" disabled={!puede('derecha')} onClick={() => mover('derecha')} aria-label="Derecha"><Flecha giro={90} /></button>
-          <button type="button" className="btn fantasma abajo" disabled={!puede('abajo')} onClick={() => mover('abajo')} aria-label="Abajo"><Flecha giro={180} /></button>
-          <p className="ayuda">Movete con las flechitas del teclado, estos botones o tocando la casilla.</p>
+          <p className="ayuda">Tocá una flecha (o deslizá el dedo) y sigue solo hasta la próxima pared. Si pedís doblar antes, dobla en la primera esquina que pueda.</p>
         </div>
       </div>
 
-      {partida.fase === 'resumen' && partida.estado === 'jugando' && partida.ultimaRonda && (
+      {p.fase === 'resumen' && p.estado === 'jugando' && p.ultimaRonda && (
         <div className="tarjeta gr-resumen">
-          <h3>{partida.ultimaRonda.mia ? '¡Ganaste la ronda!' : `${ctx.nombreRival} ganó la ronda`}</h3>
-          <p className="sub">{MOTIVO[partida.ultimaRonda.motivo](partida.ultimaRonda.mia)} · Van {partida.puntos.yo} a {partida.puntos.rival}</p>
+          <h3>{p.ultimaRonda.mia ? '¡Ganaste la ronda!' : `${ctx.nombreRival} ganó la ronda`}</h3>
+          <p className="sub">{MOTIVO[p.ultimaRonda.motivo](p.ultimaRonda.mia)} · Van {p.puntos.yo} a {p.puntos.rival}</p>
           <p className="sub">En la próxima ronda se cambian: vas a ser el {miRol === 'gato' ? 'ratón' : 'gato'}, con laberinto nuevo.</p>
-          <button className="btn" disabled={partida.listosSiguiente.includes('yo')} onClick={() => accion('siguiente')}>
-            {partida.listosSiguiente.includes('yo') ? `Esperando a ${ctx.nombreRival}…` : 'Siguiente ronda →'}
+          <button className="btn" disabled={p.listosSiguiente.includes('yo')} onClick={() => accion('siguiente')}>
+            {p.listosSiguiente.includes('yo') ? `Esperando a ${ctx.nombreRival}…` : 'Siguiente ronda →'}
           </button>
         </div>
       )}
@@ -177,5 +207,4 @@ export default function JuegoGatoRaton({ partida, accion, ctx }) {
 
 JuegoGatoRaton.textoFinal = (p) => `Terminó ${p.puntos.yo} a ${p.puntos.rival} en ${p.rondas.length} ronda${p.rondas.length === 1 ? '' : 's'}.`;
 
-JuegoGatoRaton.claveTurno = (p, ctx) =>
-  p.estado === 'jugando' && p.fase === 'jugando' && p.turno === ctx.yo ? `gr-${p.ronda}-${p.movsRaton}-${p.movsGato}` : null;
+JuegoGatoRaton.claveTurno = (p) => (p.estado === 'jugando' && p.fase === 'cuenta' ? `gr-${p.ronda}` : null);

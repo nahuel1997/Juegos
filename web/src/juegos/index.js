@@ -71,6 +71,22 @@ import ConfigSimon from './simon/Config.jsx';
 import JuegoSimon from './simon/Juego.jsx';
 import ConfigColores from './colores/Config.jsx';
 import JuegoColores from './colores/Juego.jsx';
+import ConfigPalabrasCruzadas from './palabrasCruzadas/Config.jsx';
+import JuegoPalabrasCruzadas from './palabrasCruzadas/Juego.jsx';
+import ConfigJenga from './jenga/Config.jsx';
+import JuegoJenga from './jenga/Juego.jsx';
+import ConfigNim from './nim/Config.jsx';
+import JuegoNim from './nim/Juego.jsx';
+import ConfigMasOMenos from './masOMenos/Config.jsx';
+import JuegoMasOMenos from './masOMenos/Juego.jsx';
+import ConfigTocaElPunto from './tocaElPunto/Config.jsx';
+import JuegoTocaElPunto from './tocaElPunto/Juego.jsx';
+import ConfigContaObjetos from './contaObjetos/Config.jsx';
+import JuegoContaObjetos from './contaObjetos/Juego.jsx';
+import ConfigRuletaEmojis from './ruletaEmojis/Config.jsx';
+import JuegoRuletaEmojis from './ruletaEmojis/Juego.jsx';
+import ConfigAdivina from './adivina/Config.jsx';
+import JuegoAdivina from './adivina/Juego.jsx';
 
 export const JUEGOS = {
   'batalla-naval': {
@@ -288,5 +304,53 @@ export const JUEGOS = {
     texto: 'Tocá el color de la tinta, no lo que dice. ¡El más rápido gana la carta!',
     Config: ConfigColores,
     Juego: JuegoColores,
+  },
+  'palabras-cruzadas': {
+    icono: 'palabras-cruzadas',
+    texto: 'Armá palabras con tus fichas en el tablero. Casillas dobles y triples, comodines y +50 por usar las 7.',
+    Config: ConfigPalabrasCruzadas,
+    Juego: JuegoPalabrasCruzadas,
+  },
+  'jenga': {
+    icono: 'jenga',
+    texto: 'Sacá bloques con pulso sin que se caiga la torre. El que la tira, pierde.',
+    Config: ConfigJenga,
+    Juego: JuegoJenga,
+  },
+  'nim': {
+    icono: 'nim',
+    texto: 'Palitos en pilas: sacás de una pila por turno. El que se lleva el último… pierde.',
+    Config: ConfigNim,
+    Juego: JuegoNim,
+  },
+  'mas-o-menos': {
+    icono: 'mas-o-menos',
+    texto: '¿Tiene más o menos? Habitantes, alturas, años, calorías… Responden todos a la vez.',
+    Config: ConfigMasOMenos,
+    Juego: JuegoMasOMenos,
+  },
+  'toca-el-punto': {
+    icono: 'toca-el-punto',
+    texto: 'Tocá los círculos lo más rápido que puedas. Gana el que más toca.',
+    Config: ConfigTocaElPunto,
+    Juego: JuegoTocaElPunto,
+  },
+  'conta-objetos': {
+    icono: 'conta-objetos',
+    texto: 'Aparecen un montón de dibujitos un ratito. ¿Cuántos había?',
+    Config: ConfigContaObjetos,
+    Juego: JuegoContaObjetos,
+  },
+  'ruleta-emojis': {
+    icono: 'ruleta-emojis',
+    texto: 'Gira la ruleta y sale una combinación de dibujitos: el primero que la adivina, gana.',
+    Config: ConfigRuletaEmojis,
+    Juego: JuegoRuletaEmojis,
+  },
+  'adivina': {
+    icono: 'adivina',
+    texto: 'Pistas de lo más difícil a lo más obvio: países, comidas, cosas y clubes.',
+    Config: ConfigAdivina,
+    Juego: JuegoAdivina,
   },
 };

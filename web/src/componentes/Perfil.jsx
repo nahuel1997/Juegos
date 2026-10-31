@@ -1,6 +1,39 @@
 import { useRef, useState } from 'react';
 import { pedir } from '../api.js';
 import { Avatar } from './comunes.jsx';
+import { SKINS, Muestra, useSkin } from '../skins.jsx';
+import { JUEGOS } from '../juegos/index.js';
+import { Icono } from '../iconos.jsx';
+
+// Skin para todos los juegos y la lista de los que tienen una propia.
+function Skins() {
+  const [general, , elegir, skins] = useSkin('*');
+  const propias = Object.entries(skins).filter(([k]) => k !== '*' && JUEGOS[k]);
+  return (
+    <section className="tarjeta perfil-skins">
+      <h3>Skins de los juegos</h3>
+      <p className="sub">Cambian mesas, tableros y cartas. Solo las ves vos. Cada juego tiene además su botón “Skin” para elegir una distinta.</p>
+      <div className="skin-lista anchas">
+        {SKINS.map((s) => (
+          <button key={s.id} type="button" className={`skin-op ${general === s.id ? 'activa' : ''}`} onClick={() => elegir('*', s.id)} aria-pressed={general === s.id}>
+            <Muestra skin={s.id} tam={36} />
+            <span>{s.nombre}</span>
+          </button>
+        ))}
+      </div>
+      {propias.length > 0 && (
+        <ul className="skins-propias">
+          {propias.map(([juego, skin]) => (
+            <li key={juego}>
+              <Icono id={JUEGOS[juego].icono} tam={22} /> <span>{SKINS.find((s) => s.id === skin)?.nombre}</span>
+              <button type="button" className="btn chico fantasma" onClick={() => elegir(juego, null)}>Usar la general</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 const TEMAS = [
   { id: 'azul', nombre: 'Azul marino', muestra: ['#0b1e3a', '#ffb703'] },
@@ -93,6 +126,8 @@ export default function Perfil({ usuario, onCambio, volver, avisar }) {
         </div>
         <button className="btn" disabled={ocupado}>Guardar</button>
       </form>
+
+      <Skins />
 
       <form
         className="tarjeta perfil-clave"

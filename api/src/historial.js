@@ -21,8 +21,9 @@ function guardar() {
 }
 
 // ganador null = empate.
-export function registrarPartida({ juego, jugadores, ganador, motivoFin, detalle }) {
-  partidas.unshift({ juego, jugadores, ganador, motivoFin, detalle, fecha: new Date().toISOString() });
+// nombres: los de los invitados (no tienen usuario), para mostrarlos después en el historial.
+export function registrarPartida({ juego, jugadores, ganador, motivoFin, detalle, nombres }) {
+  partidas.unshift({ juego, jugadores, ganador, motivoFin, detalle, nombres, fecha: new Date().toISOString() });
   partidas = partidas.slice(0, MAX);
   try {
     guardar();

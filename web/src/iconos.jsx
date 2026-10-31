@@ -724,6 +724,124 @@ export const ICONOS = {
       <path d="M48 14l4 6-6-2" fill="none" stroke="#e53935" strokeWidth="2.5" strokeLinecap="round" />
     </>
   ),
+  'palabras-cruzadas': (
+    <>
+      <rect x="4" y="4" width="56" height="56" rx="8" fill="#f3e3c3" stroke={T} strokeWidth="2.5" />
+      <path d="M4 22h56M4 42h56M22 4v56M42 4v56" stroke="#d4bc8e" strokeWidth="1.5" />
+      <rect x="6" y="24" width="15" height="16" rx="3" fill="#fff6dc" stroke={T} strokeWidth="2" />
+      <rect x="23" y="24" width="18" height="16" rx="3" fill="#fff6dc" stroke={T} strokeWidth="2" />
+      <rect x="43" y="24" width="15" height="16" rx="3" fill="#fff6dc" stroke={T} strokeWidth="2" />
+      <rect x="23" y="6" width="18" height="15" rx="3" fill="#fff6dc" stroke={T} strokeWidth="2" />
+      <text x="13.5" y="36" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#2b2233">S</text>
+      <text x="32" y="36" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#2b2233">O</text>
+      <text x="50.5" y="36" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#2b2233">L</text>
+      <text x="32" y="18" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#2b2233">D</text>
+      <rect x="6" y="44" width="14" height="14" rx="2" fill="#e57373" opacity=".7" />
+      <rect x="44" y="6" width="14" height="14" rx="2" fill="#64b5f6" opacity=".7" />
+    </>
+  ),
+  jenga: (
+    <>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <g key={i} transform={`translate(${i === 3 ? 4 : 0} 0)`}>
+          {i % 2 ? (
+            <rect x="14" y={50 - i * 8} width="36" height="7" rx="1.5" fill="#d9a066" stroke={T} strokeWidth="1.8" />
+          ) : (
+            [0, 1, 2].map((k) => (i === 2 && k === 1 ? null : <rect key={k} x={14 + k * 12} y={50 - i * 8} width="11" height="7" rx="1.5" fill="#e8b97c" stroke={T} strokeWidth="1.8" />))
+          )}
+        </g>
+      ))}
+      <rect x="40" y="31" width="20" height="7" rx="1.5" fill="#e8b97c" stroke={T} strokeWidth="1.8" transform="rotate(-8 50 34)" />
+      <rect x="6" y="58" width="52" height="4" rx="2" fill="#795548" />
+    </>
+  ),
+  nim: (
+    <>
+      {[[10, 1], [22, 3], [34, 5], [46, 7]].map(([x, n]) => Array.from({ length: Math.min(n, 3) }, (_, k) => (
+        <g key={`${x}${k}`} transform={`translate(${x + k * 3 - 3} ${(3 - k) * 2}) rotate(${(k - 1) * 6} 4 40)`}>
+          <rect x="2.5" y="18" width="4" height="40" rx="2" fill="#e3b778" stroke="#8a5a2b" strokeWidth="1" />
+          <ellipse cx="4.5" cy="16" rx="4" ry="5.5" fill="#d32f2f" stroke="#7f1010" strokeWidth="1" />
+        </g>
+      )))}
+    </>
+  ),
+  'mas-o-menos': (
+    <>
+      <rect x="3" y="12" width="27" height="40" rx="7" fill="#fff" stroke={T} strokeWidth="2.5" />
+      <rect x="34" y="12" width="27" height="40" rx="7" fill="#7b5cff" stroke={T} strokeWidth="2.5" />
+      <text x="16.5" y="37" textAnchor="middle" fontSize="13" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#2b2233">46</text>
+      <text x="47.5" y="38" textAnchor="middle" fontSize="18" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#fff">?</text>
+      <path d="M47.5 4l6 6h-12z" fill="#43a047" stroke={T} strokeWidth="1.5" />
+      <path d="M47.5 60l6-6h-12z" fill="#e53935" stroke={T} strokeWidth="1.5" />
+    </>
+  ),
+  'toca-el-punto': (
+    <>
+      <rect x="4" y="4" width="56" height="56" rx="10" fill="#1b2a49" stroke={T} strokeWidth="2.5" />
+      <circle cx="38" cy="26" r="13" fill="#ff4f9a" stroke="#fff" strokeWidth="3" />
+      <circle cx="38" cy="26" r="5" fill="#fff" />
+      <circle cx="16" cy="46" r="5" fill="#4fc3f7" opacity=".6" />
+      <path d="M26 54l6-16 4 10 5-3z" fill="#fff" stroke={T} strokeWidth="2" strokeLinejoin="round" />
+    </>
+  ),
+  'conta-objetos': (
+    <>
+      <rect x="4" y="6" width="56" height="52" rx="10" fill="#fff8e1" stroke={T} strokeWidth="2.5" />
+      <path d="M16 14l2.4 5 5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#ffd60a" stroke={T} strokeWidth="1.2" />
+      <path d="M44 34l2.4 5 5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#ffd60a" stroke={T} strokeWidth="1.2" />
+      <circle cx="42" cy="18" r="6" fill="#e53935" stroke={T} strokeWidth="1.5" />
+      <circle cx="18" cy="44" r="6" fill="#43a047" stroke={T} strokeWidth="1.5" />
+      <circle cx="30" cy="30" r="9" fill="#2b2233" />
+      <text x="30" y="34.5" textAnchor="middle" fontSize="12" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#fff">2</text>
+    </>
+  ),
+  'ruleta-emojis': (
+    <>
+      <circle cx="32" cy="34" r="26" fill="#fff" stroke={T} strokeWidth="2.5" />
+      {[0, 60, 120, 180, 240, 300].map((g, i) => <path key={g} d="M32 34L32 8A26 26 0 0 1 54.5 21z" fill={['#ff4f9a', '#ffd60a', '#4fc3f7', '#7b5cff', '#43a047', '#ff8a3d'][i]} transform={`rotate(${g} 32 34)`} opacity=".85" />)}
+      <circle cx="32" cy="34" r="9" fill="#fff" stroke={T} strokeWidth="2" />
+      <circle cx="29" cy="32" r="1.6" fill="#2b2233" /><circle cx="35" cy="32" r="1.6" fill="#2b2233" />
+      <path d="M28.5 36.5c2 2 5 2 7 0" stroke="#2b2233" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      <path d="M32 2l5 8h-10z" fill="#e53935" stroke={T} strokeWidth="1.8" strokeLinejoin="round" />
+    </>
+  ),
+  adivina: (
+    <>
+      <circle cx="26" cy="26" r="18" fill="#bbdefb" stroke={T} strokeWidth="2.5" />
+      <path d="M38.5 39l15 15" stroke={T} strokeWidth="6" strokeLinecap="round" />
+      <path d="M38.5 39l15 15" stroke="#8d6e63" strokeWidth="3" strokeLinecap="round" />
+      <text x="26" y="34" textAnchor="middle" fontSize="24" fontWeight="900" fontFamily="system-ui, sans-serif" fill="#1565c0">?</text>
+    </>
+  ),
+  pincel: (
+    <>
+      <path d="M44 6l14 14-24 24-14-14z" fill="#ffd60a" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M20 30l14 14-4 4c-4 4-10 4-12 10-4-6-12-6-14-12 6-2 6-8 10-12z" fill="#ff4f9a" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  llave: (
+    <>
+      <circle cx="20" cy="22" r="14" fill="#ffd54a" stroke={T} strokeWidth="2.5" />
+      <circle cx="20" cy="22" r="5" fill="#fff" stroke={T} strokeWidth="2" />
+      <path d="M30 32l24 24M44 46l6-6M50 52l5-5" stroke={T} strokeWidth="7" strokeLinecap="round" />
+      <path d="M30 32l24 24M44 46l6-6M50 52l5-5" stroke="#ffd54a" strokeWidth="3.5" strokeLinecap="round" />
+    </>
+  ),
+  gente: (
+    <>
+      <circle cx="22" cy="20" r="9" fill="#4fc3f7" stroke={T} strokeWidth="2.5" />
+      <path d="M6 54c0-12 7-20 16-20s16 8 16 20z" fill="#4fc3f7" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+      <circle cx="44" cy="22" r="8" fill="#ff4f9a" stroke={T} strokeWidth="2.5" />
+      <path d="M32 54c0-11 5-18 12-18s14 7 14 18z" fill="#ff4f9a" stroke={T} strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  reloj: (
+    <>
+      <circle cx="32" cy="34" r="24" fill="#fff" stroke={T} strokeWidth="3" />
+      <path d="M32 18v16l10 6" stroke={T} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      <path d="M24 6h16" stroke={T} strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
 };
 
 // Emoticones que se pueden mandar en una partida (el orden es el del selector).

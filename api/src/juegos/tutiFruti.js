@@ -1,5 +1,5 @@
-// Tuti fruti (Basta) 1vs1: columnas personalizadas, letra al azar por ronda, "¡Basta!" con cuenta
-// regresiva para el rival y puntos manuales (los cargan los jugadores al cerrar cada ronda).
+// Tuti fruti (Basta) de 2 a 8 jugadores: columnas personalizadas, letra al azar por ronda, "¡Basta!" con
+// cuenta regresiva para los demás y puntos manuales (los cargan los jugadores al cerrar cada ronda).
 import { ErrorJuego, entero, LETRAS, ganadorPorPuntos } from './comun.js';
 
 export const CONFIG_DEFECTO = {
@@ -40,14 +40,19 @@ export class PartidaTutiFruti {
     this.ganador = null;
     this.motivoFin = null;
     this.rondas = [];
+    this.fuera = new Set(); // los que abandonaron (con más de 2 la partida sigue sin ellos)
     this.timer = null;
     this.notificar = null; // lo pone la sala: avisa cambios que no vienen de una acción (fin del basta)
     this.#nuevaRonda();
   }
 
-  rival(j) {
+  #validar(j) {
     if (!this.jugadores.includes(j)) throw new ErrorJuego('No jugás en esta partida');
-    return this.jugadores[0] === j ? this.jugadores[1] : this.jugadores[0];
+    if (this.fuera.has(j)) throw new ErrorJuego('Abandonaste esta partida');
+  }
+
+  get activos() {
+    return this.jugadores.filter((j) => !this.fuera.has(j));
   }
 
   get actual() {
@@ -58,13 +63,13 @@ export class PartidaTutiFruti {
     const usadas = new Set(this.rondas.map((r) => r.letra));
     const libres = LETRAS.filter((l) => !this.config.excluidas.includes(l) && !usadas.has(l));
     const n = this.config.columnas.length;
-    const vacio = () => Array(n).fill('');
     this.rondas.push({
       letra: libres[Math.floor(this.rand() * libres.length)],
       fase: 'escribiendo', // escribiendo | basta | puntuando | cerrada
-      respuestas: { [this.jugadores[0]]: vacio(), [this.jugadores[1]]: vacio() },
-      puntos: { [this.jugadores[0]]: Array(n).fill(null), [this.jugadores[1]]: Array(n).fill(null) },
+      respuestas: Object.fromEntries(this.jugadores.map((j) => [j, Array(n).fill('')])),
+      puntos: Object.fromEntries(this.jugadores.map((j) => [j, Array(n).fill(null)])),
       bastaPor: null,
+      terminaron: new Set(), // los que completaron todo y cantaron (o confirmaron) basta
       hasta: null,
       desde: Date.now() + this.config.cuentaAtras * 1000, // antes de esto no se puede escribir
       confirmados: new Set(),
@@ -78,7 +83,7 @@ export class PartidaTutiFruti {
   }
 
   accion(j, tipo, datos = {}) {
-    this.rival(j);
+    this.#validar(j);
     if (this.estado !== 'jugando') throw new ErrorJuego('La partida terminó');
     const r = this.actual;
     const escribiendo = r.fase === 'escribiendo' || r.fase === 'basta';
@@ -94,12 +99,14 @@ export class PartidaTutiFruti {
       if (!escribiendo) throw new ErrorJuego('La ronda ya se cerró');
       this.#guardar(j, datos.valores);
       if (r.respuestas[j].some((x) => !x.trim())) throw new ErrorJuego('Completá todas las columnas para cantar basta');
+      r.terminaron.add(j);
       if (r.fase === 'basta') {
-        if (r.bastaPor !== j) this.#cerrar(); // los dos terminaron: no hace falta esperar
+        // Si ya terminaron todos, no hace falta esperar el reloj.
+        if (this.activos.every((x) => r.terminaron.has(x))) this.#cerrar();
         return;
       }
       r.bastaPor = j;
-      if (this.config.segundosBasta === 0) return this.#cerrar();
+      if (this.config.segundosBasta === 0 || this.activos.every((x) => r.terminaron.has(x))) return this.#cerrar();
       r.fase = 'basta';
       r.hasta = Date.now() + this.config.segundosBasta * 1000;
       this.#programarCierre();
@@ -117,12 +124,17 @@ export class PartidaTutiFruti {
     if (tipo === 'confirmar') {
       if (r.fase !== 'puntuando') throw new ErrorJuego('Todavía no se puede confirmar');
       r.confirmados.add(j);
-      if (r.confirmados.size < 2) return;
-      r.fase = 'cerrada';
-      if (this.rondas.length >= this.config.rondas) return this.#terminar();
-      return this.#nuevaRonda();
+      return this.#siConfirmaronTodos();
     }
     throw new ErrorJuego('Acción desconocida');
+  }
+
+  #siConfirmaronTodos() {
+    const r = this.actual;
+    if (r.fase !== 'puntuando' || !this.activos.every((x) => r.confirmados.has(x))) return;
+    r.fase = 'cerrada';
+    if (this.rondas.length >= this.config.rondas) return this.#terminar();
+    this.#nuevaRonda();
   }
 
   // Cierra la ronda cuando se acaba el tiempo del basta.
@@ -140,6 +152,7 @@ export class PartidaTutiFruti {
 
   // Después de restaurar una partida guardada: si estaba corriendo un basta, se vuelve a programar.
   reanudar() {
+    for (const r of this.rondas) r.terminaron ||= new Set(r.bastaPor ? [r.bastaPor] : []); // guardadas con la versión anterior
     if (this.estado === 'jugando' && this.actual.fase === 'basta') this.#programarCierre();
   }
 
@@ -157,18 +170,27 @@ export class PartidaTutiFruti {
   }
 
   #terminar() {
+    clearTimeout(this.timer);
     this.estado = 'terminada';
-    this.ganador = ganadorPorPuntos(this.jugadores, this.totales());
+    this.ganador = ganadorPorPuntos(this.activos, this.totales());
     this.motivoFin = 'puntos';
   }
 
+  // Con 2, el que abandona pierde. Con más, queda afuera y el resto sigue (si queda uno solo, gana).
   abandonar(j) {
-    const rival = this.rival(j);
+    this.#validar(j);
     if (this.estado === 'terminada') return;
-    clearTimeout(this.timer);
-    this.estado = 'terminada';
-    this.ganador = rival;
-    this.motivoFin = 'abandono';
+    this.fuera.add(j);
+    if (this.activos.length <= 1) {
+      clearTimeout(this.timer);
+      this.estado = 'terminada';
+      this.ganador = this.activos[0] ?? null;
+      this.motivoFin = 'abandono';
+      return;
+    }
+    const r = this.actual;
+    if (r.fase === 'basta' && this.activos.every((x) => r.terminaron.has(x))) this.#cerrar();
+    this.#siConfirmaronTodos();
   }
 
   detalleHistorial() {
@@ -176,29 +198,33 @@ export class PartidaTutiFruti {
   }
 
   vistaPara(j) {
-    const rival = this.rival(j);
-    const totales = this.totales();
+    if (!this.jugadores.includes(j)) throw new ErrorJuego('No jugás en esta partida');
     const actual = this.actual;
     return {
       estado: this.estado,
       ganador: this.ganador,
       motivoFin: this.motivoFin,
       config: this.config,
+      yo: j,
+      jugadores: this.jugadores,
+      fuera: [...this.fuera],
       fase: actual.fase,
       numero: this.rondas.length,
       bastaPor: actual.bastaPor,
+      terminaron: [...actual.terminaron],
       restanteMs: actual.hasta ? Math.max(0, actual.hasta - Date.now()) : null,
       arrancaEnMs: Math.max(0, actual.desde - Date.now()),
       confirmados: [...actual.confirmados],
-      totales: { yo: totales[j], rival: totales[rival] },
+      totales: this.totales(),
       rondas: this.rondas.map((r) => {
         const abierta = r.fase === 'escribiendo' || r.fase === 'basta';
         return {
           letra: r.letra,
           fase: r.fase,
           mias: r.respuestas[j],
-          rival: abierta ? null : r.respuestas[rival], // las del rival recién al cerrar la ronda
-          puntos: { yo: r.puntos[j], rival: r.puntos[rival] },
+          // Las de los demás recién al cerrar la ronda.
+          respuestas: abierta ? { [j]: r.respuestas[j] } : r.respuestas,
+          puntos: r.puntos,
         };
       }),
     };

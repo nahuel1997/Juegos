@@ -14,11 +14,21 @@
 .gr-celda.pb { border-bottom-width: 2px; }
 .gr-celda.pi { border-left-width: 2px; }
 .gr-celda.rastro::after { content: ''; position: absolute; inset: 38%; border-radius: 50%; background: rgba(140, 140, 160, .35); }
-.gr-celda.paso { cursor: pointer; background: color-mix(in srgb, var(--acento) 35%, transparent); animation: gr-paso 1s ease-in-out infinite; }
-.gr-celda.paso:hover { background: color-mix(in srgb, var(--acento) 60%, transparent); }
-@keyframes gr-paso { 50% { background: color-mix(in srgb, var(--acento) 15%, transparent); } }
+.gr-datos { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-weight: 800; }
+.gr-reloj { display: inline-flex; align-items: center; gap: 6px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.gr-reloj.apurado { color: #e53935; animation: latido-num .5s infinite alternate; }
+.gr-quesos { display: inline-flex; gap: 4px; }
+.gr-quesos i { opacity: .3; filter: grayscale(1); transition: opacity .3s, filter .3s; }
+.gr-quesos i.comido { opacity: 1; filter: none; }
+.gr-cuenta { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; font-size: clamp(3rem, 16vw, 6rem); font-weight: 900; color: #fff; text-shadow: 0 4px 16px rgba(0,0,0,.6); background: rgba(0,0,0,.25); animation: gr-cuenta .9s ease-out both; pointer-events: none; }
+@keyframes gr-cuenta { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.gr-control .btn.va { background: color-mix(in srgb, var(--acento) 30%, transparent); }
+.gr-control .btn.quiere { box-shadow: inset 0 0 0 2px var(--acento); }
+.gr-laberinto { touch-action: none; user-select: none; }
 
-.gr-pieza { position: absolute; display: grid; place-items: center; pointer-events: none; transition: left .28s cubic-bezier(.3, 1.3, .5, 1), top .28s cubic-bezier(.3, 1.3, .5, 1); }
+.gr-pieza { position: absolute; display: grid; place-items: center; pointer-events: none; }
+.gr-pieza.raton { transition: left var(--ms-raton) linear, top var(--ms-raton) linear; }
+.gr-pieza.gato { transition: left var(--ms-gato) linear, top var(--ms-gato) linear; }
 .gr-pieza .icono { width: 86%; height: 86%; }
 .gr-pieza.raton .icono, .gr-pieza.gato .icono { transform: scaleX(var(--mira, 1)); transition: transform .2s; filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
 .gr-pieza.raton { z-index: 3; }
@@ -61,6 +71,6 @@
   .gr-control { grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 64px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .moneda, .gr-celda.paso, .gr-pieza.queso .icono { animation: none; }
+  .moneda, .gr-pieza.queso .icono, .gr-reloj.apurado { animation: none; }
   .gr-pieza { transition: none; }
 }

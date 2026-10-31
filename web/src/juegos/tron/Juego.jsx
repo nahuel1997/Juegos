@@ -48,7 +48,7 @@ export default function JuegoTron({ partida, accion, ctx }) {
     cv.width = p.ancho * celda;
     cv.height = p.alto * celda;
     const g = cv.getContext('2d');
-    g.fillStyle = '#0b1026';
+    g.fillStyle = getComputedStyle(cv).getPropertyValue('--sk-pista').trim() || '#0b1026'; // skin
     g.fillRect(0, 0, cv.width, cv.height);
     g.strokeStyle = 'rgba(120,160,255,.08)';
     g.lineWidth = 1;

@@ -91,8 +91,8 @@ export default function JuegoPool({ partida, accion, ctx }) {
         onPointerUp={() => puedeApuntar && setFijo(true)}
       >
         <rect x="-40" y="-40" width="1080" height="580" rx="34" fill="#6d3f22" />
-        <rect x="-22" y="-22" width="1044" height="544" rx="22" fill="#14613b" />
-        <rect x="0" y="0" width="1000" height="500" fill="#1f7a4d" />
+        <rect x="-22" y="-22" width="1044" height="544" rx="22" style={{ fill: 'color-mix(in srgb, var(--sk-pano, #1f7a4d) 75%, #000)' }} />
+        <rect x="0" y="0" width="1000" height="500" style={{ fill: 'var(--sk-pano, #1f7a4d)' }} />
         <path d="M250 0v500" stroke="rgba(255,255,255,.12)" strokeWidth="2" />
         <circle cx="250" cy="250" r="3" fill="rgba(255,255,255,.3)" />
         {TRONERAS.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={mesa.tronera} fill="#0b0b0b" />)}

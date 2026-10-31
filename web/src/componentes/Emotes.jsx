@@ -52,7 +52,7 @@ export function EmoteGrande({ emote, yo, gente }) {
   }, [emote]);
   if (!visible) return null;
   const mio = visible.de === yo;
-  const quien = gente[visible.de]?.nombre || visible.de;
+  const quien = gente[visible.de]?.nombre || visible.nombre || visible.de;
   return (
     <div className={`emote-grande ${mio ? 'mio' : 'suyo'} emote-${visible.id}`} key={visible.n} aria-live="polite">
       <div className="emote-dibujo"><Icono id={visible.id} tam={512} titulo={NOMBRES[visible.id]} /></div>

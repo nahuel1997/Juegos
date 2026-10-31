@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { JUEGOS } from '../juegos/index.js';
 import { Icono } from '../iconos.jsx';
+import { MarcoSkin, SelectorSkin } from '../skins.jsx';
 
 // Cada cuánto el bot mira si le toca (en los de tiempo real tiene que reaccionar rápido).
-const INTERVALO = { tron: 50, colores: 120, simon: 120 };
-const CTX_BOT = { yo: 'vos', rival: 'bot', nombreRival: 'el bot', rivalOnline: true };
+const INTERVALO = { tron: 50, colores: 120, simon: 120, 'gato-raton': 90, 'toca-el-punto': 120, jenga: 150 };
+const CTX_BOT = { yo: 'vos', rival: 'bot', nombreRival: 'Bot', rivalOnline: true, nombreDe: (id) => (id === 'vos' ? 'Vos' : id === 'bot' ? 'Bot' : id) };
 
 // Práctica contra el bot, sin otra persona: corre la misma lógica del server en el navegador.
 export default function Practica({ id, nombre, usuario, volver }) {
@@ -16,7 +17,14 @@ export default function Practica({ id, nombre, usuario, volver }) {
   const partidaRef = useRef(null);
   const botOcupado = useRef(false);
   const vueltaRef = useRef(0);
-  const ctx = { ...CTX_BOT, colorYo: usuario?.color || '#ff4f9a', colorRival: '#4fc3f7' };
+  const colorYo = usuario?.color || '#ff4f9a';
+  const ctx = {
+    ...CTX_BOT,
+    colorYo,
+    colorRival: '#4fc3f7',
+    jugadores: [{ id: 'vos', nombre: usuario?.nombre || 'Vos', color: colorYo }, { id: 'bot', nombre: 'Bot', color: '#4fc3f7' }],
+    colorDe: (id) => (id === 'vos' ? colorYo : '#4fc3f7'),
+  };
 
   useEffect(() => {
     let vivo = true;
@@ -88,13 +96,16 @@ export default function Practica({ id, nombre, usuario, volver }) {
 
   const accion = useCallback((tipo, datos) => {
     const p = partidaRef.current;
-    if (!p) return;
+    if (!p) return undefined;
+    let r;
     try {
-      p.accion('vos', tipo, datos ?? {});
+      r = p.accion('vos', tipo, datos ?? {});
     } catch (e) {
       avisar(e.message || 'No se pudo');
+      r = { error: e.message };
     }
     mostrar();
+    return r;
   }, [mostrar]);
 
   if (!def) return null;
@@ -107,6 +118,7 @@ export default function Practica({ id, nombre, usuario, volver }) {
       <div className="practica-cab">
         <h2><Icono id={def.icono} tam={30} /> {nombre} <span className="vs">· práctica contra el bot</span></h2>
         <div className="acciones">
+          <SelectorSkin juego={id} />
           {vista && <button className="btn chico fantasma" onClick={() => { terminar(); setVista(null); }}>Cambiar reglas</button>}
           <button className="btn chico fantasma" onClick={() => { terminar(); volver(); }}>Volver</button>
         </div>
@@ -128,11 +140,11 @@ export default function Practica({ id, nombre, usuario, volver }) {
       )}
 
       {vista && (
-        <>
+        <MarcoSkin juego={id}>
           {terminada && (
             <div className="tarjeta final practica-fin">
               <h2>{empate ? '¡Empate!' : gane ? '¡Le ganaste al bot!' : 'Ganó el bot'}</h2>
-              <p>{def.Juego.textoFinal?.(vista, gane)}</p>
+              <p>{def.Juego.textoFinal?.(vista, gane, ctx)}</p>
               <div className="acciones centro">
                 <button className="btn" onClick={empezar}>Otra</button>
                 <button className="btn fantasma" onClick={() => { terminar(); setVista(null); }}>Cambiar reglas</button>
@@ -140,7 +152,7 @@ export default function Practica({ id, nombre, usuario, volver }) {
             </div>
           )}
           <def.Juego key={vueltaRef.current} partida={vista} accion={accion} ctx={ctx} />
-        </>
+        </MarcoSkin>
       )}
     </div>
   );

@@ -10,6 +10,8 @@ import './juegos5.css';
 import './juegos6.css';
 import './juegos7.css';
 import './juegos8.css';
+import './juegos9.css';
+import './skins.css';
 import './efectos.css';
 
 createRoot(document.getElementById('root')).render(
